@@ -31,6 +31,7 @@ export default function Hero() {
               Our Mission
             </button>
           </a>
+         
         </div>
       </div>
     </section>
