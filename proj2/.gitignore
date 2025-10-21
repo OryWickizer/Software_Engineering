@@ -38,5 +38,10 @@ coverage
 
 # Misc
 .cache
+<<<<<<< HEAD
+.eslintcache"node_modules/" 
+"proj2/node_modules/" 
+=======
 .eslintcachenode_modules/
 proj2/node_modules/
+>>>>>>> a8fe48a4928f40a311c332b88fdddb6773fae2f8
