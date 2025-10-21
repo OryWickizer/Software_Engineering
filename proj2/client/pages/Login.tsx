@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { getSupabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,47 +7,75 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
 export default function Login() {
-  const supabase = getSupabase();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const disabled = !supabase;
-
-  async function sendMagicLink(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
-    if (!supabase) {
-      toast("Connect Supabase to enable login");
+    
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
       return;
     }
+
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
       });
-      if (error) throw error;
-      toast.success("Magic link sent! Check your email.");
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Account created successfully!");
+        // Store token in memory
+        // window.authToken = data.token;
+        // Store user info
+        // window.currentUser = data.user;
+        // Redirect or update UI
+        window.location.href = '/dashboard'; // Change to your dashboard route
+      } else {
+        toast.error(data.error || "Registration failed");
+      }
     } catch (err: any) {
-      toast.error(err.message ?? "Failed to send magic link");
+      toast.error(err.message ?? "Failed to register");
     } finally {
       setLoading(false);
     }
   }
 
-  async function oauth(provider: "google" | "github") {
-    if (!supabase) {
-      toast("Connect Supabase to enable OAuth");
-      return;
-    }
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({ provider });
-      if (error) throw error;
-      if (!data?.url) return;
-      window.location.href = data.url;
+      setLoading(true);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Login successful!");
+        // Store token in memory
+        // window.authToken = data.token;
+        // Store user info
+        // window.currentUser = data.user;
+        // Redirect or update UI
+        window.location.href = '/dashboard'; // Change to your dashboard route
+      } else {
+        toast.error(data.error || "Login failed");
+      }
     } catch (err: any) {
-      toast.error(err.message ?? "OAuth error");
+      toast.error(err.message ?? "Failed to login");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -59,26 +86,21 @@ export default function Login() {
         <Card className="p-6 md:p-8 border-emerald-200/50 bg-white/80 backdrop-blur">
           <div className="text-center">
             <h1 className="text-2xl md:text-3xl font-bold">Sign in to EcoBites</h1>
-            <p className="mt-1 text-sm text-foreground/60">Secure, passwordless login. Green by design.</p>
+            <p className="mt-1 text-sm text-foreground/60">Secure login with MongoDB authentication.</p>
           </div>
 
-          {!supabase && (
-            <div className="mt-4 rounded-md bg-yellow-50 text-yellow-900 p-3 text-sm">
-              Supabase is not connected. Click <a className="underline" href="#open-mcp-popover">Open MCP popover</a> and connect Supabase, then set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
-            </div>
-          )}
-
-          <Tabs defaultValue="email" className="mt-6">
+          <Tabs defaultValue="login" className="mt-6">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="email">Email Link</TabsTrigger>
-              <TabsTrigger value="oauth">OAuth</TabsTrigger>
+              <TabsTrigger value="login">Sign In</TabsTrigger>
+              <TabsTrigger value="register">Sign Up</TabsTrigger>
             </TabsList>
-            <TabsContent value="email" className="mt-4">
-              <form onSubmit={sendMagicLink} className="space-y-4">
+            
+            <TabsContent value="login" className="mt-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="login-email">Email</Label>
                   <Input
-                    id="email"
+                    id="login-email"
                     type="email"
                     required
                     placeholder="you@example.com"
@@ -86,17 +108,70 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                <Button type="submit" disabled={disabled || loading} className="w-full">
-                  {loading ? "Sending..." : "Send Magic Link"}
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? "Signing in..." : "Sign In"}
                 </Button>
                 <p className="text-xs text-foreground/60 text-center">
                   By continuing you agree to our Terms and acknowledge our Privacy Policy.
                 </p>
               </form>
             </TabsContent>
-            <TabsContent value="oauth" className="mt-4 space-y-3">
-              <Button variant="secondary" className="w-full" onClick={() => oauth("google")}>Continue with Google</Button>
-              <Button variant="secondary" className="w-full" onClick={() => oauth("github")}>Continue with GitHub</Button>
+            
+            <TabsContent value="register" className="mt-4">
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="register-name">Full Name</Label>
+                  <Input
+                    id="register-name"
+                    type="text"
+                    required
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-email">Email</Label>
+                  <Input
+                    id="register-email"
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-password">Password</Label>
+                  <Input
+                    id="register-password"
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <p className="text-xs text-foreground/60">Must be at least 6 characters</p>
+                </div>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? "Creating account..." : "Create Account"}
+                </Button>
+                <p className="text-xs text-foreground/60 text-center">
+                  By continuing you agree to our Terms and acknowledge our Privacy Policy.
+                </p>
+              </form>
             </TabsContent>
           </Tabs>
         </Card>
