@@ -19,7 +19,7 @@ export default function Hero() {
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button size="lg" asChild>
-            <a href="#whats-new">See What's New</a>
+            <a href="#whats-new">See What's New here</a>
           </Button>
           <Button size="lg" variant="secondary" asChild>
             <a href="#mission">Our Mission</a>
