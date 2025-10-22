@@ -1,28 +1,13 @@
 {
-  "name": "fusion-starter",
+  "name": "client",
+  "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "pkg": {
-    "assets": [
-      "dist/spa/*"
-    ],
-    "scripts": [
-      "dist/server/**/*.js"
-    ]
-  },
   "scripts": {
     "dev": "vite",
-    "dev:client": "SEPARATE_DEV=true vite --port 5173",
-    "dev:server": "tsx server/dev.ts",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "vite build",
-    "build:server": "vite build --config vite.config.server.ts",
-    "start": "node dist/server/node-build.mjs",
-
-    "format.fix": "prettier --write .",
-    "typecheck": "tsc"
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "dependencies": {
+   "dependencies": {
     "@supabase/supabase-js": "^2.75.0",
     "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.3",
@@ -60,6 +45,7 @@
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-toggle-group": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.7",
+    
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
     "@swc/core": "^1.13.3",
@@ -106,4 +92,8 @@
     "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+,
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

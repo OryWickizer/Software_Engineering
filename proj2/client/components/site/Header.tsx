@@ -40,7 +40,7 @@ export default function SiteHeader() {
             </>
           ) : (
             <Button asChild size="sm" variant="ghost" className="text-foreground/80">
-              <a href="/login">Login</a>
+              <a href="/customer">Login</a>
             </Button>
           )}
           <Button asChild size="sm" className="hidden sm:inline-flex">
