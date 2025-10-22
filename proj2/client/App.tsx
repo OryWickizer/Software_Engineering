@@ -15,6 +15,7 @@ const queryClient = new QueryClient();
 import SiteHeader from "@/components/site/Header";
 import SiteFooter from "@/components/site/Footer";
 import Customer from "./pages/Customer";
+import Restaurant from "./pages/Restaurant";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,6 +32,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
               <Route path="/customer" element={<Customer />} />
+              <Route path="/restaurant" element={<Restaurant />} />
             </Routes>
           </main>
           <SiteFooter />
