@@ -1,6 +1,6 @@
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="container py-16 md:py-24">
+    <section id="how-it-works" className="container py-16 md:py-24 mx-auto">
       <div className="text-center max-w-3xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold">How It Works</h2>
         <p className="mt-2 text-foreground/60">Customers, restaurants, and drivers together make deliveries greener.</p>

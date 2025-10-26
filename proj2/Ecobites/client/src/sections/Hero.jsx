@@ -6,7 +6,7 @@ export default function Hero() {
         <div className="absolute inset-0 bg-[radial-gradient(90%_70%_at_50%_-10%,hsl(142.1_76.2%_36.3%/0.35),transparent_60%)]" />
       </div>
       
-      <div className="container py-20 md:py-28 text-center">
+      <div className="container mx-auto px-4 py-20 md:py-28 text-center">
         <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
           EcoBites • Group 22
         </span>

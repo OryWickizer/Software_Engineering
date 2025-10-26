@@ -1,6 +1,6 @@
 export default function Mission() {
   return (
-    <section id="mission" className="container py-16 md:py-24">
+    <section id="mission" className="container py-16 md:py-24 mx-auto">
       <div className="grid gap-8 md:grid-cols-12 items-start">
         <div className="md:col-span-4">
           <h2 className="text-2xl md:text-3xl font-bold">Mission Statement</h2>
