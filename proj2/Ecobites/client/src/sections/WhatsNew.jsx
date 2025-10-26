@@ -30,7 +30,7 @@ const items = [
 
 export default function WhatsNew() {
   return (
-    <section id="whats-new" className="container py-16 md:py-24">
+    <section id="whats-new" className="container py-16 md:py-24 mx-auto">
       <div className="text-center max-w-3xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold">What's New</h2>
         <p className="mt-2 text-foreground/60">Four impactful improvements to make sustainable eating effortless.</p>
