@@ -1,4 +1,5 @@
 import { PackageCheck, Users, Bike, Leaf } from "lucide-react";
+import React from "react";
 
 const items = [
   {
@@ -36,6 +37,7 @@ export default function WhatsNew() {
       </div>
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {items.map(({ title, desc, Icon }) => (
+       
           <div key={title} className="group rounded-2xl border border-emerald-200/40 bg-card p-6 shadow-sm transition hover:shadow-md hover:border-emerald-400/60">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Icon className="h-5 w-5" />

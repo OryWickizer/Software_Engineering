@@ -2,7 +2,7 @@ export default function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="absolute -z-10 inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-50 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-b from-emerald-50 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(90%_70%_at_50%_-10%,hsl(142.1_76.2%_36.3%/0.35),transparent_60%)]" />
       </div>
       
@@ -16,7 +16,7 @@ export default function Hero() {
         </h1>
         
         <p className="mx-auto mt-4 max-w-2xl text-base md:text-lg text-gray-600">
-          Redefining food delivery with sustainability at its core. Make every meal an eco‑conscious choice with transparent impact and rewarding green actions.
+          Redefining food delivery with sustainability at its core. Make every meal an eco-conscious choice with transparent impact and rewarding green actions.
         </p>
         
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
