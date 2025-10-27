@@ -1,7 +1,7 @@
 import Hero from "../sections/Hero"
 import Mission from "../sections/Mission"
 import HowItWorks from "../sections/HowItWorks"
-import WhatsNew from "../sections/WhatsNew"
+// import WhatsNew from "../sections/WhatsNew"
 
 export default function Index() {
   return (
@@ -9,7 +9,7 @@ export default function Index() {
       <Hero />
       <Mission />
       <HowItWorks />
-      <WhatsNew />
+      {/* <WhatsNew /> */}
     </div>
   );
 }
