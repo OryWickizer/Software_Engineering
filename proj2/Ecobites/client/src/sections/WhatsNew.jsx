@@ -1,9 +1,13 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { PackageCheck, Users, Bike, Leaf } from "lucide-react";
 import React from "react";
 =======
 // import { PackageCheck, Users, Bike, Leaf } from "lucide-react";
 >>>>>>> a025e110 (first commit)
+=======
+// import { PackageCheck, Users, Bike, Leaf } from "lucide-react";
+>>>>>>> b7f01b6a5559c92572f68a9408dad44445d6c74a
 
 // const items = [
 //   {
@@ -33,6 +37,7 @@ import React from "react";
 // ];
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export default function WhatsNew() {
   return (
     <section id="whats-new" className="container py-16 md:py-24 mx-auto">
@@ -56,6 +61,8 @@ export default function WhatsNew() {
   );
 }
 =======
+=======
+>>>>>>> b7f01b6a5559c92572f68a9408dad44445d6c74a
 // export default function WhatsNew() {
 //   return (
 //     <section id="whats-new" className="container py-16 md:py-24">
@@ -77,4 +84,7 @@ export default function WhatsNew() {
 //     </section>
 //   );
 // }
+<<<<<<< HEAD
 >>>>>>> a025e110 (first commit)
+=======
+>>>>>>> b7f01b6a5559c92572f68a9408dad44445d6c74a

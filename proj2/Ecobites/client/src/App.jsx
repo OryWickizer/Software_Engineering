@@ -5,6 +5,8 @@ import './index.css'
 import SiteHeader from './site/Header';
 import SiteFooter from './site/Footer';
 import Index from './pages/Index'
+import Login from './pages/login'
+import Drivers from './pages/Drivers'
 import { Routes, Route } from 'react-router-dom';
 function App() {
   return (
@@ -13,7 +15,8 @@ function App() {
              <main className="flex-1">
                <Routes>
                  <Route path="/" element={<Index />} />
-                 
+                 <Route path="/login" element={<Login />} />
+                 <Route path="/driver" element={<Drivers />} />
                </Routes>
              </main>
              <SiteFooter />
