@@ -17,4 +17,19 @@ app.use('/api/orders', orders);
 app.use('/api/restaurants', restaurantRoutes);
 
 
+// Helpful root route so visiting http://localhost:3000/ doesn't show "Cannot GET /"
+app.get("/", (req, res) => {
+	res.json({
+		service: "EcoBites API",
+		status: "ok",
+		try: {
+			health: "/api/health",
+			auth: {
+				register: "/api/auth/register",
+				login: "/api/auth/login",
+			},
+		},
+	});
+});
+
 export default app;

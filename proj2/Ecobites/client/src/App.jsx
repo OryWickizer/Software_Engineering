@@ -8,6 +8,8 @@ import Index from './pages/Index'
 import Login from './pages/Login'
 import Drivers from './pages/Drivers'
 import { Routes, Route } from 'react-router-dom';
+import Customer from './customers/Customer';
+import Restaurant from './restaurants/Restaurants';
 function App() {
   return (
            <div className="flex min-h-screen flex-col">
@@ -17,6 +19,8 @@ function App() {
                  <Route path="/" element={<Index />} />
                  <Route path="/login" element={<Login />} />
                  <Route path="/driver" element={<Drivers />} />
+                 <Route path="/customer" element={<Customer />} />
+                 <Route path="/restaurants" element={<Restaurant />} />
                </Routes>
              </main>
              <SiteFooter />
