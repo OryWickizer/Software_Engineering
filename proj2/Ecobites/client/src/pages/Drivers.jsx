@@ -1,8 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Drivers() {
   const [activeTab, setActiveTab] = useState("current");
   const [activeSection, setActiveSection] = useState("orders");
+  const [driverLocation, setDriverLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const [isLocationTracking, setIsLocationTracking] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [orderStatusMap, setOrderStatusMap] = useState({});
+  const [acceptedOrders, setAcceptedOrders] = useState([]);
+  const [rejectedOrders, setRejectedOrders] = useState([]);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [selectedOrderForLocation, setSelectedOrderForLocation] = useState(null);
   
   // Enhanced driver state with vehicle and rewards info
   const [driver] = useState({
@@ -34,7 +43,7 @@ export default function Drivers() {
   });
 
   // Enhanced orders with community options and eco-impact
-  const orders = {
+  const [orders, setOrders] = useState({
     current: [
       {
         id: 1,
@@ -43,7 +52,10 @@ export default function Drivers() {
         status: "Picking up",
         eta: "10 mins",
         isEcoRoute: true,
-        points: 30
+        points: 30,
+        pickupAddress: "123 Green St, City, State 12345",
+        deliveryAddress: "456 Main Ave, City, State 12345",
+        customerPhone: "+1-555-0101"
       }
     ],
     past: [
@@ -80,7 +92,10 @@ export default function Drivers() {
         estimate: "$18-22",
         type: "regular",
         points: 20,
-        ecoRoute: true
+        ecoRoute: true,
+        pickupAddress: "789 Organic Rd, City, State 12345",
+        deliveryAddress: "321 Delivery Ln, City, State 12345",
+        customerPhone: "+1-555-0102"
       },
       {
         id: 5,
@@ -90,10 +105,13 @@ export default function Drivers() {
         type: "community",
         groupSize: 3,
         points: 45,
-        ecoRoute: true
+        ecoRoute: true,
+        pickupAddress: "555 Community Way, City, State 12345",
+        deliveryAddress: "777 Unity St, City, State 12345",
+        customerPhone: "+1-555-0103"
       }
     ]
-  };
+  });
 
   // Reviews and insights data
   const reviews = {
@@ -108,12 +126,135 @@ export default function Drivers() {
     }
   };
 
+  // Get current geolocation
+  const getDriverCurrentLocation = () => {
+    setIsLocationTracking(true);
+    setLocationError(null);
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by this browser.");
+      setIsLocationTracking(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (positionObject) => {
+        const latitude = positionObject.coords.latitude;
+        const longitude = positionObject.coords.longitude;
+        const accuracy = positionObject.coords.accuracy;
+        
+        setDriverLocation({
+          latitude,
+          longitude,
+          accuracy,
+          timestamp: new Date().toLocaleTimeString()
+        });
+        setIsLocationTracking(false);
+      },
+      (geoError) => {
+        setLocationError(geoError.message || "Failed to get location");
+        setIsLocationTracking(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
+  // Accept order function
+  const handleAcceptOrder = (orderId) => {
+    const acceptedOrder = orders.available.find(order => order.id === orderId);
+    
+    if (acceptedOrder) {
+      setAcceptedOrders([...acceptedOrders, orderId]);
+      setOrderStatusMap(prev => ({
+        ...prev,
+        [orderId]: "accepted"
+      }));
+
+      // Move order to current orders
+      setOrders(prevOrders => ({
+        ...prevOrders,
+        current: [
+          ...prevOrders.current,
+          {
+            ...acceptedOrder,
+            status: "Order Accepted"
+          }
+        ],
+        available: prevOrders.available.filter(order => order.id !== orderId)
+      }));
+    }
+  };
+
+  // Reject order function
+  const handleRejectOrder = (orderId) => {
+    setRejectedOrders([...rejectedOrders, orderId]);
+    setOrderStatusMap(prev => ({
+      ...prev,
+      [orderId]: "rejected"
+    }));
+
+    // Remove rejected order from available
+    setOrders(prevOrders => ({
+      ...prevOrders,
+      available: prevOrders.available.filter(order => order.id !== orderId)
+    }));
+  };
+
+  // Change order delivery status
+  const handleUpdateOrderStatus = (orderId, newOrderStatus) => {
+    setOrderStatusMap(prev => ({
+      ...prev,
+      [orderId]: newOrderStatus
+    }));
+
+    setOrders(prevOrders => ({
+      ...prevOrders,
+      current: prevOrders.current.map(order =>
+        order.id === orderId
+          ? { ...order, status: newOrderStatus }
+          : order
+      )
+    }));
+  };
+
+  // Show location modal for specific order
+  const handleShowLocationModal = (orderId) => {
+    setSelectedOrderForLocation(orderId);
+    setShowLocationModal(true);
+    getDriverCurrentLocation();
+  };
+
+  // Close location modal
+  const handleCloseLocationModal = () => {
+    setShowLocationModal(false);
+    setSelectedOrderForLocation(null);
+  };
+
+  // Calculate points with multipliers
   const calculatePoints = (order) => {
-    let points = order.points;
-    if (driver.vehicle.type === "EV") points *= driver.rewards.multipliers.ev;
-    if (order.type === "community") points *= driver.rewards.multipliers.community;
-    if (order.ecoRoute) points *= driver.rewards.multipliers.efficiency;
-    return Math.round(points);
+    let pointsValue = order.points;
+    if (driver.vehicle.type === "EV") pointsValue *= driver.rewards.multipliers.ev;
+    if (order.type === "community") pointsValue *= driver.rewards.multipliers.community;
+    if (order.ecoRoute) pointsValue *= driver.rewards.multipliers.efficiency;
+    return Math.round(pointsValue);
+  };
+
+  // Get status badge color
+  const getStatusBadgeColor = (orderStatus) => {
+    const statusColorMap = {
+      "Picking up": "bg-blue-100 text-blue-700",
+      "En route": "bg-yellow-100 text-yellow-700",
+      "Arriving": "bg-purple-100 text-purple-700",
+      "Delivered": "bg-green-100 text-green-700",
+      "Order Accepted": "bg-emerald-100 text-emerald-700",
+      "accepted": "bg-emerald-100 text-emerald-700",
+      "rejected": "bg-red-100 text-red-700"
+    };
+    return statusColorMap[orderStatus] || "bg-gray-100 text-gray-700";
   };
 
   return (
@@ -231,7 +372,7 @@ export default function Drivers() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  className={`px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
                     activeTab === tab
                       ? "bg-emerald-600 text-white"
                       : "bg-white text-gray-600 hover:bg-emerald-50"
@@ -242,117 +383,284 @@ export default function Drivers() {
               ))}
             </div>
 
-        {/* Orders Content */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {orders[activeTab].map((order) => (
-            <div key={order.id} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-              {activeTab === "current" && (
-                <>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-medium text-gray-600">Order #{order.id}</span>
-                    <span className="px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
-                      {order.status}
-                    </span>
-                  </div>
-                  <p className="font-medium">{order.restaurant}</p>
-                  <p className="text-sm text-gray-600">Customer: {order.customer}</p>
-                  <p className="text-sm text-emerald-600 mt-2">ETA: {order.eta}</p>
-                </>
-              )}
+            {/* Orders Content Grid */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {orders[activeTab].map((order) => (
+                <div key={order.id} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                  
+                  {/* Current Orders */}
+                  {activeTab === "current" && (
+                    <>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-sm font-medium text-gray-600">Order #{order.id}</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <p className="font-medium text-gray-800">{order.restaurant}</p>
+                      <p className="text-sm text-gray-600">Customer: {order.customer}</p>
+                      <p className="text-sm text-gray-600 mt-1">📞 {order.customerPhone}</p>
+                      <p className="text-sm text-emerald-600 font-medium mt-2">ETA: {order.eta}</p>
+                      
+                      {/* Address Details */}
+                      <div className="mt-3 space-y-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                        <p><strong>Pickup:</strong> {order.pickupAddress}</p>
+                        <p><strong>Delivery:</strong> {order.deliveryAddress}</p>
+                      </div>
 
-              {activeTab === "past" && (
-                <>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-medium text-gray-600">Order #{order.id}</span>
-                    <span className="text-xs text-gray-500">{order.date}</span>
-                  </div>
-                  <p className="font-medium">{order.restaurant}</p>
-                  <p className="text-sm text-gray-600">Customer: {order.customer}</p>
-                  <span className="inline-block mt-2 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
-                    {order.status}
-                  </span>
-                </>
-              )}
+                      {/* Status Update Buttons */}
+                      <div className="mt-4 space-y-2">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleUpdateOrderStatus(order.id, "Picking up")}
+                            className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors"
+                          >
+                            Picking up
+                          </button>
+                          <button
+                            onClick={() => handleUpdateOrderStatus(order.id, "En route")}
+                            className="flex-1 px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-medium hover:bg-yellow-200 transition-colors"
+                          >
+                            En route
+                          </button>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleUpdateOrderStatus(order.id, "Arriving")}
+                            className="flex-1 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200 transition-colors"
+                          >
+                            Arriving
+                          </button>
+                          <button
+                            onClick={() => handleUpdateOrderStatus(order.id, "Delivered")}
+                            className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors"
+                          >
+                            Delivered
+                          </button>
+                        </div>
+                      </div>
 
-              {activeTab === "available" && (
-                <>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-medium text-gray-600">{order.restaurant}</span>
-                    {order.type === "community" && (
-                      <span className="px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
-                        👥 Community ({order.groupSize})
+                      {/* Location Button */}
+                      <button
+                        onClick={() => handleShowLocationModal(order.id)}
+                        className="w-full mt-3 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium hover:bg-emerald-200 transition-colors"
+                      >
+                        📍 Share Location
+                      </button>
+                    </>
+                  )}
+
+                  {/* Past Orders */}
+                  {activeTab === "past" && (
+                    <>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-sm font-medium text-gray-600">Order #{order.id}</span>
+                        <span className="text-xs text-gray-500">{order.date}</span>
+                      </div>
+                      <p className="font-medium text-gray-800">{order.restaurant}</p>
+                      <p className="text-sm text-gray-600">Customer: {order.customer}</p>
+                      <span className="inline-block mt-2 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
+                        {order.status}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-sm text-gray-600">{order.distance}</span>
-                    <span className="text-sm font-medium text-emerald-600">{order.estimate}</span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-sm">
-                    <span className="text-gray-500">
-                      {order.ecoRoute && "🌱 Eco-route available"}
-                    </span>
-                    <span className="font-medium text-emerald-600">
-                      +{calculatePoints(order)} pts
-                    </span>
-                  </div>
-                  <button className="w-full mt-3 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg text-sm font-medium hover:bg-emerald-100 transition-colors">
-                    Accept Order
-                  </button>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-        </>
-      ) : (
-        /* Reviews & Insights Section */
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">Recent Reviews</h3>
-            <div className="space-y-4">
-              {reviews.recent.map((review) => (
-                <div key={review.id} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-1 text-yellow-500">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <span key={i}>★</span>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">{review.comment}</p>
-                  <p className="text-xs text-gray-500 mt-1">{review.date}</p>
+                      
+                      {order.review && (
+                        <div className="mt-3 p-2 bg-yellow-50 rounded-lg">
+                          <div className="flex items-center gap-1 text-yellow-500">
+                            {[...Array(order.review.rating)].map((_, i) => (
+                              <span key={i}>★</span>
+                            ))}
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">{order.review.comment}</p>
+                        </div>
+                      )}
+                      <span className="inline-block mt-2 px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
+                        +{order.points} pts
+                      </span>
+                    </>
+                  )}
+
+                  {/* Available Orders */}
+                  {activeTab === "available" && (
+                    <>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-sm font-medium text-gray-600">{order.restaurant}</span>
+                        {order.type === "community" && (
+                          <span className="px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
+                            👥 Group ({order.groupSize})
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-sm text-gray-600">📍 {order.distance}</span>
+                        <span className="text-sm font-medium text-emerald-600">{order.estimate}</span>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between text-sm">
+                        <span className="text-gray-600">
+                          {order.ecoRoute && "🌱 Eco-route available"}
+                        </span>
+                        <span className="font-medium text-emerald-600">
+                          +{calculatePoints(order)} pts
+                        </span>
+                      </div>
+
+                      {/* Address Details */}
+                      <div className="mt-3 space-y-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                        <p><strong>Pickup:</strong> {order.pickupAddress}</p>
+                        <p><strong>Delivery:</strong> {order.deliveryAddress}</p>
+                      </div>
+
+                      {/* Accept/Reject Buttons */}
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={() => handleAcceptOrder(order.id)}
+                          disabled={acceptedOrders.includes(order.id) || rejectedOrders.includes(order.id)}
+                          className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          ✓ Accept
+                        </button>
+                        <button
+                          onClick={() => handleRejectOrder(order.id)}
+                          disabled={acceptedOrders.includes(order.id) || rejectedOrders.includes(order.id)}
+                          className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          ✗ Reject
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">Performance Insights</h3>
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-sm font-medium text-gray-600 mb-2">Strength Areas</h4>
-                <div className="space-y-2">
-                  {reviews.insights.areas.map((area, index) => (
-                    <div key={index} className="bg-emerald-50 px-3 py-2 rounded-lg">
-                      <span className="text-sm text-emerald-700">{area}</span>
+          </>
+        ) : (
+          /* Reviews & Insights Section */
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">Recent Reviews</h3>
+              <div className="space-y-4">
+                {reviews.recent.map((review) => (
+                  <div key={review.id} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-1 text-yellow-500">
+                      {[...Array(review.rating)].map((_, i) => (
+                        <span key={i}>★</span>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                    <p className="text-sm text-gray-600 mt-2">{review.comment}</p>
+                    <p className="text-xs text-gray-500 mt-1">{review.date}</p>
+                  </div>
+                ))}
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-600 mb-2">Common Praise</h4>
-                <div className="flex flex-wrap gap-2">
-                  {reviews.insights.positiveKeywords.map((keyword, index) => (
-                    <span key={index} className="px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
-                      {keyword}
-                    </span>
-                  ))}
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">Performance Insights</h3>
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Strength Areas</h4>
+                  <div className="space-y-2">
+                    {reviews.insights.areas.map((area, index) => (
+                      <div key={index} className="bg-emerald-50 px-3 py-2 rounded-lg">
+                        <span className="text-sm text-emerald-700">{area}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Common Praise</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {reviews.insights.positiveKeywords.map((keyword, index) => (
+                      <span key={index} className="px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Location Modal */}
+      {showLocationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Driver Location</h3>
+              <button
+                onClick={handleCloseLocationModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {isLocationTracking ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                <p className="text-gray-600 mt-4">Getting your location...</p>
+              </div>
+            ) : driverLocation ? (
+              <div className="space-y-4">
+                <div className="bg-emerald-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600"><strong>Latitude:</strong> {driverLocation.latitude.toFixed(6)}</p>
+                  <p className="text-sm text-gray-600"><strong>Longitude:</strong> {driverLocation.longitude.toFixed(6)}</p>
+                  <p className="text-sm text-gray-600"><strong>Accuracy:</strong> {driverLocation.accuracy.toFixed(2)} meters</p>
+                  <p className="text-sm text-gray-600"><strong>Updated:</strong> {driverLocation.timestamp}</p>
+                </div>
+
+                {selectedOrderForLocation && (
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600">
+                      <strong>Order ID:</strong> {selectedOrderForLocation}
+                    </p>
+                    <p className="text-sm text-blue-600 mt-2">
+                      Location shared with customer ✓
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={getDriverCurrentLocation}
+                    className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+                  >
+                    🔄 Refresh Location
+                  </button>
+                  <button
+                    onClick={handleCloseLocationModal}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : locationError ? (
+              <div className="space-y-4">
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <p className="text-sm text-red-600">
+                    <strong>Error:</strong> {locationError}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={getDriverCurrentLocation}
+                    className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+                  >
+                    🔄 Retry
+                  </button>
+                  <button
+                    onClick={handleCloseLocationModal}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
