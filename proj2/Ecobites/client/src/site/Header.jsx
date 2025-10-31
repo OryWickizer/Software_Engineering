@@ -47,7 +47,6 @@ export default function SiteHeader() {
             <a href="/" className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium">
               Home
             </a>
-<<<<<<< HEAD
             <a 
               href="/restaurants" 
               className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
@@ -70,9 +69,6 @@ export default function SiteHeader() {
               href="/about" 
               className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
             >
-=======
-            <a href="/about" className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium">
->>>>>>> adcb9b82 (login, logout, dashboard for each user role)
               About
             </a>
 
