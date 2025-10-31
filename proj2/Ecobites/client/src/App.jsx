@@ -5,7 +5,7 @@ import './index.css'
 import SiteHeader from './site/Header';
 import SiteFooter from './site/Footer';
 import Index from './pages/Index'
-import Login from './pages/login'
+import Login from './pages/Login'
 import Drivers from './drivers/Drivers'
 import { Routes, Route } from 'react-router-dom';
 import Customer from './customers/Customer';

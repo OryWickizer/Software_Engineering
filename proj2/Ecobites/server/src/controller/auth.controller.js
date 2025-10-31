@@ -5,7 +5,17 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-producti
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, 
+      email, 
+      password, 
+      phone, 
+      role, 
+      address,
+      restaurantName,
+      cuisine,
+      vehicleType,
+      licensePlate  } = req.body;
+    console.log("📦 Request body:", req.body); // Add this line
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Please provide all fields" });
@@ -20,8 +30,28 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    const user = new User({ name, email, password, role: role || "customer" });
+      const userData = {
+      name,
+      email,
+      password,
+      phone,
+      role: role || 'customer',
+      address
+    };
+    
+    if (role === 'restaurant') {
+      userData.restaurantName = restaurantName;
+      userData.cuisine = cuisine;
+    }
+    
+    if (role === 'driver') {
+      userData.vehicleType = vehicleType;
+      userData.licensePlate = licensePlate;
+    }
+    
+    const user = new User(userData);
     await user.save();
+
 
     const token = jwt.sign(
       { userId: user._id.toString(), email: user.email },
