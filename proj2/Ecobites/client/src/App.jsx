@@ -6,7 +6,7 @@ import SiteHeader from './site/Header';
 import SiteFooter from './site/Footer';
 import Index from './pages/Index'
 import Login from './pages/Login'
-import Drivers from './pages/Drivers'
+import Drivers from './drivers/Drivers'
 import { Routes, Route } from 'react-router-dom';
 import Customer from './customers/Customer';
 import Restaurant from './restaurants/Restaurants';

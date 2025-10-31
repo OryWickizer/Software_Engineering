@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
+import {useAuthContext} from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 
 export default function SiteHeader() {
   const [role, setRole] = useState(null);
+
+  const { isAuthenticated, logout } = useAuthContext();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedRole = localStorage.getItem("userRole");
     if (storedRole) setRole(storedRole);
   }, []);
+
+  
 
   // Determine dashboard route by role
   const getDashboardLink = () => {
@@ -22,10 +30,17 @@ export default function SiteHeader() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("userRole");
-    setRole(null);
-    window.location.href = "/"; // redirect to home
+  const handleLogout = async () => {
+    try {
+          
+            await logout();
+            navigate("/login");
+        } catch (error) {
+          console.error("Authentication error:", error);
+        } finally {
+          setRole(false);
+        }
+    // window.location.href = "/"; // redirect to home
   };
 
   return (
@@ -47,9 +62,6 @@ export default function SiteHeader() {
             <a href="/" className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium">
               Home
             </a>
-<<<<<<< HEAD
-            <a href="/about" className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium">
-=======
             <a 
               href="/restaurants" 
               className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
@@ -72,7 +84,6 @@ export default function SiteHeader() {
               href="/about" 
               className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
             >
->>>>>>> origin
               About
             </a>
 
@@ -80,7 +91,7 @@ export default function SiteHeader() {
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
 
             {/* Conditional Buttons */}
-            {!role ? (
+            {!isAuthenticated ? (
               <>
                 <a
                   href="/login"
