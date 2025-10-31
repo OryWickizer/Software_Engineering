@@ -12,6 +12,7 @@ import Customer from './customers/Customer';
 import Restaurant from './restaurants/Restaurants';
 import MenuItems from './restaurants/MenuItems';
 import CustomerOrders from './restaurants/CustomerOrders';
+import About from './pages/About';
 function App() {
   return (
            <div className="flex min-h-screen flex-col">
@@ -25,6 +26,7 @@ function App() {
                   <Route path="/restaurants" element={<Restaurant />} />
                    <Route path="/restaurants/menu" element={<MenuItems />} />
                    <Route path="/restaurants/orders" element={<CustomerOrders />} />
+                 <Route path="/about" element={<About />} />
                </Routes>
              </main>
              <SiteFooter />
