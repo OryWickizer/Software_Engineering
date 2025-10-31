@@ -20,17 +20,18 @@ export default function Hero() {
         </p>
         
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a href="#whats-new">
-            <button className="px-6 py-3 text-base font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
-              See What's New
-            </button>
-          </a>
-          
           <a href="#mission">
             <button className="px-6 py-3 text-base font-semibold text-gray-800 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
               Our Mission
             </button>
           </a>
+          <a href="#how-it-works">
+            <button className="px-6 py-3 text-base font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
+              How It Works
+            </button>
+          </a>
+          
+
          
         </div>
       </div>

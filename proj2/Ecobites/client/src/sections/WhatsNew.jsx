@@ -1,43 +1,35 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 import { PackageCheck, Users, Bike, Leaf } from "lucide-react";
 import React from "react";
-=======
 // import { PackageCheck, Users, Bike, Leaf } from "lucide-react";
->>>>>>> a025e110 (first commit)
-=======
-// import { PackageCheck, Users, Bike, Leaf } from "lucide-react";
->>>>>>> b7f01b6a5559c92572f68a9408dad44445d6c74a
 
-// const items = [
-//   {
-//     title: "Eco Packaging Selection",
-//     desc:
-//       "Choose reusable, compostable, or minimal packaging—and earn rewards for sustainable choices.",
-//     Icon: PackageCheck,
-//   },
-//   {
-//     title: "Community Sharing / Group Orders",
-//     desc:
-//       "Combine orders with neighbors or coworkers to reduce trips and unlock shared‑order discounts.",
-//     Icon: Users,
-//   },
-//   {
-//     title: "Delivery Rewards",
-//     desc:
-//       "Drivers using bikes, EVs, or low‑emission methods earn incentives for greener deliveries.",
-//     Icon: Bike,
-//   },
-//   {
-//     title: "Seasonal Menu Highlight",
-//     desc:
-//       "Enjoy seasonal ingredients that lower environmental impact from long‑distance imports.",
-//     Icon: Leaf,
-//   },
-// ];
+const items = [
+  {
+    title: "Eco Packaging Selection",
+    desc:
+      "Choose reusable, compostable, or minimal packaging—and earn rewards for sustainable choices.",
+    Icon: PackageCheck,
+  },
+  {
+    title: "Community Sharing / Group Orders",
+    desc:
+      "Combine orders with neighbors or coworkers to reduce trips and unlock shared‑order discounts.",
+    Icon: Users,
+  },
+  {
+    title: "Delivery Rewards",
+    desc:
+      "Drivers using bikes, EVs, or low‑emission methods earn incentives for greener deliveries.",
+    Icon: Bike,
+  },
+  {
+    title: "Seasonal Menu Highlight",
+    desc:
+      "Enjoy seasonal ingredients that lower environmental impact from long‑distance imports.",
+    Icon: Leaf,
+  },
+];
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 export default function WhatsNew() {
   return (
     <section id="whats-new" className="container py-16 md:py-24 mx-auto">
@@ -60,9 +52,7 @@ export default function WhatsNew() {
     </section>
   );
 }
-=======
-=======
->>>>>>> b7f01b6a5559c92572f68a9408dad44445d6c74a
+
 // export default function WhatsNew() {
 //   return (
 //     <section id="whats-new" className="container py-16 md:py-24">
@@ -84,7 +74,4 @@ export default function WhatsNew() {
 //     </section>
 //   );
 // }
-<<<<<<< HEAD
->>>>>>> a025e110 (first commit)
-=======
->>>>>>> b7f01b6a5559c92572f68a9408dad44445d6c74a
+
