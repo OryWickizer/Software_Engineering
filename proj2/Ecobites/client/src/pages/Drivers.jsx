@@ -149,7 +149,7 @@ export default function Drivers() {
                 <h1 className="text-2xl font-bold text-gray-800">{driver.name}</h1>
                 <div className="text-sm text-emerald-600">{driver.vehicle.type} Driver • {driver.vehicle.model}</div>
                 <p className="text-gray-600 mt-1">{driver.rewards.currentTier}</p>
-                <div className="mt-3 flex flex-wrap justify-center md:justify-start gap-4">
+                <div className="mt-3 flex flex-wrap justify-center md:justify-start gap-4" data-testid="driver-stats">
                   <div className="px-3 py-1 bg-emerald-50 rounded-full">
                     <span className="text-sm text-emerald-700">{driver.totalDeliveries} Deliveries</span>
                   </div>
