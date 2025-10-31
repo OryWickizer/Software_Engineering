@@ -28,6 +28,18 @@ export default function SiteHeader() {
               Restaurants
             </a>
             <a 
+              href="/customer" 
+              className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
+            >
+              Customers
+            </a>
+            <a 
+              href="/driver" 
+              className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
+            >
+              Drivers
+            </a>
+            <a 
               href="/about" 
               className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
             >
