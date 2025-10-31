@@ -10,6 +10,8 @@ import Drivers from './drivers/Drivers'
 import { Routes, Route } from 'react-router-dom';
 import Customer from './customers/Customer';
 import Restaurant from './restaurants/Restaurants';
+import MenuItems from './restaurants/MenuItems';
+import CustomerOrders from './restaurants/CustomerOrders';
 function App() {
   return (
            <div className="flex min-h-screen flex-col">
@@ -21,6 +23,8 @@ function App() {
                  <Route path="/driver" element={<Drivers />} />
                   <Route path="/customer" element={<Customer />} />
                   <Route path="/restaurants" element={<Restaurant />} />
+                   <Route path="/restaurants/menu" element={<MenuItems />} />
+                   <Route path="/restaurants/orders" element={<CustomerOrders />} />
                </Routes>
              </main>
              <SiteFooter />
