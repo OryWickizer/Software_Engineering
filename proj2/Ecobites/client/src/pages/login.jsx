@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import {useAuthContext} from "../context/AuthContext";
+import { authService } from "../api/services/auth.service";
 export default function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -10,17 +11,36 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const { login } = useAuthContext();
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
     setLoading(true);
 
+    try {
+      if(isRegister){
+        await authService.register({ name, email, password, role: "customer" });
+        setMessage("Registration successful! You can now log in.");
+        setIsRegister(false);
+      } else {
+        await login({ email, password });
+        setMessage("Login successful! Redirecting...");
+        navigate("/customer");
+      }
+    } catch (error) {
+      console.error("Authentication error:", error);
+      setMessage(error.response?.data?.error || "An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+
+
 
 
 
     console.log("Submitting to:", name, email, password, isRegister);
-    setLoading(false);
   };
 
   return (

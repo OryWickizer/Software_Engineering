@@ -1,4 +1,48 @@
+import { use, useEffect, useState } from "react";
+import {useAuthContext} from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+
 export default function SiteHeader() {
+  const [role, setRole] = useState(null);
+
+  const { isAuthenticated, logout } = useAuthContext();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("userRole");
+    if (storedRole) setRole(storedRole);
+  }, []);
+
+  
+
+  // Determine dashboard route by role
+  const getDashboardLink = () => {
+    switch (role) {
+      case "customer":
+        return "/customer";
+      case "restaurant":
+        return "/restaurant";
+      case "driver":
+        return "/driver";
+      default:
+        return "/login";
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+          
+            await logout();
+            navigate("/login");
+        } catch (error) {
+          console.error("Authentication error:", error);
+        } finally {
+          setRole(false);
+        }
+    // window.location.href = "/"; // redirect to home
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
       <nav className="container mx-auto px-4 lg:px-8">
@@ -15,10 +59,7 @@ export default function SiteHeader() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-2">
-            <a 
-              href="/" 
-              className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
-            >
+            <a href="/" className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium">
               Home
             </a>
             <a 
@@ -45,23 +86,42 @@ export default function SiteHeader() {
             >
               About
             </a>
-            
+
             {/* Divider */}
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
-            
-            {/* Auth Buttons */}
-            <a 
-              href="/login" 
-              className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
-            >
-              Login
-            </a>
-            <a 
-              href="/customer" 
-              className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 font-semibold shadow-sm hover:shadow-md transform hover:scale-105"
-            >
-              Dashboard
-            </a>
+
+            {/* Conditional Buttons */}
+            {!isAuthenticated ? (
+              <>
+                <a
+                  href="/login"
+                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
+                >
+                  Login
+                </a>
+                <a
+                  href={getDashboardLink()}
+                  className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 font-semibold shadow-sm hover:shadow-md transform hover:scale-105"
+                >
+                  Dashboard
+                </a>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium"
+                >
+                  Logout
+                </button>
+                <a
+                  href={getDashboardLink()}
+                  className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 font-semibold shadow-sm hover:shadow-md transform hover:scale-105"
+                >
+                  Dashboard
+                </a>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
