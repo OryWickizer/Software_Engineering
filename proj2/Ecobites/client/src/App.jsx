@@ -6,10 +6,10 @@ import SiteHeader from './site/Header';
 import SiteFooter from './site/Footer';
 import Index from './pages/Index'
 import Login from './pages/login'
-import Drivers from './pages/Drivers'
+import Drivers from './drivers/Drivers'
 import { Routes, Route } from 'react-router-dom';
-import Customer from './pages/Customer';
-import Restaurant from './pages/Restaurants';
+import Customer from './customers/Customer';
+import Restaurant from './restaurants/Restaurants';
 function App() {
   return (
            <div className="flex min-h-screen flex-col">
