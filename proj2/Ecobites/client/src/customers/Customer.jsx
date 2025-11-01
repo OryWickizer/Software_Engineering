@@ -170,7 +170,7 @@ const Customer = () => {
   };
 
   const handleCheckout = () => {
-    navigate('/checkout', { state: { cart } });
+    navigate('/customer/checkout', { state: { cart } });
   };
 
   return (
@@ -192,15 +192,31 @@ const Customer = () => {
             </div>
           </div>
           <div className="ml-auto text-right">
-            <div className="text-sm">Cart</div>
-            <button
-              onClick={() => setIsCartOpen((s) => !s)}
-              className="mt-2 bg-white text-emerald-600 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-3"
-            >
-              <span className="text-lg">🛒</span>
-              <span>{cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
-              <span className="text-sm font-medium">{cart.length > 0 ? formatCurrency(getTotal()) : ''}</span>
-            </button>
+            <div className="text-sm">Cart & Orders</div>
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={() => navigate('/customer/orders')}
+                className="bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
+                title="View Order Status"
+              >
+                📋
+              </button>
+              <button
+                onClick={() => setIsCartOpen((s) => !s)}
+                className="bg-white text-emerald-600 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-3 hover:bg-emerald-50 transition-colors"
+              >
+                <span className="text-lg">🛒</span>
+                <span>{cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
+                <span className="text-sm font-medium">{cart.length > 0 ? formatCurrency(getTotal()) : ''}</span>
+              </button>
+            </div>
+            {/* Ongoing Order Indicator */}
+            <div className="mt-2 text-xs text-emerald-200">
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                Order in progress
+              </span>
+            </div>
           </div>
         </div>
 

@@ -9,11 +9,13 @@ import Drivers from './drivers/Drivers'
 import { Routes, Route } from 'react-router-dom';
 import Customer from './customers/Customer';
 import Checkout from './customers/Checkout';
+import OrderStatus from './customers/OrderStatus';
 import Restaurant from './restaurants/Restaurants';
 import MenuItems from './restaurants/MenuItems';
 import CustomerOrders from './restaurants/CustomerOrders';
 import About from './pages/About';
 import { RestaurantProvider } from './context/RestaurantContext';
+
 function App() {
   return (
            <RestaurantProvider>
@@ -26,7 +28,8 @@ function App() {
                  <Route path="/profile" element={<Profile />} />
                  <Route path="/driver" element={<Drivers />} />
                   <Route path="/customer" element={<Customer />} />
-                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/customer/checkout" element={<Checkout />} />
+                  <Route path="/customer/orders" element={<OrderStatus />} />
                   <Route path="/restaurants" element={<Restaurant />} />
                    <Route path="/restaurants/menu" element={<MenuItems />} />
                    <Route path="/restaurants/orders" element={<CustomerOrders />} />
