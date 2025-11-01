@@ -7,8 +7,8 @@ export const authService = {
   },
 
   login: async (credentials) => {
+    try {
     const response = await api.post('/auth/login', credentials);
-    console.log("🔑 Login response:", response.data);
       if (response.data?.token) {
       localStorage.setItem("token", response.data.token);
     }
@@ -16,9 +16,10 @@ export const authService = {
       localStorage.setItem("user", JSON.stringify(response.data.user));
     }
     return response.data;
-  
-
-  },
+} catch (error) {
+    throw error;
+  }
+},
 
   logout: () => {
     localStorage.removeItem('token');
