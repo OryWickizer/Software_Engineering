@@ -1,15 +1,75 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter, useNavigate } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
-import Login from '../pages/login';
+import Login from '../pages/Login';
+import { AuthProvider } from '../context/AuthContext';
+import { authService } from '../api/services/auth.service';
 import '@testing-library/jest-dom';
 
-// Mock useNavigate hook
-vi.mock('react-router-dom', () => {
-  return {
-    BrowserRouter: ({ children }) => children,
-    useNavigate: () => vi.fn()
+// Mock the axios config module first
+vi.mock('../api/axios.config', () => ({
+  default: {
+    post: vi.fn()
   }
+}));
+
+// Mock the auth service
+vi.mock('../api/services/auth.service', () => ({
+  authService: {
+    login: vi.fn().mockResolvedValue({
+      user: { id: 1, name: 'Test User', email: 'test@example.com', role: 'customer' },
+      token: 'fake-jwt-token'
+    }),
+    register: vi.fn().mockResolvedValue({
+      user: { id: 1, name: 'Test User', email: 'test@example.com', role: 'customer' },
+      token: 'fake-jwt-token'
+    })
+  }
+}));
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+global.localStorage = localStorageMock;
+
+// Create mock API instance
+const mockApi = {
+  interceptors: {
+    request: { use: vi.fn() },
+    response: { use: vi.fn() }
+  },
+  post: vi.fn(() => Promise.resolve({ data: { user: { id: '123', role: 'customer' }, token: 'mock-token' } }))
+};
+
+// Mock axios config
+vi.mock('../api/axios.config', () => ({
+  default: mockApi
+}));
+
+// Mock auth service
+const mockAuthResponse = { user: { id: '123', role: 'customer' } };
+
+vi.mock('../api/services/auth.service', () => ({
+  authService: {
+    getCurrentUser: vi.fn(() => null),
+    isAuthenticated: vi.fn(() => false),
+    login: vi.fn(() => Promise.resolve(mockAuthResponse)),
+    logout: vi.fn(),
+    register: vi.fn(() => Promise.resolve(mockAuthResponse))
+  }
+}));
+
+// Mock useNavigate
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useNavigate: () => vi.fn()
+  };
 });
 
 // Test data generator functions
@@ -29,16 +89,19 @@ const generateFormInput = (type = 'login') => {
 
 describe('Login Component', () => {
   const renderLogin = () => {
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
+    return render(
+      <AuthProvider>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </AuthProvider>
     );
   };
 
   beforeEach(() => {
-    // Clear any mocks before each test
+    // Clear all mocks and localStorage before each test
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   // Test 1: Initial Render - Sign In Mode
@@ -92,8 +155,8 @@ describe('Login Component', () => {
     expect(passwordInput.value).toBe(testData.password);
   });
 
-  // Test 5: Loading State
-  test('shows loading state when form is submitted with dynamic data', async () => {
+  // Test 5: Login Form Submission
+  test('handles login submission with auth service call', async () => {
     renderLogin();
     const testData = generateFormInput('login');
     
@@ -105,26 +168,66 @@ describe('Login Component', () => {
     fireEvent.change(passwordInput, { target: { value: testData.password } });
     fireEvent.click(submitButton);
     
-    // Check for loading state
-    expect(screen.getByRole('button', { name: /Sign In/i })).toHaveClass('disabled:opacity-60');
-    
-    // Wait for loading state to finish
     await waitFor(() => {
-      expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+      expect(authService.login).toHaveBeenCalledWith({
+        email: testData.email,
+        password: testData.password
+      });
     });
   });
 
-  // Test 6: Register Form Validation
-  test('validates all required fields in register form', () => {
+  // Test 6: Registration Form Submission
+  test('handles registration with auth service call', async () => {
     renderLogin();
+    
+    // Switch to register mode and wait for state update
     fireEvent.click(screen.getByText(/New to EcoBites\? Join now/i));
+    await waitFor(() => {
+      expect(screen.getByText('Join EcoBites')).toBeInTheDocument();
+    });
+    
+    const testData = generateFormInput('register');
     
     const nameInput = screen.getByPlaceholderText('Full name');
     const emailInput = screen.getByPlaceholderText('Email address');
     const passwordInput = screen.getByPlaceholderText('Password');
+    const submitButton = screen.getByRole('button', { name: /Create Account/i });
     
-    expect(nameInput).toBeRequired();
-    expect(emailInput).toBeRequired();
-    expect(passwordInput).toBeRequired();
+    fireEvent.change(nameInput, { target: { value: testData.name } });
+    fireEvent.change(emailInput, { target: { value: testData.email } });
+    fireEvent.change(passwordInput, { target: { value: testData.password } });
+    
+    fireEvent.submit(screen.getByRole('form'));
+    
+    await waitFor(() => {
+      expect(authService.register).toHaveBeenCalledWith({
+        name: testData.name,
+        email: testData.email,
+          password: testData.password,
+          phone: ''
+      });
+    });
+  });
+
+  // Test 7: Form Validation
+  test('validates required fields in registration form', async () => {
+    renderLogin();
+    fireEvent.click(screen.getByText(/New to EcoBites\? Join now/i));
+    
+    const submitButton = screen.getByRole('button', { name: /Create Account/i });
+    
+    await waitFor(() => {
+      fireEvent.click(submitButton);
+    });
+    
+    await waitFor(() => {
+      const nameInput = screen.getByPlaceholderText('Full name');
+      const emailInput = screen.getByPlaceholderText('Email address');
+      const passwordInput = screen.getByPlaceholderText('Password');
+      
+      expect(nameInput).toBeRequired();
+      expect(emailInput).toBeRequired();
+      expect(passwordInput).toBeRequired();
+    });
   });
 });
