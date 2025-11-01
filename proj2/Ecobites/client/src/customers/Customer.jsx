@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Customer = () => {
+  const navigate = useNavigate();
+
   // Example restaurants data (kept local for UI mock)
   const [restaurants] = useState([
     {
@@ -54,7 +57,6 @@ const Customer = () => {
   // Cart structure: [{ name, price, restaurant, quantity }]
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isCheckout, setIsCheckout] = useState(false);
 
   const cuisines = useMemo(() => {
     const set = new Set();
@@ -134,14 +136,7 @@ const Customer = () => {
   };
 
   const handleCheckout = () => {
-    setIsCheckout(true);
-    // placeholder for backend call
-    setTimeout(() => {
-      alert('Thank you for your order!');
-      setCart([]);
-      setIsCheckout(false);
-      setIsCartOpen(false);
-    }, 500);
+    navigate('/checkout', { state: { cart } });
   };
 
   return (
@@ -302,7 +297,7 @@ const Customer = () => {
               <div className="text-sm text-gray-600">Subtotal</div>
               <div className="font-bold">{formatCurrency(getTotal())}</div>
             </div>
-            <button onClick={handleCheckout} disabled={cart.length === 0 || isCheckout} className="w-full bg-emerald-600 text-white py-2 rounded font-semibold disabled:opacity-60">{isCheckout ? 'Processing...' : 'Checkout'}</button>
+            <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full bg-emerald-600 text-white py-2 rounded font-semibold disabled:opacity-60">Checkout</button>
           </div>
           </div>
         </aside>
