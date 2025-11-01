@@ -5,6 +5,9 @@ import { authService } from '../api/services/auth.service';
 export const useAuth = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
+  // Get user from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   const loginMutation = useMutation({
     mutationFn: authService.login,
@@ -44,6 +47,7 @@ export const useAuth = () => {
   };
 
   return {
+    user,
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout,

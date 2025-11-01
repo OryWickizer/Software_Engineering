@@ -1,58 +1,89 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { restaurantService } from '../api/services/restaurant.service.js';
+import { menuService } from '../api/services/menu.service.js';
+import { useRestaurantContext } from '../context/RestaurantContext';
 
 const Customer = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Example restaurants data (kept local for UI mock)
-  const [restaurants] = useState([
-    {
-      id: 1,
-      name: 'Green Eats',
-      rating: 4.5,
-      cuisine: 'Healthy, Vegan',
-      deliveryTime: '20-30',
-      image: '🥗',
-      description: 'Wholesome plant-based bowls and fresh snacks.',
-      menuItems: [
-        { name: 'Buddha Bowl', description: 'Fresh veggies and quinoa', price: 12.99, category: 'Bowl' },
-        { name: 'Green Smoothie', description: 'Kale, spinach, and fruits', price: 6.99, category: 'Drinks' },
-        { name: 'Avocado Toast', description: 'Sourdough with fresh avo', price: 8.99, category: 'Breakfast' },
-      ],
-    },
-    {
-      id: 2,
-      name: 'Veggie Haven',
-      rating: 4.7,
-      cuisine: 'Vegetarian, Indian',
-      deliveryTime: '25-35',
-      image: '🥘',
-      description: 'Comforting vegetarian dishes inspired by home-style cooking.',
-      menuItems: [
-        { name: 'Paneer Tikka', description: 'Grilled cottage cheese', price: 14.99, category: 'Main' },
-        { name: 'Dal Makhani', description: 'Creamy lentils', price: 11.99, category: 'Main' },
-        { name: 'Naan Bread', description: 'Fresh baked bread', price: 3.99, category: 'Bread' },
-      ],
-    },
-    {
-      id: 3,
-      name: 'Eco Pizza',
-      rating: 4.6,
-      cuisine: 'Italian, Pizza',
-      deliveryTime: '15-25',
-      image: '🍕',
-      description: 'Wood-fired pizzas with locally sourced produce.',
-      menuItems: [
-        { name: 'Margherita Pizza', description: 'Classic cheese pizza', price: 9.99, category: 'Pizza' },
-        { name: 'Veggie Supreme', description: 'Loaded with vegetables', price: 13.99, category: 'Pizza' },
-        { name: 'Garden Salad', description: 'Fresh mixed greens', price: 6.99, category: 'Salad' },
-      ],
-    },
-  ]);
+  // Fetch restaurants from API
+  const [restaurants, setRestaurants] = useState([]);
+  const { selectedRestaurant, setSelectedRestaurant, menu, fetchMenu } = useRestaurantContext();
+
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const response = await restaurantService.getAll();
+        if (response.success && response.data) {
+          // Transform the data to match our component's needs
+          const transformedData = response.data.map(restaurant => ({
+            id: restaurant._id,
+            name: restaurant.restaurantName,
+            ownerName: restaurant.name,
+            email: restaurant.email,
+            phone: restaurant.phone,
+            cuisine: restaurant.cuisine.join(', '), // Join array into string for compatibility
+            address: `${restaurant.address.street}, ${restaurant.address.city}, ${restaurant.address.zipCode}`,
+            isAvailable: restaurant.isAvailable,
+            // Add default values for missing fields
+            rating: 4.5, // Default rating
+            deliveryTime: '30-45', // Default delivery time
+            image: '🍽️', // Default image
+            description: `${restaurant.restaurantName} - ${restaurant.cuisine.join(' & ')} cuisine`,
+            menuItems: [] // We'll need to fetch menu items separately
+          }));
+          setRestaurants(transformedData);
+        } else {
+          throw new Error('Invalid response format');
+        }
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch restaurants: ' + err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
+
+  // Effect to fetch menu items when a restaurant is selected
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      if (selectedRestaurant) {
+        try {
+          const response = await menuService.getByRestaurant(selectedRestaurant.id);
+          if (response.success && response.data) {
+              const menuItems = response.data;
+              // Update selected restaurant with menu items (preserve id/_id so frontend can send menuItemId)
+              setSelectedRestaurant(prev => ({
+                ...prev,
+                menuItems: menuItems.map(item => ({
+                  _id: item._id || item.id,
+                  id: item._id || item.id,
+                  name: item.name,
+                  description: item.description,
+                  price: item.price,
+                  category: item.category,
+                  isAvailable: item.isAvailable
+                }))
+              }));
+          }
+        } catch (err) {
+          console.error('Failed to fetch menu items:', err);
+        }
+      }
+    };
+
+    fetchMenuItems();
+  }, [selectedRestaurant?.id, setSelectedRestaurant]);
+
 
   const [query, setQuery] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState('All');
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
 
   // Cart structure: [{ name, price, restaurant, quantity }]
   const [cart, setCart] = useState([]);
@@ -61,7 +92,9 @@ const Customer = () => {
   const cuisines = useMemo(() => {
     const set = new Set();
     restaurants.forEach((r) => {
-      r.cuisine.split(',').map((c) => set.add(c.trim()));
+      if (typeof r.cuisine === 'string') {
+        r.cuisine.split(',').forEach((c) => set.add(c.trim()));
+      }
     });
     return ['All', ...Array.from(set)];
   }, [restaurants]);
@@ -72,9 +105,10 @@ const Customer = () => {
       const matchesQuery =
         r.name.toLowerCase().includes(q) ||
         r.description.toLowerCase().includes(q) ||
-        r.menuItems.some((mi) => mi.name.toLowerCase().includes(q) || mi.description.toLowerCase().includes(q));
+        r.address.toLowerCase().includes(q) ||
+        (r.menuItems && r.menuItems.some((mi) => mi.name.toLowerCase().includes(q) || mi.description.toLowerCase().includes(q)));
       const matchesCuisine = cuisineFilter === 'All' || r.cuisine.includes(cuisineFilter);
-      return matchesQuery && matchesCuisine;
+      return matchesQuery && matchesCuisine && r.isAvailable;
     });
   }, [restaurants, query, cuisineFilter]);
 
@@ -212,7 +246,16 @@ const Customer = () => {
                   <p className="text-sm text-gray-500">{selectedRestaurant.cuisine} • {selectedRestaurant.deliveryTime} mins</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setSelectedRestaurant(null)} className="px-3 py-1 rounded-md bg-gray-100">← Back</button>
+                  <button 
+                    onClick={() => {
+                      setSelectedRestaurant(null);
+                      // Clear the menu when going back
+                      fetchMenu(null);
+                    }} 
+                    className="px-3 py-1 rounded-md bg-gray-100"
+                  >
+                    ← Back
+                  </button>
                 </div>
               </div>
 
@@ -228,7 +271,17 @@ const Customer = () => {
                       <div className="text-xs text-gray-400 mt-2">Category: {item.category}</div>
                     </div>
                     <div className="mt-4 flex gap-2">
-                      <button onClick={() => addToCart({ ...item, restaurant: selectedRestaurant.name })} className="ml-auto px-3 py-2 bg-emerald-600 text-white rounded-md">Add</button>
+                      <button 
+                        onClick={() => addToCart({ 
+                          ...item, 
+                          restaurant: selectedRestaurant.name,
+                          restaurantId: selectedRestaurant.id,
+                          menuItemId: item._id // Make sure this is also included
+                        })} 
+                        className="ml-auto px-3 py-2 bg-emerald-600 text-white rounded-md"
+                      >
+                        Add
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -258,7 +311,15 @@ const Customer = () => {
                           <span className="text-xs px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full">{r.cuisine}</span>
                         </div>
                         <div className="mt-3 flex gap-2">
-                          <button onClick={() => setSelectedRestaurant(r)} className="px-3 py-1 bg-emerald-600 text-white rounded-md text-sm font-semibold">View Menu</button>
+                          <button 
+                            onClick={() => {
+                              setSelectedRestaurant(r);
+                              fetchMenu(r.id);
+                            }} 
+                            className="px-3 py-1 bg-emerald-600 text-white rounded-md text-sm font-semibold"
+                          >
+                            View Menu
+                          </button>
                         </div>
                       </div>
                     </div>

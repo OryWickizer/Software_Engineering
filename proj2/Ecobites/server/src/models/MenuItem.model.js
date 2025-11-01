@@ -3,7 +3,8 @@ const menuItemSchema = new mongoose.Schema({
   restaurantId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false,
+    default: null
   },
   name: {
     type: String,
@@ -17,7 +18,8 @@ const menuItemSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: ['appetizer', 'main', 'dessert', 'beverage', 'side'],
-    required: true
+    required: false,
+    default: 'main'
   },
   image: String,
   isAvailable: {
@@ -33,3 +35,6 @@ const menuItemSchema = new mongoose.Schema({
 });
 
 export const MenuItem = mongoose.model('MenuItem', menuItemSchema);
+
+// Provide default export for compatibility with some tests/imports
+export default MenuItem;
