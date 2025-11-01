@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1044954690.svg)](https://doi.org/10.5281/zenodo.17497556)
+
 # EcoBites Monorepo (Client + Server)
 
 This repo contains a React frontend (Vite + Tailwind) and a Node/Express backend with MongoDB and Jest tests.

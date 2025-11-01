@@ -3,7 +3,7 @@ import {useAuthContext} from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 
-export default function SiteHeader() {
+export default function SiteHeader({ onMenuClick, showMenuButton, user }) {
   const [role, setRole] = useState(null);
 
   const { isAuthenticated, logout } = useAuthContext();
@@ -91,19 +91,13 @@ export default function SiteHeader() {
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
 
             {/* Conditional Buttons */}
-            {!isAuthenticated ? (
+            {!user ? (
               <>
                 <a
                   href="/login"
                   className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
                 >
                   Login
-                </a>
-                <a
-                  href={getDashboardLink()}
-                  className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 font-semibold shadow-sm hover:shadow-md transform hover:scale-105"
-                >
-                  Dashboard
                 </a>
               </>
             ) : (
@@ -118,18 +112,23 @@ export default function SiteHeader() {
                   href={getDashboardLink()}
                   className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 font-semibold shadow-sm hover:shadow-md transform hover:scale-105"
                 >
-                  Dashboard
+                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)} Dashboard
                 </a>
               </>
             )}
           </div>
 
           {/* Mobile Menu Button */}
-          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          {showMenuButton && (
+            <button 
+              onClick={onMenuClick}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
         </div>
       </nav>
     </header>
