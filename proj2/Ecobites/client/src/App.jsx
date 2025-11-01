@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './index.css'
 import SiteHeader from './site/Header';
 import SiteFooter from './site/Footer';
 import Index from './pages/Index'
-import Login from './pages/Login'
+import Profile from './pages/Profile'
+import Login from './pages/login'
 import Drivers from './drivers/Drivers'
 import { Routes, Route } from 'react-router-dom';
 import Customer from './customers/Customer';
@@ -21,6 +20,7 @@ function App() {
                <Routes>
                  <Route path="/" element={<Index />} />
                  <Route path="/login" element={<Login />} />
+                 <Route path="/profile" element={<Profile />} />
                  <Route path="/driver" element={<Drivers />} />
                   <Route path="/customer" element={<Customer />} />
                   <Route path="/restaurants" element={<Restaurant />} />
