@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import { useAuthContext } from "../context/AuthContext";
 export default function Drivers() {
   const [activeTab, setActiveTab] = useState("current");
   const [activeSection, setActiveSection] = useState("orders");
@@ -12,6 +12,7 @@ export default function Drivers() {
   const [rejectedOrders, setRejectedOrders] = useState([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [selectedOrderForLocation, setSelectedOrderForLocation] = useState(null);
+   const {user, isAuthenticated} = useAuthContext();
   
   // Enhanced driver state with vehicle and rewards info
   const [driver] = useState({
@@ -258,6 +259,7 @@ export default function Drivers() {
   };
 
   return (
+    user && user.role == 'driver' ? (
     <div className="min-h-screen bg-emerald-50/60">
       {/* Profile Section */}
       <div className="relative overflow-hidden">
@@ -661,6 +663,11 @@ export default function Drivers() {
           </div>
         </div>
       )}
-    </div>
+    </div>) : (<div className="min-h-screen flex items-center justify-center bg-emerald-50/60">
+      <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
+        <p className="text-gray-600">You must be logged in as a driver to access this page.</p>
+      </div>
+    </div>)
   );
 }

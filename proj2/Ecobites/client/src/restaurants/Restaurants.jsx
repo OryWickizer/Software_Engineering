@@ -1,3 +1,96 @@
+import React, { useState } from 'react';
+
+
+const Restaurant = () => {
+  const [showForm, setShowForm] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [menuItem, setMenuItem] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: ''
+  });
+  const [menuItems, setMenuItems] = useState([]);
+
+  // Orders state
+  const [ordersTab, setOrdersTab] = useState('incoming'); // incoming | accepted | rejected
+  const [orders, setOrders] = useState([
+    {
+      id: 1,
+      customer: 'Alice Johnson',
+      createdAt: new Date().toISOString(),
+      items: [
+        { name: 'Margherita Pizza', qty: 1, price: 9.99 },
+        { name: 'Caesar Salad', qty: 2, price: 6.49 },
+      ],
+      notes: 'No croutons in the salad, please.',
+      status: 'incoming',
+    },
+    {
+      id: 2,
+      customer: 'Michael Chen',
+      createdAt: new Date().toISOString(),
+      items: [
+        { name: 'Spaghetti Bolognese', qty: 1, price: 11.5 },
+      ],
+      notes: '',
+      status: 'incoming',
+    },
+    {
+      id: 3,
+      customer: 'Sara Patel',
+      createdAt: new Date().toISOString(),
+      items: [
+        { name: 'Margherita Pizza', qty: 2, price: 9.99 },
+      ],
+      notes: 'Extra basil if possible.',
+      status: 'incoming',
+    },
+  ]);
+
+  const orderTotal = (order) =>
+    order.items.reduce((sum, it) => sum + it.price * it.qty, 0);
+
+  const acceptOrder = (id) => {
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: 'accepted' } : o)));
+  };
+
+  const rejectOrder = (id) => {
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: 'rejected' } : o)));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (editingIndex !== null) {
+      const updatedItems = [...menuItems];
+      updatedItems[editingIndex] = menuItem;
+      setMenuItems(updatedItems);
+      setEditingIndex(null);
+    } else {
+      setMenuItems([...menuItems, menuItem]);
+    }
+    
+    setShowForm(false);
+    setMenuItem({ name: '', description: '', price: '', category: '' });
+  };
+
+  const handleEdit = (index) => {
+    setMenuItem(menuItems[index]);
+    setEditingIndex(index);
+    setShowForm(true);
+  };
+
+  const handleDelete = (index) => {
+    const updatedItems = menuItems.filter((_, i) => i !== index);
+    setMenuItems(updatedItems);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingIndex(null);
+    setMenuItem({ name: '', description: '', price: '', category: '' });
+  };
 import React from 'react';
 import { Link } from 'react-router-dom';
 
