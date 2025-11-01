@@ -56,8 +56,9 @@ const Customer = () => {
       if (selectedRestaurant) {
         try {
           const response = await menuService.getByRestaurant(selectedRestaurant.id);
-          if (response.success && response.data) {
-              const menuItems = response.data;
+          if (response) {
+              const menuItems = response;
+              console.log('Fetched menu items:', menuItems);
               // Update selected restaurant with menu items (preserve id/_id so frontend can send menuItemId)
               setSelectedRestaurant(prev => ({
                 ...prev,

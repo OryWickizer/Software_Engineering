@@ -122,12 +122,12 @@ const Checkout = () => {
       // Create the order
       const response = await orderService.create(orderData);
       
-      if (response.success) {
+      if (response) {
         // Clear cart and redirect to order confirmation
         navigate('/profile', { 
           state: { 
             orderConfirmation: true,
-            orderId: response.data._id
+            orderId: response._id
           }
         });
       } else {
