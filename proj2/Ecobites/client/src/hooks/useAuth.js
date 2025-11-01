@@ -18,6 +18,10 @@ export const useAuth = () => {
       else if (role === 'restaurant') navigate('/restaurant/dashboard');
       else if (role === 'driver') navigate('/driver/dashboard');
     },
+    onError: (error) => {
+      // Just log it, don't throw - React Query handles the error state
+      console.error('Login failed:', error.response?.data?.error || error.message);
+    },
   });
 
   const registerMutation = useMutation({

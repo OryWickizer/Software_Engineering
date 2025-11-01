@@ -2,16 +2,19 @@ import { use, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {useAuthContext} from "../context/AuthContext";
 import { authService } from "../api/services/auth.service";
+import { useAuth } from "../hooks/useAuth";
+
 export default function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { login } = useAuthContext();
+  const { login, register} = useAuthContext();
 
 
   const handleSubmit = async (e) => {
@@ -21,7 +24,7 @@ export default function Login() {
 
     try {
       if(isRegister){
-        await authService.register({ name, email, password, role: "customer" });
+        await authService.register({ name, email, password, role: "customer", phone });
         setMessage("Registration successful! You can now log in.");
         setIsRegister(false);
       } else {
@@ -42,6 +45,7 @@ export default function Login() {
 
     console.log("Submitting to:", name, email, password, isRegister);
   };
+
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-emerald-50 overflow-hidden">
@@ -80,6 +84,8 @@ export default function Login() {
           </div>
         )}
 
+     
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {isRegister && (
             <div className="relative group">
@@ -115,6 +121,18 @@ export default function Login() {
               className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
             />
           </div>
+          {isRegister && (
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+              />
+            </div>
+          )}
 
           <button
             type="submit"
