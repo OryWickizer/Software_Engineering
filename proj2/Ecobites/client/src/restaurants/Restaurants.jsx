@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 
 const Restaurant = () => {
@@ -47,7 +48,7 @@ const Restaurant = () => {
       status: 'incoming',
     },
   ]);
-
+}
   const orderTotal = (order) =>
     order.items.reduce((sum, it) => sum + it.price * it.qty, 0);
 
@@ -91,8 +92,6 @@ const Restaurant = () => {
     setEditingIndex(null);
     setMenuItem({ name: '', description: '', price: '', category: '' });
   };
-import React from 'react';
-import { Link } from 'react-router-dom';
 
 export default function Restaurants() {
   return (

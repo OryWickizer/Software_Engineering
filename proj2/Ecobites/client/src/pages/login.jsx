@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {useAuthContext} from "../context/AuthContext";
 import { authService } from "../api/services/auth.service";
@@ -24,7 +24,7 @@ export default function Login() {
 
     try {
       if(isRegister){
-        await authService.register({ name, email, password, role: "customer", phone });
+        await authService.register({ name, email, password, phone });
         setMessage("Registration successful! You can now log in.");
         setIsRegister(false);
       } else {
@@ -86,7 +86,7 @@ export default function Login() {
 
      
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-label={isRegister ? "Registration Form" : "Login Form"}>
           {isRegister && (
             <div className="relative group">
               <input

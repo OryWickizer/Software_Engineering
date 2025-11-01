@@ -11,6 +11,8 @@ router.post('/', protect, createOrder);
 router.get('/:role/:userId', protect, getOrdersByRole);
 router.get('/detail/:orderId', protect, getOrderById);
 router.patch('/:orderId/status', protect, updateOrderStatus);
+// Support PUT for status updates (tests expect PUT)
+router.put('/:orderId/status', protect, updateOrderStatus);
 router.get('/available/drivers', protect, getAvailableOrdersForDrivers);
 
 

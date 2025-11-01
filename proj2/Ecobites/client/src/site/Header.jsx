@@ -1,9 +1,9 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {useAuthContext} from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 
-export default function SiteHeader({ onMenuClick, showMenuButton, user }) {
+export default function SiteHeader({ onMenuClick, showMenuButton }) {
   const [role, setRole] = useState(null);
 
   const { isAuthenticated, logout } = useAuthContext();
@@ -62,24 +62,28 @@ export default function SiteHeader({ onMenuClick, showMenuButton, user }) {
             <a href="/" className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium">
               Home
             </a>
-            <a 
-              href="/restaurants" 
-              className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
-            >
-              Restaurants
-            </a>
-            <a 
-              href="/customer" 
-              className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
-            >
-              Customers
-            </a>
-            <a 
-              href="/driver" 
-              className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
-            >
-              Drivers
-            </a>
+            {!isAuthenticated && (
+              <>
+                <a 
+                  href="/restaurants" 
+                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
+                >
+                  Restaurants
+                </a>
+                <a 
+                  href="/customer" 
+                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
+                >
+                  Customers
+                </a>
+                <a 
+                  href="/driver" 
+                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
+                >
+                  Drivers
+                </a>
+              </>
+            )}
             <a 
               href="/about" 
               className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
@@ -91,7 +95,7 @@ export default function SiteHeader({ onMenuClick, showMenuButton, user }) {
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
 
             {/* Conditional Buttons */}
-            {!user ? (
+            {!isAuthenticated ? (
               <>
                 <a
                   href="/login"
@@ -102,18 +106,18 @@ export default function SiteHeader({ onMenuClick, showMenuButton, user }) {
               </>
             ) : (
               <>
+                <a
+                  href={getDashboardLink()}
+                  className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 font-semibold shadow-sm hover:shadow-md transform hover:scale-105"
+                >
+                  {role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard` : 'Dashboard'}
+                </a>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium"
                 >
                   Logout
                 </button>
-                <a
-                  href={getDashboardLink()}
-                  className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 font-semibold shadow-sm hover:shadow-md transform hover:scale-105"
-                >
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)} Dashboard
-                </a>
               </>
             )}
           </div>
