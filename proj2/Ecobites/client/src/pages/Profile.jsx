@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Customer from "../customers/Customer";
 
 // Single Profile component that renders different UI based on role.
 // For now role is hardcoded; later replace with value from backend (user.role).
@@ -101,11 +102,11 @@ export default function Profile() {
       { key: "settings", label: "Settings" },
     ],
     customer: [
-      { key: "overview", label: "Overview" },
-      { key: "orders", label: "My Orders" },
-      { key: "addresses", label: "Addresses" },
-      { key: "payments", label: "Payments" },
-      { key: "settings", label: "Settings" },
+      { key: "overview", label: "Dashboard" },
+      { key: "orders", label: "Order History" },
+      { key: "addresses", label: "My Addresses" },
+      { key: "payments", label: "Payment Methods" },
+      { key: "settings", label: "Account Settings" },
     ],
     restaurant: [
       { key: "overview", label: "Overview" },
@@ -176,12 +177,7 @@ export default function Profile() {
   const renderCustomerMain = () => {
     switch (sidebarSelection) {
       case "overview":
-        return (
-          <div>
-            <h3 className="text-xl font-semibold">Customer Overview</h3>
-            <p className="text-sm text-gray-600">Orders: {customerInfo.orders}</p>
-          </div>
-        );
+        return <Customer />;
       case "orders":
         return (
           <div>
