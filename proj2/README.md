@@ -1,8 +1,10 @@
 [![DOI](https://zenodo.org/badge/1044954690.svg)](https://doi.org/10.5281/zenodo.17497556)
 [![CI](https://github.com/your-username/your-repo/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/your-repo/actions/workflows/ci.yml)
-[![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=flat&logo=eslint&logoColor=white)](https://eslint.org/)
-[![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black)](https://prettier.io/)
-[![Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)](https://github.com/your-username/your-repo/tree/main/Ecobites/server/coverage)
+[![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=flat&logo=eslint&logoColor=white)](Ecobites/client/eslint.config.js)
+[![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black)](Ecobites/client/.prettierrc)
+[![Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)](Ecobites/server/coverage/lcov-report/index.html)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Node.js Version](https://img.shields.io/badge/node.js-18-green.svg)](https://nodejs.org/)
 
 # EcoBites Monorepo (Client + Server)
 
