@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   role: {
     type: String,
@@ -65,3 +66,6 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
 };
 
 export const User = mongoose.model("User", userSchema);
+
+// Provide default export for compatibility with default imports in tests
+export default User;

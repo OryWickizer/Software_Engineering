@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { orderService } from '../api/services/order.service';
+import { useAuthContext } from '../context/AuthContext';
 
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuthContext();
+  console.log('Authenticated user at Checkout:', user);
   const cart = location.state?.cart || [];
+
+  if (!isAuthenticated) {
+    navigate('/login', { state: { from: location } });
+    return null;
+  }
+  console.log('Cart items at Checkout:', cart);
 
   const [deliveryAddress, setDeliveryAddress] = useState({
     name: '',
@@ -41,22 +51,94 @@ const Checkout = () => {
     setPayment({ ...payment, [e.target.name]: e.target.value });
   };
 
-  const handleConfirmOrder = () => {
+  const handleConfirmOrder = async () => {
     if (!deliveryAddress.name || !deliveryAddress.address) {
       alert('Please fill in all required fields.');
       return;
     }
     if (paymentMethod === 'card' && (!payment.cardNumber || !payment.expiry || !payment.cvv || !payment.name)) {
-      alert('Please fill in all card details.');
+      alert('Please fill in all payment details.');
       return;
     }
-    setIsProcessing(true);
-    // Mock processing
-    setTimeout(() => {
-      alert('Order confirmed! Thank you for your purchase.');
-      // Clear cart logic would go here if using context
-      navigate('/customer');
-    }, 2000);
+
+    try {
+      setIsProcessing(true);
+      // Calculate order totals
+      const subtotal = parseFloat(getTotal());
+      const deliveryFee = 5;
+      const tax = 0; // or calculate based on your tax rate
+      const total = subtotal + deliveryFee + tax;
+
+      // Determine customer id robustly (support _id, id, nested $oid)
+      const extractId = (u) => {
+        if (!u) return null;
+        if (typeof u === 'string') return u;
+        if (u._id && typeof u._id === 'string') return u._id;
+        // handle cases where _id may be an object like { $oid: '...' }
+        if (u._id && typeof u._id === 'object' && u._id.$oid) return u._id.$oid;
+        if (u.id) return u.id;
+        return null;
+      };
+
+      const customerId = extractId(user);
+      if (!customerId) {
+        console.error('No authenticated customer id available on user object:', user);
+        alert('Unable to determine customer id. Please log out and log in again.');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Prepare order data in the full shape you requested.
+      // Note: server will still validate/override authoritative fields (customerId from token, restaurantId from menu items, prices/totals)
+      const itemsForPayload = cart.map(item => ({
+        menuItemId: item.menuItemId || item._id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity || 1
+      }));
+
+      const subtotalClient = parseFloat(getTotal());
+      const deliveryFeeClient = 5;
+      const taxClient = 0;
+      const totalClient = +(subtotalClient + deliveryFeeClient + taxClient).toFixed(2);
+
+      const orderData = {
+        customerId: customerId, // extracted from authenticated user above
+        restaurantId: cart[0]?.restaurantId || null,
+        items: itemsForPayload,
+        deliveryAddress: {
+          street: deliveryAddress.address,
+          city: deliveryAddress.city,
+          zipCode: deliveryAddress.zip,
+        },
+        subtotal: subtotalClient,
+        deliveryFee: deliveryFeeClient,
+        tax: taxClient,
+        total: totalClient,
+        paymentMethod: paymentMethod,
+        specialInstructions: ''
+      };
+      console.log('Order Data:', orderData);
+      // Create the order
+      const response = await orderService.create(orderData);
+      
+      if (response) {
+        // Clear cart and redirect to order confirmation
+        navigate('/profile', { 
+          state: { 
+            orderConfirmation: true,
+            orderId: response._id
+          }
+        });
+      } else {
+        throw new Error('Failed to create order');
+      }
+    } catch (error) {
+      console.error('Order creation failed:', error);
+      alert('Failed to create order. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (cart.length === 0) {

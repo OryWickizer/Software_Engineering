@@ -5,6 +5,9 @@ import { authService } from '../api/services/auth.service';
 export const useAuth = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
+  // Get user from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   const loginMutation = useMutation({
     mutationFn: authService.login,
@@ -17,6 +20,10 @@ export const useAuth = () => {
       if (role === 'customer') navigate('/');
       else if (role === 'restaurant') navigate('/restaurant/dashboard');
       else if (role === 'driver') navigate('/driver/dashboard');
+    },
+    onError: (error) => {
+      // Just log it, don't throw - React Query handles the error state
+      console.error('Login failed:', error.response?.data?.error || error.message);
     },
   });
 
@@ -40,6 +47,7 @@ export const useAuth = () => {
   };
 
   return {
+    user,
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout,

@@ -3,17 +3,22 @@ import { User } from '../models/User.model.js';
 
 export const createMenuItem = async (req, res) => {
   try {
-    const { restaurantId, name, description, price, category, image, preparationTime } = req.body;
-    
+    let { restaurantId, name, description, price, category, image, preparationTime } = req.body;
+
+    // If restaurantId not supplied, and the authenticated user is a restaurant, use their id
+    if (!restaurantId && req.user && req.user.role === 'restaurant') {
+      restaurantId = req.user._id.toString();
+    }
+
     // Verify restaurant exists and user owns it
-    const restaurant = await User.findById(restaurantId);
+    const restaurant = restaurantId ? await User.findById(restaurantId) : null;
     if (!restaurant || restaurant.role !== 'restaurant') {
       return res.status(404).json({
         success: false,
         message: 'Restaurant not found'
       });
     }
-    
+
     if (req.user.role === 'restaurant' && req.user._id.toString() !== restaurantId) {
       return res.status(403).json({
         success: false,
@@ -32,13 +37,11 @@ export const createMenuItem = async (req, res) => {
     });
     
     await menuItem.save();
-    
-    res.status(201).json({
-      success: true,
-      message: 'Menu item created successfully',
-      data: menuItem
-    });
+
+    // Return the created menu item directly (test expectations)
+    res.status(201).json(menuItem);
   } catch (error) {
+    console.error('getMenuByRestaurant error:', error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -53,11 +56,8 @@ export const getMenuByRestaurant = async (req, res) => {
     const menuItems = await MenuItem.find({ restaurantId, isAvailable: true })
       .sort({ category: 1, name: 1 });
     
-    res.json({
-      success: true,
-      count: menuItems.length,
-      data: menuItems
-    });
+    // Return array of menu items directly to match test expectations
+    res.json(menuItems);
   } catch (error) {
     res.status(500).json({
       success: false,
