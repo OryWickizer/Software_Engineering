@@ -4,19 +4,7 @@ import { useNavigate } from 'react-router-dom';
 const OrderStatus = () => {
   const navigate = useNavigate();
 
-  // Mock data for orders
-  const [ongoingOrder] = useState({
-    id: 'ORD-12345',
-    status: 'Preparing',
-    items: [
-      { name: 'Buddha Bowl', quantity: 1, price: 12.99 },
-      { name: 'Green Smoothie', quantity: 2, price: 6.99 },
-    ],
-    total: 26.97,
-    estimatedTime: '25-30 mins',
-    restaurant: 'Green Eats',
-  });
-
+  // Mock data for past orders
   const [pastOrders] = useState([
     {
       id: 'ORD-12344',
@@ -33,6 +21,14 @@ const OrderStatus = () => {
       items: [{ name: 'Margherita Pizza', quantity: 1, price: 9.99 }],
       total: 9.99,
       restaurant: 'Eco Pizza',
+    },
+    {
+      id: 'ORD-12342',
+      date: '2023-10-05',
+      status: 'Delivered',
+      items: [{ name: 'Vegan Burger', quantity: 2, price: 11.99 }],
+      total: 23.98,
+      restaurant: 'Green Eats',
     },
   ]);
 
@@ -59,7 +55,7 @@ const OrderStatus = () => {
     <div className="min-h-screen bg-gray-50 p-6 pt-24">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Order Status</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Order History</h1>
           <button
             onClick={() => navigate('/customer')}
             className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
@@ -68,45 +64,19 @@ const OrderStatus = () => {
           </button>
         </div>
 
-        {/* Ongoing Order */}
-        {ongoingOrder && (
-          <div className="bg-white rounded-xl p-6 shadow-md mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Current Order</h2>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(ongoingOrder.status)}`}>
-                {ongoingOrder.status}
-              </span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-gray-500">Order ID: {ongoingOrder.id}</p>
-                <p className="text-sm text-gray-500">Restaurant: {ongoingOrder.restaurant}</p>
-                <p className="text-sm text-gray-500">Estimated Time: {ongoingOrder.estimatedTime}</p>
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-800 mb-2">Items:</h3>
-                <ul className="space-y-1">
-                  {ongoingOrder.items.map((item, idx) => (
-                    <li key={idx} className="text-sm text-gray-600">
-                      {item.name} x {item.quantity} - {formatCurrency(item.price * item.quantity)}
-                    </li>
-                  ))}
-                </ul>
-                <p className="font-semibold text-emerald-600 mt-2">Total: {formatCurrency(ongoingOrder.total)}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Past Orders */}
+        {/* Order History */}
         <div className="bg-white rounded-xl p-6 shadow-md">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Order History</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Orders</h2>
           {pastOrders.length === 0 ? (
-            <p className="text-gray-500">No past orders found.</p>
+            <p className="text-gray-500">No orders found.</p>
           ) : (
             <div className="space-y-4">
               {pastOrders.map((order) => (
-                <div key={order.id} className="border border-gray-200 rounded-lg p-4">
+                <div
+                  key={order.id}
+                  className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => navigate(`/customer/orders/${order.id}`)}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <p className="font-medium text-gray-800">Order #{order.id}</p>
