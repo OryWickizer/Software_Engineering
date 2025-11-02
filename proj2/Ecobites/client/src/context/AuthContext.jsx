@@ -60,4 +60,6 @@ export const useAuthContext = () => {
 };
 
 // NOTE: AuthContext also exports helpers/constants; keep in separate module if Fast Refresh issues arise
-export { AuthContext };
+// Intentionally do not export the raw AuthContext object to avoid
+// react-refresh "only-export-components" warnings. Consumers should
+// use `useAuthContext` or `AuthProvider` instead.
