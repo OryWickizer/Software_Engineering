@@ -3,7 +3,7 @@ import { User } from '../models/User.model.js';
 
 export const createMenuItem = async (req, res) => {
   try {
-    let { restaurantId, name, description, price, category, image, preparationTime } = req.body;
+    let { restaurantId, name, description, price, category, image, preparationTime, packagingOptions } = req.body;
 
     // If restaurantId not supplied, and the authenticated user is a restaurant, use their id
     if (!restaurantId && req.user && req.user.role === 'restaurant') {
@@ -33,7 +33,8 @@ export const createMenuItem = async (req, res) => {
       price,
       category,
       image,
-      preparationTime
+      preparationTime,
+      packagingOptions
     });
     
     await menuItem.save();

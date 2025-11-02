@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
 import { orderService } from "../api/services/order.service";
+import { DRIVER_INCENTIVES, STATUS_COLORS } from "../utils/constants";
 
 export default function Drivers() {
   const [activeTab, setActiveTab] = useState("available");
@@ -16,7 +17,7 @@ export default function Drivers() {
   const [selectedOrderForLocation, setSelectedOrderForLocation] = useState(null);
   const [availableOrders, setAvailableOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, isAuthenticated } = useAuthContext();
+  const { user, setUser, isAuthenticated, refreshUser } = useAuthContext();
 
   // Fetch available orders
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function Drivers() {
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       setIsLoading(true);
-      await orderService.updateStatus(orderId, {
+      const updatedOrder = await orderService.updateStatus(orderId, {
         status: newStatus,
         driverId: user._id
       });
@@ -121,6 +122,19 @@ export default function Drivers() {
         };
       });
 
+      // If delivered and server credited driver incentive, reflect points immediately in Profile
+      if (newStatus === 'DELIVERED' && updatedOrder?.driverRewardPoints > 0) {
+        // Optimistically update local user reward points
+        setUser((prev) => {
+          if (!prev) return prev;
+          const next = { ...prev, rewardPoints: (prev.rewardPoints || 0) + (updatedOrder.driverRewardPoints || 0) };
+          localStorage.setItem('user', JSON.stringify(next));
+          return next;
+        });
+        // Also refresh from server in background to ensure consistency
+        refreshUser?.();
+      }
+
       // Optional: if last current order was delivered, bounce back to Available
       setActiveTab(prevTab => {
         if (newStatus === 'DELIVERED') {
@@ -142,10 +156,10 @@ export default function Drivers() {
     rating: 4.8,
     totalDeliveries: 156,
     efficiency: 92,
-    availablePoints: 450,
+    availablePoints: user?.rewardPoints ?? 0,
     vehicle: {
-      type: "EV",
-      model: "Tesla Model 3",
+      type: user?.vehicleType || "EV",
+      model: "",
       isVerified: true
     },
     rewards: {
@@ -330,6 +344,15 @@ export default function Drivers() {
     return Math.round(pointsValue);
   };
 
+  // Driver green delivery incentive (display only; credited on delivery by server)
+  const getVehicleIncentive = () => {
+    const vt = (driver.vehicle.type || '').toLowerCase();
+    if (vt.includes('ev') || vt.includes('electric')) return DRIVER_INCENTIVES.EV;
+    if (vt.includes('bike') || vt.includes('bicycle')) return DRIVER_INCENTIVES.BIKE;
+    if (vt.includes('scooter') || vt.includes('low')) return DRIVER_INCENTIVES.SCOOTER;
+    return DRIVER_INCENTIVES.DEFAULT;
+  };
+
   // Safely format address objects for display
   const formatAddress = (addr) => {
     if (!addr) return "";
@@ -341,18 +364,9 @@ export default function Drivers() {
     try { return String(addr); } catch { return ""; }
   };
 
-  // Get status badge color
+  // Get status badge color using constants
   const getStatusBadgeColor = (orderStatus) => {
-    const statusColorMap = {
-      "Picking up": "bg-blue-100 text-blue-700",
-      "En route": "bg-yellow-100 text-yellow-700",
-      "Arriving": "bg-purple-100 text-purple-700",
-      "Delivered": "bg-green-100 text-green-700",
-      "Order Accepted": "bg-emerald-100 text-emerald-700",
-      "accepted": "bg-emerald-100 text-emerald-700",
-      "rejected": "bg-red-100 text-red-700"
-    };
-    return statusColorMap[orderStatus] || "bg-gray-100 text-gray-700";
+    return STATUS_COLORS[orderStatus] || "bg-gray-100 text-gray-700";
   };
 
   return (
@@ -513,6 +527,7 @@ export default function Drivers() {
 
                       {/* Status Update Buttons */}
                       <div className="mt-4 space-y-2">
+                        <div className="text-xs text-emerald-700 bg-emerald-50 rounded p-2">Green delivery incentive on completion: +{getVehicleIncentive()} pts</div>
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleUpdateOrderStatus(order._id, "OUT_FOR_DELIVERY")}
@@ -532,7 +547,7 @@ export default function Drivers() {
                             onClick={() => handleUpdateOrderStatus(order._id, "DELIVERED")}
                             className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors"
                           >
-                            Delivered
+                            Complete Delivery
                           </button>
                         </div>
                       </div>

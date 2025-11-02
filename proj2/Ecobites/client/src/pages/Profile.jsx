@@ -1,64 +1,28 @@
 import { useState, useEffect } from "react";
 import Customer from "../customers/Customer";
+import { useAuthContext } from "../context/AuthContext";
 
-// Single Profile component that renders different UI based on role.
-// For now role is hardcoded; later replace with value from backend (user.role).
+// Single Profile component that renders different UI based on authenticated user's role.
 export default function Profile() {
-  // role defaults to value stored in localStorage.user.role (if present)
-  const [role, setRole] = useState(() => {
-    try {
-      const raw = localStorage.getItem("user");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        // user saved earlier by login stored either as {role} or { user: { role } }
-        return parsed.role || (parsed.user && parsed.user.role) || "driver";
-      }
-    } catch (e) {
-      // ignore
-    }
-    return "driver";
-  });
+  const { user: authUser } = useAuthContext();
+  // role derives from authenticated user only (no manual switching)
+  const [role, setRole] = useState(() => authUser?.role || "customer");
 
   const [sidebarSelection, setSidebarSelection] = useState("overview");
 
-  // shared user (try read from localStorage, fallback to mock)
-  const [user, setUser] = useState(() => {
-    try {
-      const raw = localStorage.getItem("user");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        // support both { name, email, role } and { user: { ... } }
-        return parsed.user || parsed;
-      }
-    } catch (e) {}
-    return {
-      name: "Alex",
-      email: "alex@example.com",
-      avatarInitial: "A",
-      rating: 4.7,
-    };
-  });
+  // shared user (hydrate from auth; fallback to minimal stub)
+  const [user, setUser] = useState(() => authUser || { name: "User", email: "user@example.com" });
 
   // If localStorage changes elsewhere, sync role/user (lightweight)
   useEffect(() => {
-    const onStorage = () => {
-      try {
-        const raw = localStorage.getItem("user");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          setUser(parsed.user || parsed);
-          setRole(parsed.role || (parsed.user && parsed.user.role) || role);
-        }
-      } catch (e) {}
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [role]);
+    setUser(authUser || user);
+    if (authUser?.role) setRole(authUser.role);
+  }, [authUser]);
 
   // --- Driver specific data / actions ---
   const driverInfo = {
-    vehicleType: "EV",
-    points: 420,
+    vehicleType: authUser?.vehicleType || "EV",
+    points: authUser?.rewardPoints ?? 0,
     efficiency: 89,
   };
 
@@ -71,6 +35,7 @@ export default function Profile() {
   const customerInfo = {
     orders: 12,
     favoriteRestaurants: ["Green Eats", "Veggie Haven"],
+    rewardPoints: authUser?.rewardPoints ?? 0,
   };
 
   const customerActions = {
@@ -124,7 +89,7 @@ export default function Profile() {
         return (
           <div>
             <h3 className="text-xl font-semibold">Driver Overview</h3>
-            <p className="text-sm text-gray-600">Points: <span className="font-medium text-emerald-600">{driverInfo.points}</span></p>
+            <p className="text-sm text-gray-600">Green Incentive Points: <span className="font-medium text-emerald-600">{driverInfo.points}</span></p>
             <p className="text-sm text-gray-600">Efficiency: {driverInfo.efficiency}%</p>
             <p className="text-sm text-gray-600">Vehicle: {driverInfo.vehicleType}</p>
           </div>
@@ -149,8 +114,8 @@ export default function Profile() {
       case "rewards":
         return (
           <div>
-            <h3 className="text-xl font-semibold">Rewards & Efficiency</h3>
-            <p className="text-sm text-gray-600">Use EV and community orders to multiply points.</p>
+            <h3 className="text-xl font-semibold">Driver Rewards & Efficiency</h3>
+            <p className="text-sm text-gray-600">Use EV, bikes, or low-emission methods to earn incentives on deliveries.</p>
             <div className="mt-4">
               <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
                 <div className="bg-emerald-600 h-3 rounded-full" style={{ width: `${(driverInfo.points/500)*100}%` }} />
@@ -177,7 +142,16 @@ export default function Profile() {
   const renderCustomerMain = () => {
     switch (sidebarSelection) {
       case "overview":
-        return <Customer />;
+        return (
+          <div>
+            <div className="mb-4">
+              <h3 className="text-xl font-semibold">Customer Dashboard</h3>
+              <p className="text-sm text-gray-600">Eco Rewards Balance: <span className="font-medium text-emerald-600">{customerInfo.rewardPoints}</span> pts</p>
+              <p className="text-xs text-gray-500 mt-1">Choose reusable/compostable/minimal packaging at checkout to earn more.</p>
+            </div>
+            <Customer />
+          </div>
+        );
       case "orders":
         return (
           <div>
@@ -232,6 +206,7 @@ export default function Profile() {
           <div>
             <h3 className="text-xl font-semibold">Menu</h3>
             <p className="text-sm text-gray-600">Manage your menu items.</p>
+            <p className="text-xs text-emerald-700 mt-1">Tip: set packaging options (reusable/compostable/minimal) so customers can earn rewards.</p>
             <button onClick={() => restaurantActions.addMenuItem()} className="mt-3 px-3 py-2 bg-emerald-50 text-emerald-700 rounded">Add item</button>
             <div className="mt-3 space-y-2">
               {restaurantInfo.menuItems.map((m) => (
@@ -278,20 +253,13 @@ export default function Profile() {
         <aside className="col-span-12 md:col-span-3 lg:col-span-3">
           <div className="bg-white rounded-2xl p-4 shadow">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-2xl text-emerald-700">{user.avatarInitial}</div>
+              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-2xl text-emerald-700">
+                {(user?.name || 'U').slice(0,1).toUpperCase()}
+              </div>
               <div>
                 <div className="font-semibold">{user.name}</div>
                 <div className="text-xs text-gray-500">{user.email}</div>
               </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-xs text-gray-500 mb-2">Preview role (hardcoded)</label>
-              <select value={role} onChange={(e) => { setRole(e.target.value); setSidebarSelection('overview'); }} className="w-full p-2 border rounded">
-                <option value="driver">Driver</option>
-                <option value="customer">Customer</option>
-                <option value="restaurant">Restaurant</option>
-              </select>
             </div>
 
             <nav className="mt-6 space-y-2">

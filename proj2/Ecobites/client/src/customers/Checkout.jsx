@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
 import { useAuthContext } from '../context/AuthContext';
+import { PACKAGING_OPTIONS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
 
 const Checkout = () => {
   const location = useLocation();
@@ -34,6 +35,14 @@ const Checkout = () => {
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [packagingPreference, setPackagingPreference] = useState(PACKAGING_OPTIONS.MINIMAL);
+
+  // Packaging choices from constants
+  const packagingChoices = [
+    { value: PACKAGING_OPTIONS.REUSABLE, label: PACKAGING_LABELS[PACKAGING_OPTIONS.REUSABLE], reward: ECO_REWARDS[PACKAGING_OPTIONS.REUSABLE], desc: 'Returnable container, highest reward' },
+    { value: PACKAGING_OPTIONS.COMPOSTABLE, label: PACKAGING_LABELS[PACKAGING_OPTIONS.COMPOSTABLE], reward: ECO_REWARDS[PACKAGING_OPTIONS.COMPOSTABLE], desc: 'Compost-friendly materials' },
+    { value: PACKAGING_OPTIONS.MINIMAL, label: PACKAGING_LABELS[PACKAGING_OPTIONS.MINIMAL], reward: ECO_REWARDS[PACKAGING_OPTIONS.MINIMAL], desc: 'Reduced packaging footprint' }
+  ];
 
   const formatCurrency = (num) => {
     return Number(num).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
@@ -116,7 +125,8 @@ const Checkout = () => {
         tax: taxClient,
         total: totalClient,
         paymentMethod: paymentMethod,
-        specialInstructions: ''
+        specialInstructions: '',
+        packagingPreference
       };
       console.log('Order Data:', orderData);
       // Create the order
@@ -350,6 +360,37 @@ const Checkout = () => {
                 </div>
               </div>
             )}
+
+            {/* Eco Packaging Preference */}
+            <div className="mt-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <span className="text-emerald-600 text-sm font-bold">🌿</span>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-800">Packaging Preference</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {packagingChoices.map(choice => (
+                  <label key={choice.value} className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    packagingPreference === choice.value ? 'border-emerald-500 bg-emerald-50 shadow-md' : 'border-gray-200 hover:border-emerald-300'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="packagingPreference"
+                      value={choice.value}
+                      checked={packagingPreference === choice.value}
+                      onChange={(e) => setPackagingPreference(e.target.value)}
+                      className="mt-1 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-800">{choice.label}</div>
+                      <div className="text-sm text-emerald-700">Earn +{choice.reward} eco points</div>
+                      <div className="text-xs text-gray-500 mt-1">{choice.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

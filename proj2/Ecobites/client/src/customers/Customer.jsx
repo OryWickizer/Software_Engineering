@@ -271,6 +271,15 @@ const Customer = () => {
                       </div>
                       <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                       <div className="text-xs text-gray-400 mt-2">Category: {item.category}</div>
+                      {item.packagingOptions && item.packagingOptions.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {item.packagingOptions.map((opt, idx) => (
+                            <span key={idx} className="px-2 py-1 rounded-full text-xs bg-emerald-50 text-emerald-700 capitalize">
+                              {opt}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="mt-4 flex gap-2">
                       <button 

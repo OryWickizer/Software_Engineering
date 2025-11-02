@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { orderService } from '../api/services/order.service';
+import { authService } from '../api/services/auth.service';
 
 const OrderDetail = () => {
   const { orderId } = useParams();
@@ -7,115 +9,44 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [updating, setUpdating] = useState(false);
+  const currentUser = authService.getCurrentUser();
 
-  // Mock data for orders
-  const mockOrders = {
-    'ORD-12344': {
-      orderNumber: 'ORD-12344',
-      createdAt: '2023-10-15T14:30:00Z',
-      status: 'DELIVERED',
-      items: [
-        { name: 'Paneer Tikka', quantity: 1, price: 14.99 },
-        { name: 'Garlic Naan', quantity: 2, price: 3.99 },
-      ],
-      restaurant: { name: 'Veggie Haven' },
-      deliveryAddress: {
-        street: '123 Main St',
-        city: 'New York',
-        zipCode: '10001'
-      },
-      paymentMethod: 'credit_card',
-      estimatedDeliveryTime: '2023-10-15T15:00:00Z',
-      specialInstructions: 'Extra spicy please',
-      subtotal: 22.97,
-      deliveryFee: 2.99,
-      tax: 2.30,
-      total: 28.26,
-      statusHistory: [
-        { status: 'PLACED', timestamp: '2023-10-15T14:30:00Z' },
-        { status: 'ACCEPTED', timestamp: '2023-10-15T14:35:00Z' },
-        { status: 'PREPARING', timestamp: '2023-10-15T14:40:00Z' },
-        { status: 'READY', timestamp: '2023-10-15T14:55:00Z' },
-        { status: 'OUT_FOR_DELIVERY', timestamp: '2023-10-15T15:00:00Z' },
-        { status: 'DELIVERED', timestamp: '2023-10-15T15:15:00Z' },
-      ]
-    },
-    'ORD-12343': {
-      orderNumber: 'ORD-12343',
-      createdAt: '2023-10-10T12:00:00Z',
-      status: 'DELIVERED',
-      items: [
-        { name: 'Margherita Pizza', quantity: 1, price: 9.99 },
-        { name: 'Caesar Salad', quantity: 1, price: 7.99 },
-      ],
-      restaurant: { name: 'Eco Pizza' },
-      deliveryAddress: {
-        street: '456 Oak Ave',
-        city: 'Los Angeles',
-        zipCode: '90210'
-      },
-      paymentMethod: 'paypal',
-      estimatedDeliveryTime: '2023-10-10T12:45:00Z',
-      specialInstructions: 'No onions on pizza',
-      subtotal: 17.98,
-      deliveryFee: 3.99,
-      tax: 1.80,
-      total: 23.77,
-      statusHistory: [
-        { status: 'PLACED', timestamp: '2023-10-10T12:00:00Z' },
-        { status: 'ACCEPTED', timestamp: '2023-10-10T12:05:00Z' },
-        { status: 'PREPARING', timestamp: '2023-10-10T12:10:00Z' },
-        { status: 'READY', timestamp: '2023-10-10T12:30:00Z' },
-        { status: 'OUT_FOR_DELIVERY', timestamp: '2023-10-10T12:35:00Z' },
-        { status: 'DELIVERED', timestamp: '2023-10-10T12:50:00Z' },
-      ]
-    },
-    'ORD-12342': {
-      orderNumber: 'ORD-12342',
-      createdAt: '2023-10-05T18:20:00Z',
-      status: 'DELIVERED',
-      items: [
-        { name: 'Vegan Burger', quantity: 2, price: 11.99 },
-        { name: 'Sweet Potato Fries', quantity: 1, price: 5.99 },
-        { name: 'Green Smoothie', quantity: 1, price: 6.99 },
-      ],
-      restaurant: { name: 'Green Eats' },
-      deliveryAddress: {
-        street: '789 Pine St',
-        city: 'Chicago',
-        zipCode: '60601'
-      },
-      paymentMethod: 'cash',
-      estimatedDeliveryTime: '2023-10-05T19:00:00Z',
-      specialInstructions: 'Extra pickles on burgers',
-      subtotal: 36.96,
-      deliveryFee: 4.99,
-      tax: 3.70,
-      total: 45.65,
-      statusHistory: [
-        { status: 'PLACED', timestamp: '2023-10-05T18:20:00Z' },
-        { status: 'ACCEPTED', timestamp: '2023-10-05T18:25:00Z' },
-        { status: 'PREPARING', timestamp: '2023-10-05T18:30:00Z' },
-        { status: 'READY', timestamp: '2023-10-05T18:50:00Z' },
-        { status: 'OUT_FOR_DELIVERY', timestamp: '2023-10-05T18:55:00Z' },
-        { status: 'DELIVERED', timestamp: '2023-10-05T19:10:00Z' },
-      ]
+  // Load order from API
+  useEffect(() => {
+    let isMounted = true;
+    const fetchOrder = async () => {
+      try {
+        setIsLoading(true);
+        const data = await orderService.getById(orderId);
+        if (!isMounted) return;
+        setOrder(data);
+        setError(null);
+      } catch (e) {
+        if (!isMounted) return;
+        setError(e?.response?.data?.message || 'Failed to load order');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    if (orderId) fetchOrder();
+    return () => { isMounted = false; };
+  }, [orderId]);
+
+  const handleCancel = async () => {
+    if (!order || updating) return;
+    const confirm = window.confirm('Are you sure you want to cancel this order?');
+    if (!confirm) return;
+    try {
+      setUpdating(true);
+      const updated = await orderService.updateStatus(order._id, { status: 'CANCELLED' });
+      setOrder(updated);
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setUpdating(false);
     }
   };
-
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const foundOrder = mockOrders[orderId];
-      if (foundOrder) {
-        setOrder(foundOrder);
-        setIsLoading(false);
-      } else {
-        setError('Order not found');
-        setIsLoading(false);
-      }
-    }, 500); // Simulate loading delay
-  }, [orderId]);
 
   const formatCurrency = (num) => {
     return Number(num).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
@@ -223,7 +154,7 @@ const OrderDetail = () => {
           {/* Order Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-800">Order #{order.orderNumber}</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">Order #{order.orderNumber || (order._id ? order._id.slice(-6) : '')}</h2>
               <p className="text-sm text-gray-500">Placed on {formatDateTime(order.createdAt)}</p>
             </div>
             <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(getStatusDisplay(order.status))}`}>
@@ -251,22 +182,39 @@ const OrderDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Restaurant</h3>
-              <p className="text-gray-600">{order.restaurant?.name || 'Restaurant Name'}</p>
+              <p className="text-gray-600">{order.restaurant?.name || order.restaurantName || 'Restaurant'}</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Delivery Address</h3>
-              <p className="text-gray-600">
-                {order.deliveryAddress?.street}<br />
-                {order.deliveryAddress?.city}, {order.deliveryAddress?.zipCode}
-              </p>
+              {order.deliveryAddress ? (
+                <p className="text-gray-600">
+                  {order.deliveryAddress?.street}<br />
+                  {order.deliveryAddress?.city}, {order.deliveryAddress?.zipCode}
+                </p>
+              ) : (
+                <p className="text-gray-600">No address on file</p>
+              )}
             </div>
           </div>
+
+          {/* Customer actions */}
+          {currentUser?.role === 'customer' && !['DELIVERED', 'CANCELLED'].includes(String(order.status).toUpperCase()) && (
+            <div className="mb-6">
+              <button
+                onClick={handleCancel}
+                disabled={updating}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
+              >
+                {updating ? 'Cancelling…' : 'Cancel Order'}
+              </button>
+            </div>
+          )}
 
           {/* Payment and Timing */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Payment Method</h3>
-              <p className="text-gray-600 capitalize">{order.paymentMethod}</p>
+              <p className="text-gray-600 capitalize">{order.paymentMethod || 'card'}</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Estimated Delivery</h3>
@@ -315,7 +263,7 @@ const OrderDetail = () => {
                 {order.statusHistory.map((history, idx) => (
                   <div key={idx} className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">{getStatusDisplay(history.status)}</span>
-                    <span className="text-gray-500">{formatDateTime(history.timestamp)}</span>
+                    <span className="text-gray-500">{formatDateTime(history.timestamp || history.updatedAt || order.createdAt)}</span>
                   </div>
                 ))}
               </div>

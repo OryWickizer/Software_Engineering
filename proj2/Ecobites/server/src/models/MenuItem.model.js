@@ -29,6 +29,16 @@ const menuItemSchema = new mongoose.Schema({
   preparationTime: {
     type: Number, // in minutes
     default: 15
+  },
+  // Supported sustainable packaging options for this item/restaurant
+  packagingOptions: {
+    type: [
+      {
+        type: String,
+        enum: ['reusable', 'compostable', 'minimal']
+      }
+    ],
+    default: ['reusable', 'compostable', 'minimal']
   }
 }, {
   timestamps: true

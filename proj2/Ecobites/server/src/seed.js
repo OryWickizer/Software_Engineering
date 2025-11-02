@@ -62,7 +62,8 @@ export const seedData = async () => {
         description: 'Classic pizza with tomato and mozzarella',
         price: 12.99,
         category: 'main',
-        preparationTime: 20
+        preparationTime: 20,
+        packagingOptions: ['reusable', 'compostable']
       },
       {
         restaurantId: restaurant._id,
@@ -70,7 +71,8 @@ export const seedData = async () => {
         description: 'Fresh romaine with parmesan and croutons',
         price: 8.99,
         category: 'appetizer',
-        preparationTime: 10
+        preparationTime: 10,
+        packagingOptions: ['compostable', 'minimal']
       },
       {
         restaurantId: restaurant._id,
@@ -78,7 +80,8 @@ export const seedData = async () => {
         description: 'Classic Italian dessert',
         price: 6.99,
         category: 'dessert',
-        preparationTime: 5
+        preparationTime: 5,
+        packagingOptions: ['minimal']
       }
     ]);
     
@@ -104,6 +107,8 @@ export const seedData = async () => {
       subtotal: 34.97,
       deliveryFee: 5,
       total: 39.97,
+      packagingPreference: 'reusable',
+      ecoRewardPoints: 30,
       status: 'PLACED',
       statusHistory: [{
         status: 'PLACED',
