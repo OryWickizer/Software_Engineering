@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+
+    - name: Install dependencies (server)
+      run: cd Ecobites/server && npm ci
+
+    - name: Install dependencies (client)
+      run: cd Ecobites/client && npm ci
+
+    - name: Run server tests
+      run: cd Ecobites/server && npm test
+
+    - name: Run client tests
+      run: cd Ecobites/client && npm test
+
+    - name: Lint client
+      run: cd Ecobites/client && npm run lint
+
+    - name: Format check client
+      run: cd Ecobites/client && npx prettier --check .
