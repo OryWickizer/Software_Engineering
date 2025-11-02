@@ -94,7 +94,7 @@ export const getOrdersByRole = async (req, res) => {
       });
     }
     
-    let query = {};
+  let query = {};
     
     if (role === 'customer') {
       query.customerId = userId;
@@ -104,8 +104,24 @@ export const getOrdersByRole = async (req, res) => {
       query.driverId = userId;
     }
     
-    const orders = await Order.find(query)
-      .sort({ createdAt: -1 });
+    let q = Order.find(query).sort({ createdAt: -1 });
+
+    // When driver is querying their orders, enrich with restaurant name for UI
+    if (role === 'driver') {
+      q = q.populate({ path: 'restaurantId', select: 'restaurantName name' });
+    }
+
+    const found = await q.exec();
+
+    // Map to plain objects and add restaurant convenience field when populated
+    const orders = found.map((o) => {
+      const obj = o.toObject ? o.toObject() : o;
+      if (obj.restaurantId && typeof obj.restaurantId === 'object') {
+        obj.restaurant = obj.restaurantId.restaurantName || obj.restaurantId.name || '';
+        obj.restaurantId = obj.restaurantId._id ? obj.restaurantId._id.toString() : obj.restaurantId;
+      }
+      return obj;
+    });
     
     // Return array of orders directly (without population)
     res.json(orders);
@@ -217,13 +233,23 @@ export const getAvailableOrdersForDrivers = async (req, res) => {
       });
     }
     
-    const orders = await Order.find({
+    const found = await Order.find({
       status: 'READY',
       driverId: null
     })
-    .sort({ createdAt: -1 });
-    
-    // Return array of available orders directly
+      .sort({ createdAt: -1 })
+      .populate({ path: 'restaurantId', select: 'restaurantName name' });
+
+    // Map to include a top-level 'restaurant' field for UI
+    const orders = found.map((o) => {
+      const obj = o.toObject ? o.toObject() : o;
+      if (obj.restaurantId && typeof obj.restaurantId === 'object') {
+        obj.restaurant = obj.restaurantId.restaurantName || obj.restaurantId.name || '';
+        obj.restaurantId = obj.restaurantId._id ? obj.restaurantId._id.toString() : obj.restaurantId;
+      }
+      return obj;
+    });
+
     res.json(orders);
   } catch (error) {
     res.status(500).json({
