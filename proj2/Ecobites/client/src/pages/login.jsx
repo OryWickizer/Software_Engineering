@@ -28,9 +28,17 @@ export default function Login() {
         setMessage("Registration successful! You can now log in.");
         setIsRegister(false);
       } else {
-        await login({ email, password });
+        const loginData = await login({ email, password });
         setMessage("Login successful! Redirecting...");
-        navigate("/customer");
+        if (loginData.user.role === 'customer') {
+          navigate("/customer");
+        } else if (loginData.user.role === 'driver') {
+          navigate("/driver");
+        } else if (loginData.user.role === 'restaurant') {
+          navigate("/restaurants");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error) {
       console.error("Authentication error:", error);
