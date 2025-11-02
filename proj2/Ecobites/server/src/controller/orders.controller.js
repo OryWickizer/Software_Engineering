@@ -1,10 +1,11 @@
 import {Order} from '../models/Order.model.js';
 import { User } from '../models/User.model.js';
 import { MenuItem } from '../models/MenuItem.model.js';
+import { calculateEcoReward, calculateDriverIncentive } from '../config/constants.js';
 
 export const createOrder = async (req, res) => {
   try {
-    const { customerId: bodyCustomerId, restaurantId: bodyRestaurantId, items: bodyItems, deliveryAddress, specialInstructions } = req.body;
+    const { customerId: bodyCustomerId, restaurantId: bodyRestaurantId, items: bodyItems, deliveryAddress, specialInstructions, packagingPreference } = req.body;
 
     // Only authenticated customers can create orders for themselves
     if (req.user.role !== 'customer' || req.user._id.toString() !== (bodyCustomerId || req.user._id.toString())) {
@@ -56,6 +57,12 @@ export const createOrder = async (req, res) => {
     // Prefer server-derived restaurant id
     const restaurantId = bodyRestaurantId && bodyRestaurantId.toString() === restaurantIdFromItems ? bodyRestaurantId : restaurantIdFromItems;
 
+    // Compute eco reward points based on packaging preference using constant
+    const selectedPackaging = ['reusable', 'compostable', 'minimal'].includes(packagingPreference)
+      ? packagingPreference
+      : 'minimal';
+    const ecoRewardPoints = calculateEcoReward(selectedPackaging);
+
     const order = new Order({
       customerId: req.user._id,
       restaurantId,
@@ -65,6 +72,8 @@ export const createOrder = async (req, res) => {
       deliveryFee,
       tax,
       total,
+      packagingPreference: selectedPackaging,
+      ecoRewardPoints,
       specialInstructions,
       status: 'PLACED',
       statusHistory: [{ status: 'PLACED', updatedBy: req.user._id.toString() }]
@@ -209,6 +218,24 @@ export const updateOrderStatus = async (req, res) => {
     }
     
     try {
+      // If delivered and eco rewards not yet credited, credit to customer
+      if (status === 'DELIVERED' && order.ecoRewardPoints > 0 && !order.ecoRewardCredited) {
+        await User.findByIdAndUpdate(order.customerId, { $inc: { rewardPoints: order.ecoRewardPoints } });
+        order.ecoRewardCredited = true;
+      }
+
+      // Driver incentives for green delivery methods on delivery
+      if (status === 'DELIVERED' && order.driverId && !order.driverRewardCredited) {
+        const driver = await User.findById(order.driverId);
+        if (driver) {
+          const driverPts = calculateDriverIncentive(driver.vehicleType);
+          if (driverPts > 0) {
+            await User.findByIdAndUpdate(order.driverId, { $inc: { rewardPoints: driverPts } });
+            order.driverRewardPoints = driverPts;
+            order.driverRewardCredited = true;
+          }
+        }
+      }
       await order.save();
       // Return updated order directly (without population)
       res.json(order);

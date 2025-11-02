@@ -60,6 +60,31 @@ const orderSchema = new mongoose.Schema({
     ],
     default: 'PLACED'
   },
+  // Eco packaging preference selected by customer
+  packagingPreference: {
+    type: String,
+    enum: ['reusable', 'compostable', 'minimal'],
+    default: 'minimal'
+  },
+  // Eco reward points granted for packaging choice
+  ecoRewardPoints: {
+    type: Number,
+    default: 0
+  },
+  // Whether reward points were credited to the user (on delivery)
+  ecoRewardCredited: {
+    type: Boolean,
+    default: false
+  },
+  // Driver green delivery incentives
+  driverRewardPoints: {
+    type: Number,
+    default: 0
+  },
+  driverRewardCredited: {
+    type: Boolean,
+    default: false
+  },
   deliveryAddress: {
     street: String,
     city: String,

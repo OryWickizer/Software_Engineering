@@ -5,6 +5,7 @@ import SiteFooter from './site/Footer';
 import Index from './pages/Index'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
+import OrderDetails from './pages/OrderDetails'
 import Drivers from './drivers/Drivers'
 import { Routes, Route } from 'react-router-dom';
 import Customer from './customers/Customer';
@@ -34,6 +35,7 @@ function App() {
       {/* Protected */}
       <Route element={<ProtectedRoute />}>
         <Route path="/profile" element={<Profile />} />
+        <Route path="/orders/:orderId" element={<OrderDetails />} />
 
         {/* Customer Routes */}
         <Route element={<RoleBasedRoute allowedRoles={['customer']} />}>

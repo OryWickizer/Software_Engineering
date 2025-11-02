@@ -32,13 +32,26 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const updated = await authService.fetchMe();
+      if (updated) setUser(updated);
+      return updated;
+    } catch (e) {
+      // if token invalid, logout
+      console.error('Failed to refresh user', e);
+      return null;
+    }
+  };
+
   const value = {
     user,
     setUser,
     isAuthenticated: authService.isAuthenticated(),
     loading,
     login,
-    logout
+    logout,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -51,3 +64,5 @@ export const useAuthContext = () => {
   }
   return context;
 };
+
+export { AuthContext };

@@ -70,6 +70,11 @@ export const register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        rewardPoints: user.rewardPoints || 0,
+        vehicleType: user.vehicleType || null,
+        licensePlate: user.licensePlate || null,
+        restaurantName: user.restaurantName || null,
+        cuisine: user.cuisine || null,
       },
     });
   } catch (error) {
@@ -113,10 +118,41 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        rewardPoints: user.rewardPoints || 0,
+        vehicleType: user.vehicleType || null,
+        licensePlate: user.licensePlate || null,
+        restaurantName: user.restaurantName || null,
+        cuisine: user.cuisine || null,
       },
     });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Server error during login" });
+  }
+};
+
+export const me = async (req, res) => {
+  try {
+    // req.user is set by protect middleware with full user minus password
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    res.json({
+      user: {
+        id: req.user._id.toString(),
+        _id: req.user._id.toString(),
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+        rewardPoints: req.user.rewardPoints || 0,
+        vehicleType: req.user.vehicleType || null,
+        licensePlate: req.user.licensePlate || null,
+        restaurantName: req.user.restaurantName || null,
+        cuisine: req.user.cuisine || null,
+      }
+    });
+  } catch (error) {
+    console.error("Me error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 };

@@ -7,7 +7,8 @@ export default function MenuItems() {
     name: '',
     description: '',
     price: '',
-    category: ''
+    category: '',
+    packagingOptions: ['reusable','compostable','minimal']
   });
   const [menuItems, setMenuItems] = useState([]);
 
@@ -23,8 +24,8 @@ export default function MenuItems() {
       setMenuItems([...menuItems, menuItem]);
     }
 
-    setShowForm(false);
-    setMenuItem({ name: '', description: '', price: '', category: '' });
+  setShowForm(false);
+  setMenuItem({ name: '', description: '', price: '', category: '', packagingOptions: ['reusable','compostable','minimal'] });
   };
 
   const handleEdit = (index) => {
@@ -41,7 +42,7 @@ export default function MenuItems() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingIndex(null);
-    setMenuItem({ name: '', description: '', price: '', category: '' });
+  setMenuItem({ name: '', description: '', price: '', category: '', packagingOptions: ['reusable','compostable','minimal'] });
   };
 
   return (
@@ -105,6 +106,30 @@ export default function MenuItems() {
                 required
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Packaging Options</label>
+              <div className="flex flex-wrap gap-3">
+                {['reusable','compostable','minimal'].map(opt => (
+                  <label key={opt} className="flex items-center gap-2 text-sm capitalize">
+                    <input
+                      type="checkbox"
+                      checked={menuItem.packagingOptions.includes(opt)}
+                      onChange={(e) => {
+                        setMenuItem(mi => {
+                          const has = mi.packagingOptions.includes(opt);
+                          return {
+                            ...mi,
+                            packagingOptions: has ? mi.packagingOptions.filter(o => o !== opt) : [...mi.packagingOptions, opt]
+                          };
+                        });
+                      }}
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Shown to customers and used for eco rewards.</p>
+            </div>
             <div className="flex gap-2">
               <button
                 type="submit"
@@ -133,6 +158,13 @@ export default function MenuItems() {
               <p className="text-gray-600 mb-2">{item.description}</p>
               <p className="text-lg font-bold text-green-600">${item.price}</p>
               <p className="text-sm text-gray-500 mt-2">Category: {item.category}</p>
+              {item.packagingOptions && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {item.packagingOptions.map((opt, idx) => (
+                    <span key={idx} className="px-2 py-1 rounded-full text-xs bg-emerald-50 text-emerald-700 capitalize">{opt}</span>
+                  ))}
+                </div>
+              )}
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={() => handleEdit(index)}

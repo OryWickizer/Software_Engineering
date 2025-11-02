@@ -1,55 +1,66 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { orderService } from '../api/services/order.service';
+import { authService } from '../api/services/auth.service';
+import { STATUS_COLORS, ORDER_STATUS } from '../utils/constants';
 
 const OrderStatus = () => {
   const navigate = useNavigate();
 
-  // Mock data for past orders
-  const [pastOrders] = useState([
-    {
-      id: 'ORD-12344',
-      date: '2023-10-15',
-      status: 'Delivered',
-      items: [{ name: 'Paneer Tikka', quantity: 1, price: 14.99 }],
-      total: 14.99,
-      restaurant: 'Veggie Haven',
-    },
-    {
-      id: 'ORD-12343',
-      date: '2023-10-10',
-      status: 'Delivered',
-      items: [{ name: 'Margherita Pizza', quantity: 1, price: 9.99 }],
-      total: 9.99,
-      restaurant: 'Eco Pizza',
-    },
-    {
-      id: 'ORD-12342',
-      date: '2023-10-05',
-      status: 'Delivered',
-      items: [{ name: 'Vegan Burger', quantity: 2, price: 11.99 }],
-      total: 23.98,
-      restaurant: 'Green Eats',
-    },
-  ]);
+  const [pastOrders, setPastOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    const load = async () => {
+      try {
+        if (!user?._id) throw new Error('Not authenticated');
+        setLoading(true);
+        const data = await orderService.getByRole('customer', user._id);
+        // Normalize data for UI
+        const orders = (Array.isArray(data) ? data : [])
+          .map(o => ({
+            _id: o._id,
+            orderNumber: o.orderNumber,
+            date: o.createdAt || o.updatedAt,
+            status: o.status,
+            items: o.items || [],
+            total: o.total || o.totalPrice || 0,
+            restaurant: typeof o.restaurant === 'string' ? o.restaurant : (o.restaurant?.name || o.restaurantName || ''),
+          }));
+        setPastOrders(orders);
+        setError(null);
+      } catch (e) {
+        setError(e?.response?.data?.message || e.message || 'Failed to load orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const formatCurrency = (num) => {
     return Number(num).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
   };
 
   const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'preparing':
-        return 'text-yellow-600 bg-yellow-100';
-      case 'ready':
-        return 'text-blue-600 bg-blue-100';
-      case 'out for delivery':
-        return 'text-orange-600 bg-orange-100';
-      case 'delivered':
-        return 'text-green-600 bg-green-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
-    }
+    const key = String(status || '').toUpperCase().replace(/\s+/g, '_');
+    return STATUS_COLORS[key] || 'text-gray-600 bg-gray-100';
   };
+
+  const getStatusLabel = (status) => {
+    const key = String(status || '').toUpperCase().replace(/\s+/g, '_');
+    return ORDER_STATUS[key] || status;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 pt-24 flex items-center justify-center">
+        <p className="text-gray-600">Loading your orders…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 pt-24">
@@ -67,29 +78,32 @@ const OrderStatus = () => {
         {/* Order History */}
         <div className="bg-white rounded-xl p-6 shadow-md">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Orders</h2>
-          {pastOrders.length === 0 ? (
+          {error && (
+            <p className="text-red-600 mb-3">{error}</p>
+          )}
+          {!error && pastOrders.length === 0 ? (
             <p className="text-gray-500">No orders found.</p>
           ) : (
             <div className="space-y-4">
               {pastOrders.map((order) => (
                 <div
-                  key={order.id}
+                  key={order._id}
                   className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => navigate(`/customer/orders/${order.id}`)}
+                  onClick={() => navigate(`/customer/orders/${order._id}`)}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <p className="font-medium text-gray-800">Order #{order.id}</p>
-                      <p className="text-sm text-gray-500">{order.date} • {order.restaurant}</p>
+                      <p className="font-medium text-gray-800">Order #{order.orderNumber || order._id?.slice(-6)}</p>
+                      <p className="text-sm text-gray-500">{new Date(order.date).toLocaleString()} • {order.restaurant}</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                      {order.status}
+                      {getStatusLabel(order.status)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-sm text-gray-600">
-                        {order.items.map(item => `${item.name} x ${item.quantity}`).join(', ')}
+                        {(order.items || []).map(item => `${(item.name || item.itemName || item.menuItem?.name || 'Item')} x ${item.quantity}`).join(', ')}
                       </p>
                     </div>
                     <p className="font-semibold text-emerald-600">{formatCurrency(order.total)}</p>

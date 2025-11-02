@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema({
   isAvailable: {
     type: Boolean,
     default: true
+  },
+  // Eco rewards accumulated by the user (customers)
+  rewardPoints: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
