@@ -8,16 +8,18 @@ This repo contains a React frontend (Vite + Tailwind) and a Node/Express backend
 
 - `Ecobites/client/` — React 18 app built with Vite and Tailwind CSS
   - Routing via `react-router-dom`
-  - Pages: `Index`, `login`, `Drivers`, `Customer`
-  - Sections: `Hero`, `Mission`, `HowItWorks`
+  - Pages: `Index`, `login`, `Drivers`, `Customer`, `Checkout`, `Profile`
+  - Sections: `Hero`, `Mission`, `HowItWorks`, `WhatsNew`
   - Site chrome: `Header`, `Footer`
+  - Authentication with JWT and context
   - Tests with Vitest + React Testing Library
 - `Ecobites/server/` — Express API with Mongoose models
   - Auth endpoints: register, login (JWT)
+  - Order management, menu items, restaurant management
   - Health endpoint
   - Mongo connection via `mongoose`
   - Tests with Jest + Supertest and an in-memory MongoDB
-- `client/` — A separate, unused `Hero.tsx` example component (TypeScript). Not wired to the running app.
+- `docs/` — Project documentation (how, what, why)
 
 ## Backend (Ecobites/server)
 
@@ -89,10 +91,13 @@ Then in `package.json` scripts:
 - `src/main.jsx` mounts `<App />` with `<BrowserRouter />`
 - `src/App.jsx` defines routes:
   - `/` → `Index` (landing, uses `Hero`, `Mission`, `HowItWorks`)
-  - `/login` → `login` (form UI; currently logs inputs, no API hookup yet)
-  - `/driver` → `Drivers` (driver dashboard mock)
-  - `/customer` → `Customer` (simple cart mock)
+  - `/login` → `login` (authentication with backend API integration)
+  - `/driver` → `Drivers` (driver dashboard with order management)
+  - `/customer` → `Customer` (customer interface with cart and orders)
+  - `/checkout` → `Checkout` (order placement and eco-rewards)
+  - `/profile` → `Profile` (user profile management)
 - Header/Footer provide navigation and brand; Tailwind used for styling
+- Authentication context manages user state and API calls
 
 ### Run (Windows, cmd.exe)
 From `Ecobites/client`:
@@ -110,9 +115,24 @@ From `Ecobites/client`:
 npm test
 ```
 
-## Notes and next steps
-- The login/register page UI isn’t wired to the backend yet. Hook up to `/api/auth/register` and `/api/auth/login` with fetch/axios.
-- Protect future API routes using `authenticateToken` middleware in `src/middleware/auth.middleware.js`.
-- Consider moving or removing the top-level `client/` folder (TSX demo) if unused to avoid confusion.
-- For Windows compatibility, consider switching server test scripts to `cross-env`.
-- Ensure a valid `.env` in `Ecobites/server` with `MONGODB_URI` and a strong `JWT_SECRET` before running.
+## Getting Started
+
+See [INSTALL.md](INSTALL.md) for detailed setup instructions.
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## Documentation
+
+- [How it works](docs/how.md) — User tutorials and workflows
+- [What it does](docs/what.md) — Component and function descriptions
+- [Why it matters](docs/why.md) — Project mission and impact
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details.
+
+## Code of Conduct
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).

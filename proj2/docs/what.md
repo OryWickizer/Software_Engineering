@@ -42,3 +42,24 @@ This document provides point descriptions of each class/function in the EcoBites
 - **Authentication UI**: Handles both login and registration forms, toggles between modes, validates input, calls auth service, redirects based on user role after successful login.
 - **State Management**: Manages form fields (name, email, phone, password), loading state, messages, registration mode toggle.
 - **Navigation**: Redirects users to role-specific dashboards after authentication.
+
+### Customer Component (`proj2/Ecobites/client/src/customers/Customer.jsx`)
+- **Restaurant Discovery Interface**: Fetches and displays restaurants, handles search/filtering by cuisine, manages cart functionality.
+- **Menu Viewing**: When restaurant selected, fetches and displays menu items with add-to-cart functionality.
+- **Cart Management**: Maintains cart state with quantity adjustments, calculates totals, navigates to checkout.
+- **State Management**: Uses RestaurantContext for selected restaurant/menu data, local state for cart and UI interactions.
+
+### Drivers Component (`proj2/Ecobites/client/src/drivers/Drivers.jsx`)
+- **Order Management Dashboard**: Displays available, current, and past orders for drivers with tabbed interface.
+- **Order Acceptance/Rejection**: Handles accepting available orders, updates status through API calls.
+- **Status Updates**: Allows drivers to update order status (picked up, out for delivery, delivered) with real-time UI updates.
+- **Location Sharing**: Provides geolocation functionality to share driver location with customers.
+- **Eco-Rewards Display**: Shows driver incentives based on vehicle type (EV bonuses), earned points, and performance metrics.
+- **Reviews & Insights**: Displays customer reviews, performance analytics, and efficiency metrics.
+
+### Restaurants Component (`proj2/Ecobites/client/src/restaurants/Restaurants.jsx`)
+- **Dashboard Overview**: Provides navigation links to menu management and customer orders sections.
+- **Menu Management**: Links to menu items page for creating/editing restaurant offerings.
+- **Order Handling**: Links to customer orders page for accepting/rejecting incoming orders.
+- **State Management**: Manages local state for menu items and orders.
+
