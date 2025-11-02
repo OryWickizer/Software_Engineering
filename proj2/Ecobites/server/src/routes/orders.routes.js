@@ -6,14 +6,19 @@ import { protect } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-//order routes
+// order routes
 router.post('/', protect, createOrder);
-router.get('/:role/:userId', protect, getOrdersByRole);
+
+// IMPORTANT: place specific routes BEFORE the generic parameterized route to avoid shadowing
+router.get('/available/drivers', protect, getAvailableOrdersForDrivers);
 router.get('/detail/:orderId', protect, getOrderById);
+
 router.patch('/:orderId/status', protect, updateOrderStatus);
 // Support PUT for status updates (tests expect PUT)
 router.put('/:orderId/status', protect, updateOrderStatus);
-router.get('/available/drivers', protect, getAvailableOrdersForDrivers);
+
+// This generic route must come last
+router.get('/:role/:userId', protect, getOrdersByRole);
 
 
 export default router;
