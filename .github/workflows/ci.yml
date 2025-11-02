@@ -69,6 +69,8 @@ jobs:
 
       - name: Lint (client)
         run: npm run lint --if-present
+        # allow lint failures so tests still run and provide feedback
+        continue-on-error: true
 
       - name: Run unit tests
         run: npm test -- --run

@@ -14,17 +14,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (credentials) => {
-    
-   try {
-      const data = await authService.login(credentials);
-      if (data?.user) {
-        setUser(data.user);
-      }
-      return data;
-    } catch (error) {
-      // Re-throw the error so it can be caught in the component
-      throw error;
+    const data = await authService.login(credentials);
+    if (data?.user) {
+      setUser(data.user);
     }
+    return data;
   };
 
   const logout = () => {
@@ -65,4 +59,5 @@ export const useAuthContext = () => {
   return context;
 };
 
+// NOTE: AuthContext also exports helpers/constants; keep in separate module if Fast Refresh issues arise
 export { AuthContext };
