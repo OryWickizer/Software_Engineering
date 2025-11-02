@@ -5,4 +5,4 @@ Course Submissions by Group 22 for CSC 510 (001): Software Engineering
 - Ory Wickizer
 - Stephen Liu
 - Atharva Waingankar
-- Yash Dive
+- Yash Divee
