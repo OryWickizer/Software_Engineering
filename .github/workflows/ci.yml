@@ -3,8 +3,13 @@ name: CI
 on:
   push:
     branches: [ main, Yash ]
+    # only run CI when files under the Ecobites app change
+    paths:
+      - 'proj2/Ecobites/**'
   pull_request:
     branches: [ main, Yash ]
+    paths:
+      - 'proj2/Ecobites/**'
 
 concurrency:
   group: ci-${{ github.ref }}
