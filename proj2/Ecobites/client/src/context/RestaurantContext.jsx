@@ -1,7 +1,6 @@
-import { createContext, useContext, useState } from "react";
-import { restaurantService } from "../api/services/restaurant.service";
-
-const RestaurantContext = createContext();
+import { useContext, useState } from 'react';
+import { RestaurantContext } from './contexts';
+import { restaurantService } from '../api/services/restaurant.service';
 
 export const RestaurantProvider = ({ children }) => {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
@@ -31,3 +30,5 @@ export const RestaurantProvider = ({ children }) => {
 };
 
 export const useRestaurantContext = () => useContext(RestaurantContext);
+
+// raw RestaurantContext is exported from `contexts.js`.
