@@ -1,3 +1,76 @@
+// Combine orders with neighbors for delivery optimization
+export const combineOrdersWithNeighbors = async (req, res) => {
+  try {
+    const { customerId, radiusMeters = 500 } = req.body;
+    // Get the customer's address
+    const customer = await (await import('../models/User.model.js')).User.findById(customerId);
+    if (!customer || !customer.address || !customer.address.coordinates) {
+      return res.status(400).json({ message: 'Customer address/coordinates not found' });
+    }
+    // Find other customers with orders in PLACED/PREPARING/READY status, within city/zip
+    const activeStatuses = ['PLACED', 'PREPARING', 'READY'];
+    const orders = await Order.find({
+      status: { $in: activeStatuses },
+      'deliveryAddress.city': customer.address.city,
+      'deliveryAddress.zipCode': customer.address.zipCode,
+    });
+    // Filter by geo proximity (Haversine formula)
+    function getDistanceMeters(coord1, coord2) {
+      if (!coord1 || !coord2) return Infinity;
+      const R = 6371000; // meters
+      const toRad = (v) => v * Math.PI / 180;
+      const dLat = toRad(coord2.lat - coord1.lat);
+      const dLng = toRad(coord2.lng - coord1.lng);
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(toRad(coord1.lat)) * Math.cos(toRad(coord2.lat)) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+    const nearbyOrders = orders.filter(o => {
+      if (!o.deliveryAddress?.coordinates) return false;
+      const dist = getDistanceMeters(customer.address.coordinates, o.deliveryAddress.coordinates);
+      return dist <= radiusMeters && String(o.customerId) !== String(customerId);
+    });
+    if (nearbyOrders.length === 0) {
+      return res.status(200).json({ message: 'No nearby orders to combine', combinedOrders: [] });
+    }
+
+    // Mark orders as combined: update status and add eco rewards to both customers
+    const COMBINED_REWARD = 20; // points for combining
+    const updatedOrderIds = [];
+    // Determine combine group id
+    const myOrder = await Order.findOne({ customerId, status: { $in: activeStatuses } });
+    const groupId = `GRP${(myOrder?._id?.toString() || Date.now().toString()).slice(-6)}`;
+    const allOrders = [myOrder, ...nearbyOrders].filter(Boolean);
+    const allIds = allOrders.map(o => o._id);
+
+    for (const o of allOrders) {
+      o.status = 'COMBINED';
+      o.combineGroupId = groupId;
+      o.combineWith = allIds.filter(id => id.toString() !== o._id.toString());
+      o.statusHistory.push({ status: 'COMBINED', updatedBy: customerId });
+      await o.save();
+      updatedOrderIds.push(o._id);
+      // Add eco reward points to each customer
+      const targetUser = await User.findById(o.customerId);
+      if (targetUser) {
+        targetUser.rewardPoints = (targetUser.rewardPoints || 0) + COMBINED_REWARD;
+        await targetUser.save();
+      }
+    }
+
+    // Return updated orders and success message
+    return res.status(200).json({
+      message: `Orders combined! Both you and your neighbors earned ${COMBINED_REWARD} eco points.`,
+      combinedOrders: [myOrder, ...nearbyOrders],
+      updatedOrderIds
+    });
+  } catch (error) {
+    console.error('combineOrdersWithNeighbors error:', error);
+    res.status(500).json({ message: 'Failed to combine orders' });
+  }
+};
 import {Order} from '../models/Order.model.js';
 import { User } from '../models/User.model.js';
 import { MenuItem } from '../models/MenuItem.model.js';
@@ -117,7 +190,9 @@ export const getOrdersByRole = async (req, res) => {
 
     // When driver is querying their orders, enrich with restaurant name for UI
     if (role === 'driver') {
-      q = q.populate({ path: 'restaurantId', select: 'restaurantName name' });
+      q = q
+        .populate({ path: 'restaurantId', select: 'restaurantName name address' })
+        .populate({ path: 'customerId', select: 'name phone address' });
     }
 
     const found = await q.exec();
@@ -127,7 +202,15 @@ export const getOrdersByRole = async (req, res) => {
       const obj = o.toObject ? o.toObject() : o;
       if (obj.restaurantId && typeof obj.restaurantId === 'object') {
         obj.restaurant = obj.restaurantId.restaurantName || obj.restaurantId.name || '';
+        obj.pickupAddress = obj.restaurantId.address || null;
         obj.restaurantId = obj.restaurantId._id ? obj.restaurantId._id.toString() : obj.restaurantId;
+      }
+      if (obj.customerId && typeof obj.customerId === 'object') {
+        obj.customerName = obj.customerId.name || '';
+        obj.customerPhone = obj.customerId.phone || '';
+        // Keep deliveryAddress as-is on order; ensure present
+        if (!obj.deliveryAddress && obj.customerId.address) obj.deliveryAddress = obj.customerId.address;
+        obj.customerId = obj.customerId._id ? obj.customerId._id.toString() : obj.customerId;
       }
       return obj;
     });
@@ -260,19 +343,28 @@ export const getAvailableOrdersForDrivers = async (req, res) => {
       });
     }
     
+    // Show READY and COMBINED orders for drivers
     const found = await Order.find({
-      status: 'READY',
+      status: { $in: ['READY', 'COMBINED'] },
       driverId: null
     })
       .sort({ createdAt: -1 })
-      .populate({ path: 'restaurantId', select: 'restaurantName name' });
+      .populate({ path: 'restaurantId', select: 'restaurantName name address' })
+      .populate({ path: 'customerId', select: 'name phone address' });
 
     // Map to include a top-level 'restaurant' field for UI
     const orders = found.map((o) => {
       const obj = o.toObject ? o.toObject() : o;
       if (obj.restaurantId && typeof obj.restaurantId === 'object') {
         obj.restaurant = obj.restaurantId.restaurantName || obj.restaurantId.name || '';
+        obj.pickupAddress = obj.restaurantId.address || null;
         obj.restaurantId = obj.restaurantId._id ? obj.restaurantId._id.toString() : obj.restaurantId;
+      }
+      if (obj.customerId && typeof obj.customerId === 'object') {
+        obj.customerName = obj.customerId.name || '';
+        obj.customerPhone = obj.customerId.phone || '';
+        if (!obj.deliveryAddress && obj.customerId.address) obj.deliveryAddress = obj.customerId.address;
+        obj.customerId = obj.customerId._id ? obj.customerId._id.toString() : obj.customerId;
       }
       return obj;
     });

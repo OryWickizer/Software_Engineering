@@ -33,4 +33,8 @@ export const orderService = {
     });
     return response.data;
   },
+  combineWithNeighbors: async (customerId, radiusMeters = 500) => {
+    const response = await api.post('/orders/combine', { customerId, radiusMeters });
+    return response.data;
+  },
 };

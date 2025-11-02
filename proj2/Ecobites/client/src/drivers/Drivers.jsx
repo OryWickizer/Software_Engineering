@@ -86,6 +86,29 @@ export default function Drivers() {
     }
   };
 
+  // Accept all orders in the same combined group
+  const handleAcceptCombinedGroup = async (groupId) => {
+    try {
+      setIsLoading(true);
+      const groupOrders = (orders.available || []).filter(o => o.combineGroupId === groupId);
+      for (const go of groupOrders) {
+        await orderService.updateStatus(go._id, { status: 'DRIVER_ASSIGNED', driverId: user._id });
+      }
+      // Update local state to move group orders to current
+      setOrders(prev => ({
+        ...prev,
+        available: prev.available.filter(o => o.combineGroupId !== groupId),
+        current: [...prev.current, ...groupOrders.map(o => ({ ...o, status: 'DRIVER_ASSIGNED' }))]
+      }));
+      setAcceptedOrders(prev => [...prev, ...groupOrders]);
+      setActiveTab('current');
+    } catch (err) {
+      console.error('Error accepting combined group:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Handler for updating order status
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -335,13 +358,42 @@ export default function Drivers() {
     setSelectedOrderForLocation(null);
   };
 
-  // Calculate points with multipliers
+  // Calculate potential points with multipliers (for Available list)
   const calculatePoints = (order) => {
-    let pointsValue = order.points;
-    if (driver.vehicle.type === "EV") pointsValue *= driver.rewards.multipliers.ev;
-    if (order.type === "community") pointsValue *= driver.rewards.multipliers.community;
-    if (order.ecoRoute) pointsValue *= driver.rewards.multipliers.efficiency;
-    return Math.round(pointsValue);
+    const base = Number(
+      order?.driverRewardPoints ??
+      order?.points ??
+      getVehicleIncentive() ??
+      0
+    );
+    let pts = base;
+    if ((driver.vehicle.type || "").toLowerCase().includes("ev")) pts *= (driver.rewards.multipliers.ev || 1);
+    if (order?.type === "community") pts *= (driver.rewards.multipliers.community || 1);
+    if (order?.ecoRoute) pts *= (driver.rewards.multipliers.efficiency || 1);
+    const safe = Number.isFinite(pts) ? Math.round(pts) : 0;
+    return Math.max(0, safe);
+  };
+
+  // Awarded points already credited (for Past list)
+  const getAwardedPoints = (order) => {
+    const val = Number(order?.driverRewardPoints ?? order?.points ?? getVehicleIncentive() ?? 0);
+    return Number.isFinite(val) ? Math.max(0, Math.round(val)) : 0;
+  };
+
+  // Best-effort customer name
+  const getCustomerName = (order) => {
+    if (!order) return "Customer";
+    return (
+      order.customerName ||
+      (typeof order.customer === 'string' ? order.customer : order.customer?.name) ||
+      order.customerId?.name ||
+      "Customer"
+    );
+  };
+
+  // ETA/duration fallback
+  const getEta = (order) => {
+    return order?.eta || order?.estimate || "ETA ~12 mins";
   };
 
   // Driver green delivery incentive (display only; credited on delivery by server)
@@ -511,9 +563,9 @@ export default function Drivers() {
                         </span>
                       </div>
                       <p className="font-medium text-gray-800">{order.restaurant}</p>
-                      <p className="text-sm text-gray-600">Customer: {order.customer}</p>
+                      <p className="text-sm text-gray-600">Customer: {getCustomerName(order)}</p>
                       <p className="text-sm text-gray-600 mt-1">📞 {order.customerPhone}</p>
-                      <p className="text-sm text-emerald-600 font-medium mt-2">ETA: {order.eta}</p>
+                      <p className="text-sm text-emerald-600 font-medium mt-2">ETA: {getEta(order)}</p>
                       
                       {/* Address Details */}
                       <div className="mt-3 space-y-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
@@ -570,7 +622,7 @@ export default function Drivers() {
                         <span className="text-xs text-gray-500">{order.date}</span>
                       </div>
                       <p className="font-medium text-gray-800">{order.restaurant}</p>
-                      <p className="text-sm text-gray-600">Customer: {order.customer}</p>
+                      <p className="text-sm text-gray-600">Customer: {getCustomerName(order)}</p>
                       <span className="inline-block mt-2 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
                         {order.status}
                       </span>
@@ -586,7 +638,7 @@ export default function Drivers() {
                         </div>
                       )}
                       <span className="inline-block mt-2 px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
-                        +{order.points} pts
+                        +{getAwardedPoints(order)} pts
                       </span>
                     </>
                   )}
@@ -595,16 +647,23 @@ export default function Drivers() {
                   {activeTab === "available" && (
                     <>
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-medium text-gray-600">{order.restaurant}</span>
-                        {order.type === "community" && (
-                          <span className="px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
-                            👥 Group ({order.groupSize})
+                        <span className="text-sm font-medium text-gray-800">{order.restaurant}</span>
+                        {order.status === 'COMBINED' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
+                            👥 Combined Delivery
                           </span>
                         )}
                       </div>
+                      {order.status === 'COMBINED' && (
+                        <div className="mb-2 text-xs text-gray-600">
+                          {(() => { const size = (orders.available || []).filter(o => o.combineGroupId && o.combineGroupId === order.combineGroupId).length; return (
+                            <span>Group {order.combineGroupId} • {size} orders</span>
+                          ); })()}
+                        </div>
+                      )}
                       <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm text-gray-600">📍 {order.distance}</span>
-                        <span className="text-sm font-medium text-emerald-600">{order.estimate}</span>
+                        <span className="text-sm text-gray-600">📍 {order.distance || 'Nearby'}</span>
+                        <span className="text-sm font-medium text-emerald-600">{order.estimate || 'ETA ~12 mins'}</span>
                       </div>
                       <div className="mt-3 flex items-center justify-between text-sm">
                         <span className="text-gray-600">
@@ -628,11 +687,14 @@ export default function Drivers() {
                       {/* Accept/Reject Buttons */}
                       <div className="flex gap-2 mt-4">
                         <button
-                          onClick={() => handleAcceptOrder(order._id)}
+                          onClick={() => order.status === 'COMBINED' && (orders.available || []).some(o => o.combineGroupId === order.combineGroupId && o._id !== order._id)
+                            ? handleAcceptCombinedGroup(order.combineGroupId)
+                            : handleAcceptOrder(order._id)
+                          }
                           disabled={acceptedOrders.some(o => (o._id || o.id) === (order._id || order.id)) || rejectedOrders.includes(order._id || order.id)}
                           className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                          ✓ Accept
+                          {order.status === 'COMBINED' ? '✓ Accept Group' : '✓ Accept'}
                         </button>
                         <button
                           onClick={() => handleRejectOrder(order._id || order.id)}

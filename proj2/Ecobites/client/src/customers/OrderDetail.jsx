@@ -1,9 +1,39 @@
-import React, { useState, useEffect } from 'react';
+  import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
 import { authService } from '../api/services/auth.service';
+  // Combine with neighbors
+  
+
 
 const OrderDetail = () => {
+  const [combining, setCombining] = useState(false);
+  const [combinedOrders, setCombinedOrders] = useState([]);
+  const [combineError, setCombineError] = useState(null);
+  const [combineSuccess, setCombineSuccess] = useState(null);
+
+  const handleCombineWithNeighbors = async () => {
+    if (!currentUser?._id || combining) return;
+    setCombining(true);
+    setCombineError(null);
+    setCombineSuccess(null);
+    try {
+      const result = await orderService.combineWithNeighbors(currentUser._id);
+      setCombinedOrders(result.combinedOrders || []);
+      if (result.message && result.updatedOrderIds && result.updatedOrderIds.length > 0) {
+        setCombineSuccess(result.message);
+        setCombineError(null);
+        // Optionally, refresh order details after combine
+        if (result.combinedOrders && result.combinedOrders[0]) setOrder(result.combinedOrders[0]);
+      } else if (result.message) {
+        setCombineError(result.message);
+      }
+    } catch (e) {
+      setCombineError(e?.response?.data?.message || 'Failed to combine orders');
+    } finally {
+      setCombining(false);
+    }
+  };
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
@@ -198,8 +228,8 @@ const OrderDetail = () => {
           </div>
 
           {/* Customer actions */}
-          {currentUser?.role === 'customer' && !['DELIVERED', 'CANCELLED'].includes(String(order.status).toUpperCase()) && (
-            <div className="mb-6">
+          {currentUser?.role === 'customer' && !['DELIVERED', 'CANCELLED', 'COMBINED'].includes(String(order.status).toUpperCase()) && (
+            <div className="mb-6 flex gap-4">
               <button
                 onClick={handleCancel}
                 disabled={updating}
@@ -207,6 +237,43 @@ const OrderDetail = () => {
               >
                 {updating ? 'Cancelling…' : 'Cancel Order'}
               </button>
+              <button
+                onClick={handleCombineWithNeighbors}
+                disabled={combining}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {combining ? 'Combining…' : 'Combine with Neighbors'}
+              </button>
+            </div>
+          )}
+
+          {/* Combined Orders Result & Success/Error UI */}
+          {combineSuccess && (
+            <div className="mb-6">
+              <div className="p-4 rounded bg-emerald-100 text-emerald-800 font-semibold">
+                {combineSuccess}
+              </div>
+              {combinedOrders.length > 1 && (
+                <div className="mt-2">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Combined Orders:</h3>
+                  <ul className="space-y-2">
+                    {combinedOrders.map((o) => (
+                      <li key={o._id} className="border rounded p-3 flex flex-col">
+                        <span className="font-medium">Order #{o.orderNumber || o._id?.slice(-6)}</span>
+                        <span className="text-sm text-gray-600">{o.deliveryAddress?.street}, {o.deliveryAddress?.city}</span>
+                        <span className="text-sm text-gray-500">Customer: {String(o.customerId) !== String(currentUser._id) ? o.customerId : 'You'}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          {combineError && (
+            <div className="mb-6">
+              <div className="p-4 rounded bg-red-100 text-red-800 font-semibold">
+                {combineError}
+              </div>
             </div>
           )}
 

@@ -53,10 +53,11 @@ const orderSchema = new mongoose.Schema({
       'picked_up',
       'OUT_FOR_DELIVERY',
       'out_for_delivery',
-      'DELIVERED',
-      'delivered',
-      'CANCELLED',
-      'cancelled'
+  'DELIVERED',
+  'delivered',
+  'CANCELLED',
+  'cancelled',
+  'COMBINED'
     ],
     default: 'PLACED'
   },
@@ -94,6 +95,15 @@ const orderSchema = new mongoose.Schema({
       lng: Number
     }
   },
+  // Grouping info for combined deliveries
+  combineGroupId: {
+    type: String,
+    default: null
+  },
+  combineWith: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order'
+  }],
   subtotal: {
     type: Number,
     required: false,

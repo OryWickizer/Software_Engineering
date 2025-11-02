@@ -1,0 +1,78 @@
+name: Deploy (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment name"
+        default: "production"
+        required: true
+
+jobs:
+  build-artifacts:
+    name: Build Client & Package Server
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install client deps
+        working-directory: proj2/Ecobites/client
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm i; fi
+
+      - name: Build client
+        working-directory: proj2/Ecobites/client
+        run: npm run build
+
+      - name: Upload client dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist-${{ github.sha }}
+          path: proj2/Ecobites/client/dist
+
+      - name: Install server deps
+        working-directory: proj2/Ecobites/server
+        run: |
+          if [ -f package-lock.json ]; then npm ci --only=production; else npm i --omit=dev; fi
+
+      - name: Package server (zip)
+        working-directory: proj2/Ecobites/server
+        run: |
+          zip -r server-${{ github.sha }}.zip src package.json package-lock.json jest.config.js || true
+
+      - name: Upload server package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-package-${{ github.sha }}
+          path: proj2/Ecobites/server/server-${{ github.sha }}.zip
+
+  # Optional: push server image to GHCR (requires Dockerfile and uncommented steps)
+  # server-container:
+  #   name: Build & Push Server Image (GHCR)
+  #   runs-on: ubuntu-latest
+  #   needs: build-artifacts
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: Login to GHCR
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Build & Push
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         context: proj2/Ecobites/server
+  #         push: true
+  #         tags: ghcr.io/${{ github.repository }}-server:latest,ghcr.io/${{ github.repository }}-server:${{ github.sha }}

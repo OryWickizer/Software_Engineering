@@ -9,6 +9,7 @@ export const ORDER_STATUS = {
   OUT_FOR_DELIVERY: 'Out for Delivery',
   DELIVERED: 'Delivered',
   CANCELLED: 'Cancelled',
+  COMBINED: 'Combined Delivery',
 };
 
 export const USER_ROLES = {
@@ -95,4 +96,5 @@ export const STATUS_COLORS = {
   OUT_FOR_DELIVERY: 'bg-orange-100 text-orange-700',
   DELIVERED: 'bg-green-100 text-green-700',
   CANCELLED: 'bg-red-100 text-red-700',
+  COMBINED: 'bg-teal-100 text-teal-700',
 };
