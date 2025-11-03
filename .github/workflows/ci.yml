@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, Yash ]
+    # only run CI when files under the Ecobites app change
+    paths:
+      - 'proj2/Ecobites/**'
+  pull_request:
+    branches: [ main, Yash ]
+    paths:
+      - 'proj2/Ecobites/**'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server-tests:
+    name: Server • Jest + Coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proj2/Ecobites/server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: proj2/Ecobites/server/package.json
+
+      - name: Install deps
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm i; fi
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-coverage
+          path: proj2/Ecobites/server/coverage
+
+  client-tests:
+    name: Client • Lint + Vitest + Coverage + Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proj2/Ecobites/client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: proj2/Ecobites/client/package.json
+
+      - name: Install deps
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm i; fi
+
+      - name: Lint (client)
+        run: npm run lint --if-present
+
+      - name: Run unit tests
+        run: npm test -- --run
+
+      - name: Coverage (vitest)
+        run: npm run test:coverage
+
+      - name: Upload client coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-coverage
+          path: proj2/Ecobites/client/coverage
+
+      - name: Build client
+        run: npm run build
+
+      - name: Upload client build
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: proj2/Ecobites/client/dist

@@ -10,6 +10,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering)
 
 # EcoBites Monorepo (Client + Server)
+hi
 
 This repo contains a React frontend (Vite + Tailwind) and a Node/Express backend with MongoDB and Jest tests.
 

@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import { register, login } from '../controller/auth.controller.js';
-import { createOrder, getOrdersByRole, updateOrderStatus, getAvailableOrdersForDrivers, getOrderById } from '../controller/orders.controller.js';
+import { createOrder, getOrdersByRole, updateOrderStatus, getAvailableOrdersForDrivers, getOrderById, combineOrdersWithNeighbors } from '../controller/orders.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
 
 const router = Router();
 
 // order routes
+// Combine orders for delivery optimization
+router.post('/combine', protect, combineOrdersWithNeighbors);
 router.post('/', protect, createOrder);
 
 // IMPORTANT: place specific routes BEFORE the generic parameterized route to avoid shadowing
