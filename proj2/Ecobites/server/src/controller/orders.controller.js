@@ -2,11 +2,15 @@
 export const combineOrdersWithNeighbors = async (req, res) => {
   try {
     const { customerId, radiusMeters = 500 } = req.body;
+    console.log('Combine request from customer:', customerId, 'radius:', radiusMeters);
+    
     // Get the customer's address
     const customer = await (await import('../models/User.model.js')).User.findById(customerId);
     if (!customer || !customer.address || !customer.address.coordinates) {
       return res.status(400).json({ message: 'Customer address/coordinates not found' });
     }
+    console.log('Customer address:', customer.address);
+    
     // Find other customers with orders in PLACED/PREPARING/READY status, within city/zip
     const activeStatuses = ['PLACED', 'PREPARING', 'READY'];
     const orders = await Order.find({
@@ -14,6 +18,7 @@ export const combineOrdersWithNeighbors = async (req, res) => {
       'deliveryAddress.city': customer.address.city,
       'deliveryAddress.zipCode': customer.address.zipCode,
     });
+    console.log('Found orders in same city/zip:', orders.length);
     // Filter by geo proximity (Haversine formula)
     function getDistanceMeters(coord1, coord2) {
       if (!coord1 || !coord2) return Infinity;
@@ -30,8 +35,14 @@ export const combineOrdersWithNeighbors = async (req, res) => {
     const nearbyOrders = orders.filter(o => {
       if (!o.deliveryAddress?.coordinates) return false;
       const dist = getDistanceMeters(customer.address.coordinates, o.deliveryAddress.coordinates);
-      return dist <= radiusMeters && String(o.customerId) !== String(customerId);
+      const isNearby = dist <= radiusMeters && String(o.customerId) !== String(customerId);
+      if (dist <= radiusMeters) {
+        console.log('Order', o._id, 'distance:', dist, 'customer:', o.customerId, 'isNearby:', isNearby);
+      }
+      return isNearby;
     });
+    console.log('Nearby orders after filtering:', nearbyOrders.length);
+    
     if (nearbyOrders.length === 0) {
       return res.status(200).json({ message: 'No nearby orders to combine', combinedOrders: [] });
     }
@@ -41,7 +52,12 @@ export const combineOrdersWithNeighbors = async (req, res) => {
     const updatedOrderIds = [];
     // Determine combine group id
     const myOrder = await Order.findOne({ customerId, status: { $in: activeStatuses } });
-    const groupId = `GRP${(myOrder?._id?.toString() || Date.now().toString()).slice(-6)}`;
+    
+    if (!myOrder) {
+      return res.status(400).json({ message: 'You don\'t have any active orders to combine' });
+    }
+    
+    const groupId = `GRP${myOrder._id.toString().slice(-6)}`;
     const allOrders = [myOrder, ...nearbyOrders].filter(Boolean);
     const allIds = allOrders.map(o => o._id);
 
@@ -63,7 +79,7 @@ export const combineOrdersWithNeighbors = async (req, res) => {
     // Return updated orders and success message
     return res.status(200).json({
       message: `Orders combined! Both you and your neighbors earned ${COMBINED_REWARD} eco points.`,
-      combinedOrders: [myOrder, ...nearbyOrders],
+      combinedOrders: allOrders, // Use filtered allOrders instead of raw array
       updatedOrderIds
     });
   } catch (error) {

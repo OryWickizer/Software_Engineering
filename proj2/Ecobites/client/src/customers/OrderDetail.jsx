@@ -257,7 +257,7 @@ const OrderDetail = () => {
                 <div className="mt-2">
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">Combined Orders:</h3>
                   <ul className="space-y-2">
-                    {combinedOrders.map((o) => (
+                    {combinedOrders.filter(o => o && o._id).map((o) => (
                       <li key={o._id} className="border rounded p-3 flex flex-col">
                         <span className="font-medium">Order #{o.orderNumber || o._id?.slice(-6)}</span>
                         <span className="text-sm text-gray-600">{o.deliveryAddress?.street}, {o.deliveryAddress?.city}</span>
