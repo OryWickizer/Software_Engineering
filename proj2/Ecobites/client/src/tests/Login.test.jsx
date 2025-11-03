@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
-import Login from '../pages/Login.jsx';
 import { AuthProvider } from '../context/AuthContext';
 import { authService } from '../api/services/auth.service';
 import '@testing-library/jest-dom';
+import Login from '../pages/login';
 
 // Mock the axios config module first
 vi.mock('../api/axios.config', () => ({
