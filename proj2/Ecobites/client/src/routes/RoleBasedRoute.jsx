@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthContext } from '../hooks/useAuthContext';
 
-export const RoleBasedRoute = ({ children, allowedRoles }) => {
+export const RoleBasedRoute = ({ allowedRoles }) => {
   const { user, loading } = useAuthContext();
 
   if (loading) {

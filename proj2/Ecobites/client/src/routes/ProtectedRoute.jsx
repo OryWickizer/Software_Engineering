@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthContext } from '../hooks/useAuthContext';
 
-export const ProtectedRoute = ({ children }) => {
+export const ProtectedRoute = () => {
   const { isAuthenticated, loading } = useAuthContext();
 
   if (loading) {
