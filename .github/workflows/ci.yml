@@ -72,11 +72,19 @@ jobs:
         # allow lint failures so tests still run and provide feedback
         continue-on-error: true
 
+      - name: Format check (prettier)
+        run: npm run format:check
+
       - name: Run unit tests
         run: npm test -- --run
 
       - name: Coverage (vitest)
         run: npm run test:coverage
+
+      - name: Upload client coverage to Coveralls
+        run: npx coveralls < ./coverage/lcov.info
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
       - name: Upload client coverage
         uses: actions/upload-artifact@v4

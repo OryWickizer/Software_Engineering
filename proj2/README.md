@@ -1,13 +1,13 @@
 [![DOI](https://zenodo.org/badge/1044954690.svg)](https://doi.org/10.5281/zenodo.17497556)
 [![CI](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
-[![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=flat&logo=eslint&logoColor=white)](Ecobites/client/eslint.config.js)
-[![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black)](Ecobites/client/.prettierrc)
+[![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=flat&logo=eslint&logoColor=white)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
+[![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/OryWickizer/Software_Engineering/branch/main/graph/badge.svg?flag=server)](https://codecov.io/gh/OryWickizer/Software_Engineering)
+[![Babel](https://img.shields.io/badge/Babel-F9DC3E?style=flat&logo=babel&logoColor=black)](https://babeljs.io/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Node.js Version](https://img.shields.io/badge/node.js-18-green.svg)](https://nodejs.org/)
 [![GitHub issues](https://img.shields.io/github/issues/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering/issues)
-
-[![GitHub last commit](https://img.shields.io/github/last-commit/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering)
+[![GitHub last commit](https://img.shields.io/github/last-commit/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering/commits/main/)
 
 # EcoBites Monorepo (Client + Server)
 
