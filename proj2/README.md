@@ -2,9 +2,12 @@
 [![CI](https://github.com/your-username/your-repo/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/your-repo/actions/workflows/ci.yml)
 [![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=flat&logo=eslint&logoColor=white)](Ecobites/client/eslint.config.js)
 [![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black)](Ecobites/client/.prettierrc)
-[![Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)](Ecobites/server/coverage/lcov-report/index.html)
+[![Coverage](https://img.shields.io/badge/Coverage-56%25-yellow)](Ecobites/server/coverage/lcov-report/index.html)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Node.js Version](https://img.shields.io/badge/node.js-18-green.svg)](https://nodejs.org/)
+[![GitHub issues](https://img.shields.io/github/issues/your-username/your-repo)](https://github.com/your-username/your-repo/issues)
+[![GitHub stars](https://img.shields.io/github/stars/your-username/your-repo)](https://github.com/your-username/your-repo/stargazers)
+[![GitHub last commit](https://img.shields.io/github/last-commit/your-username/your-repo)](https://github.com/your-username/your-repo)
 
 # EcoBites Monorepo (Client + Server)
 
