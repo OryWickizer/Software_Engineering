@@ -145,7 +145,9 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 - [How it works](docs/how.md) — User tutorials and workflows
 - [What it does](docs/what.md) — Component and function descriptions
+- [API Reference](docs/api.md) — Complete API documentation
 - [Why it matters](docs/why.md) — Project mission and impact
+- [Changelog](CHANGELOG.md) — Version history and release notes
 
 ## License
 
