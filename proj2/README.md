@@ -5,9 +5,9 @@
 [![Coverage](https://img.shields.io/badge/Coverage-56%25-yellow)](Ecobites/server/coverage/lcov-report/index.html)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Node.js Version](https://img.shields.io/badge/node.js-18-green.svg)](https://nodejs.org/)
-[![GitHub issues](https://img.shields.io/github/issues/your-username/your-repo)](https://github.com/your-username/your-repo/issues)
-[![GitHub stars](https://img.shields.io/github/stars/your-username/your-repo)](https://github.com/your-username/your-repo/stargazers)
-[![GitHub last commit](https://img.shields.io/github/last-commit/your-username/your-repo)](https://github.com/your-username/your-repo)
+[![GitHub issues](https://img.shields.io/github/issues/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering/issues)
+
+[![GitHub last commit](https://img.shields.io/github/last-commit/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering)
 
 # EcoBites Monorepo (Client + Server)
 
