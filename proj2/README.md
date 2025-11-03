@@ -1,8 +1,8 @@
 [![DOI](https://zenodo.org/badge/1044954690.svg)](https://doi.org/10.5281/zenodo.17497556)
-[![CI](https://github.com/your-username/your-repo/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/your-repo/actions/workflows/ci.yml)
+[![CI](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
 [![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=flat&logo=eslint&logoColor=white)](Ecobites/client/eslint.config.js)
 [![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black)](Ecobites/client/.prettierrc)
-[![Coverage](https://img.shields.io/badge/Coverage-56%25-yellow)](Ecobites/server/coverage/lcov-report/index.html)
+[![codecov](https://codecov.io/gh/OryWickizer/Software_Engineering/branch/main/graph/badge.svg?flag=server)](https://codecov.io/gh/OryWickizer/Software_Engineering)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Node.js Version](https://img.shields.io/badge/node.js-18-green.svg)](https://nodejs.org/)
 [![GitHub issues](https://img.shields.io/github/issues/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering/issues)
@@ -10,10 +10,8 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering)
 
 # EcoBites Monorepo (Client + Server)
-hi
 
 This repo contains a React frontend (Vite + Tailwind) and a Node/Express backend with MongoDB and Jest tests.
-
 ## Structure
 
 - `Ecobites/client/` — React 18 app built with Vite and Tailwind CSS

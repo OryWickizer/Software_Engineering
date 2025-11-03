@@ -36,3 +36,10 @@ jobs:
 
     - name: Format check client
       run: cd Ecobites/client && npx prettier --check .
+
+    - name: Upload server coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./Ecobites/server/coverage/lcov.info
+        flags: server
+        name: server-coverage
