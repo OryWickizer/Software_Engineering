@@ -1,6 +1,5 @@
-import { createContext, useContext, useState } from 'react';
-
-const CartContext = createContext(null);
+import { useContext, useState } from 'react';
+import { CartContext } from './contexts';
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
@@ -71,4 +70,4 @@ export const useCart = () => {
   return context;
 };
 
-export default CartContext;
+// Note: raw CartContext is exported from `contexts.js`.

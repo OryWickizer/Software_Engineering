@@ -11,6 +11,7 @@
 
 # EcoBites Monorepo (Client + Server)
 
+
 This repo contains a React frontend (Vite + Tailwind) and a Node/Express backend with MongoDB and Jest tests.
 ## Structure
 

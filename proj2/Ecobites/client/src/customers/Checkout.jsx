@@ -1,22 +1,16 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
-import { useAuthContext } from '../context/AuthContext';
+import { useAuthContext } from '../hooks/useAuthContext';
 import { PACKAGING_OPTIONS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
 
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthContext();
-  console.log('Authenticated user at Checkout:', user);
   const cart = location.state?.cart || [];
 
-  if (!isAuthenticated) {
-    navigate('/login', { state: { from: location } });
-    return null;
-  }
-  console.log('Cart items at Checkout:', cart);
-
+  // Hooks must be called unconditionally at the top of the component.
   const [deliveryAddress, setDeliveryAddress] = useState({
     name: '',
     address: '',
@@ -36,6 +30,14 @@ const Checkout = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [packagingPreference, setPackagingPreference] = useState(PACKAGING_OPTIONS.MINIMAL);
+
+  // Redirect to login when user is not authenticated. Do this in an effect
+  // so hooks remain in the same order across renders.
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location } });
+    }
+  }, [isAuthenticated, navigate, location]);
 
   // Packaging choices from constants
   const packagingChoices = [
@@ -71,12 +73,7 @@ const Checkout = () => {
     }
 
     try {
-      setIsProcessing(true);
-      // Calculate order totals
-      const subtotal = parseFloat(getTotal());
-      const deliveryFee = 5;
-      const tax = 0; // or calculate based on your tax rate
-      const total = subtotal + deliveryFee + tax;
+    setIsProcessing(true);
 
       // Determine customer id robustly (support _id, id, nested $oid)
       const extractId = (u) => {
@@ -106,7 +103,7 @@ const Checkout = () => {
         quantity: item.quantity || 1
       }));
 
-      const subtotalClient = parseFloat(getTotal());
+  const subtotalClient = parseFloat(getTotal());
       const deliveryFeeClient = 5;
       const taxClient = 0;
       const totalClient = +(subtotalClient + deliveryFeeClient + taxClient).toFixed(2);
