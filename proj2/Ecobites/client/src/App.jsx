@@ -22,18 +22,6 @@ import { RoleBasedRoute } from './routes/RoleBasedRoute';
 
 function App() {
   return (
-<<<<<<< HEAD
-           <div className="flex min-h-screen flex-col">
-           <SiteHeader />
-             <main className="flex-1">
-               <Routes>
-                 <Route path="/" element={<Index />} />
-                 <Route path="/login" element={<Login />} />
-                 <Route path="/driver" element={<Drivers />} />
-                 <Route path="/customer" element={<Customer />} />
-                 <Route path="/restaurants" element={<Restaurant />} />
-               </Routes>
-=======
            <RestaurantProvider>
              <div className="flex min-h-screen flex-col">
                <SiteHeader />
@@ -70,7 +58,6 @@ function App() {
         </Route>
       </Route>
     </Routes>
->>>>>>> origin/main
              </main>
              <SiteFooter />
            </div>
@@ -79,5 +66,4 @@ function App() {
 }
 
 export default App;
-
 
