@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
-import { useAuthContext } from '../context/AuthContext';
+import { useAuthContext } from '../hooks/useAuthContext';
 import { PACKAGING_OPTIONS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
 
 const Checkout = () => {

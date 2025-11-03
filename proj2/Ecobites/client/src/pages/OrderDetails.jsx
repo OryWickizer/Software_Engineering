@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../context/AuthContext';
+import { useAuthContext } from '../hooks/useAuthContext';
 import { orderService } from '../api/services/order.service';
 import { ORDER_STATUS, STATUS_COLORS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
 
