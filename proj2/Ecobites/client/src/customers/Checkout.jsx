@@ -73,11 +73,7 @@ const Checkout = () => {
     }
 
     try {
-      setIsProcessing(true);
-      // Calculate order totals
-  const subtotal = parseFloat(getTotal());
-  const deliveryFee = 5;
-  const tax = 0; // or calculate based on your tax rate
+    setIsProcessing(true);
 
       // Determine customer id robustly (support _id, id, nested $oid)
       const extractId = (u) => {

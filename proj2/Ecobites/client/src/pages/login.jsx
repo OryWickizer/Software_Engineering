@@ -13,7 +13,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { login, register} = useAuthContext();
+  const { login } = useAuthContext();
 
 
   const handleSubmit = async (e) => {
