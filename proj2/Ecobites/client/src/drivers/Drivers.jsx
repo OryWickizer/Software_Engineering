@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useAuthContext } from "../context/AuthContext";
+import { orderService } from "../api/services/order.service";
+import { DRIVER_INCENTIVES, STATUS_COLORS } from "../utils/constants";
 
 export default function Drivers() {
-  const [activeTab, setActiveTab] = useState("current");
+  const [activeTab, setActiveTab] = useState("available");
   const [activeSection, setActiveSection] = useState("orders");
   const [driverLocation, setDriverLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
@@ -12,17 +15,174 @@ export default function Drivers() {
   const [rejectedOrders, setRejectedOrders] = useState([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [selectedOrderForLocation, setSelectedOrderForLocation] = useState(null);
+  const [availableOrders, setAvailableOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user, setUser, isAuthenticated, refreshUser } = useAuthContext();
+
+  // Fetch available orders
+  useEffect(() => {
+      // State declarations
+    const fetchAvailableOrders = async () => {
+      try {
+        setIsLoading(true);
+  const orders = await orderService.getAvailableForDrivers();
+  setAvailableOrders(orders);
+  // keep tabbed state in sync so Available tab renders immediately
+  setOrders(prev => ({ ...prev, available: orders }));
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isAuthenticated && user?.role === 'driver') {
+      fetchAvailableOrders();
+      // Refresh every 30 seconds
+      const interval = setInterval(fetchAvailableOrders, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, user]);
+
+  // If driver gets a current order, focus Current tab; otherwise prefer Available
+  useEffect(() => {
+    if (acceptedOrders.length > 0 && activeTab !== 'current') {
+      setActiveTab('current');
+    } else if (acceptedOrders.length === 0 && availableOrders.length > 0 && activeTab !== 'available') {
+      setActiveTab('available');
+    }
+  }, [acceptedOrders, availableOrders]);
   
+  // Handler for accepting orders
+  const handleAcceptOrder = async (orderId) => {
+    try {
+      setIsLoading(true);
+      await orderService.updateStatus(orderId, {
+        status: 'DRIVER_ASSIGNED',
+        driverId: user._id
+      });
+      
+      // Move order to accepted orders
+  const order = availableOrders.find(o => o._id === orderId);
+      setAcceptedOrders(prev => [...prev, order]);
+       setOrderStatusMap(prev => ({
+         ...prev,
+         [orderId]: "DRIVER_ASSIGNED"
+       }));
+  setAvailableOrders(prev => prev.filter(o => o._id !== orderId));
+
+      // Keep rendered orders in sync immediately
+      setOrders(prev => ({
+        ...prev,
+        available: prev.available.filter(o => (o._id || o.id) !== orderId),
+        current: [...prev.current, { ...order, status: 'DRIVER_ASSIGNED' }]
+      }));
+      // Focus Current tab for a smoother UX
+      setActiveTab('current');
+    } catch (error) {
+      console.error("Error accepting order:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Accept all orders in the same combined group
+  const handleAcceptCombinedGroup = async (groupId) => {
+    try {
+      setIsLoading(true);
+      const groupOrders = (orders.available || []).filter(o => o.combineGroupId === groupId);
+      for (const go of groupOrders) {
+        await orderService.updateStatus(go._id, { status: 'DRIVER_ASSIGNED', driverId: user._id });
+      }
+      // Update local state to move group orders to current
+      setOrders(prev => ({
+        ...prev,
+        available: prev.available.filter(o => o.combineGroupId !== groupId),
+        current: [...prev.current, ...groupOrders.map(o => ({ ...o, status: 'DRIVER_ASSIGNED' }))]
+      }));
+      setAcceptedOrders(prev => [...prev, ...groupOrders]);
+      setActiveTab('current');
+    } catch (err) {
+      console.error('Error accepting combined group:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handler for updating order status
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      setIsLoading(true);
+      const updatedOrder = await orderService.updateStatus(orderId, {
+        status: newStatus,
+        driverId: user._id
+      });
+      
+      // Update local state for acceptedOrders (used for tab auto-switch)
+      setAcceptedOrders(prev => {
+        if (newStatus === 'DELIVERED') {
+          return prev.filter(o => o._id !== orderId);
+        }
+        return prev.map(order => order._id === orderId ? { ...order, status: newStatus } : order);
+      });
+
+      // Update rendered orders immediately
+      setOrders(prev => {
+        // If delivered: move from current -> past
+        if (newStatus === 'DELIVERED') {
+          const deliveredOrder = prev.current.find(o => (o._id || o.id) === orderId);
+          const updatedDelivered = deliveredOrder ? { ...deliveredOrder, status: 'DELIVERED' } : null;
+          return {
+            ...prev,
+            current: prev.current.filter(o => (o._id || o.id) !== orderId),
+            past: updatedDelivered ? [updatedDelivered, ...prev.past] : prev.past
+          };
+        }
+        // Otherwise: just update status within current
+        return {
+          ...prev,
+          current: prev.current.map(o => (o._id || o.id) === orderId ? { ...o, status: newStatus } : o)
+        };
+      });
+
+      // If delivered and server credited driver incentive, reflect points immediately in Profile
+      if (newStatus === 'DELIVERED' && updatedOrder?.driverRewardPoints > 0) {
+        // Optimistically update local user reward points
+        setUser((prev) => {
+          if (!prev) return prev;
+          const next = { ...prev, rewardPoints: (prev.rewardPoints || 0) + (updatedOrder.driverRewardPoints || 0) };
+          localStorage.setItem('user', JSON.stringify(next));
+          return next;
+        });
+        // Also refresh from server in background to ensure consistency
+        refreshUser?.();
+      }
+
+      // Optional: if last current order was delivered, bounce back to Available
+      setActiveTab(prevTab => {
+        if (newStatus === 'DELIVERED') {
+          const nextHasCurrent = (orders.current || []).some(o => (o._id || o.id) !== orderId);
+          if (!nextHasCurrent && availableOrders.length > 0) return 'available';
+        }
+        return prevTab;
+      });
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Enhanced driver state with vehicle and rewards info
   const [driver] = useState({
-    name: "John Driver",
+    name: user?.name || "Driver",
     rating: 4.8,
     totalDeliveries: 156,
     efficiency: 92,
-    availablePoints: 450,
+    availablePoints: user?.rewardPoints ?? 0,
     vehicle: {
-      type: "EV",
-      model: "Tesla Model 3",
+      type: user?.vehicleType || "EV",
+      model: "",
       isVerified: true
     },
     rewards: {
@@ -42,76 +202,81 @@ export default function Drivers() {
     }
   });
 
-  // Enhanced orders with community options and eco-impact
+  // Fetch current and past orders
+  useEffect(() => {
+    const fetchDriverOrders = async () => {
+      if (!isAuthenticated || user?.role !== 'driver') return;
+      
+      try {
+        setIsLoading(true);
+  const driverOrders = await orderService.getByRole('driver', user._id);
+        
+        // Separate orders by status
+        const current = driverOrders.filter(order => 
+          ['DRIVER_ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY'].includes(order.status)
+        );
+        const past = driverOrders.filter(order => 
+          ['DELIVERED', 'CANCELLED'].includes(order.status)
+        );
+        
+        setAcceptedOrders(current);
+        // Update orders state with real data
+        setOrders({
+          current,
+          past,
+          available: availableOrders
+        });
+      } catch (error) {
+        console.error("Error fetching driver orders:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDriverOrders();
+  }, [isAuthenticated, user, availableOrders]);
+
+  // Enhanced orders state management
   const [orders, setOrders] = useState({
-    current: [
-      {
-        id: 1,
-        customer: "Alice",
-        restaurant: "Green Eats",
-        status: "Picking up",
-        eta: "10 mins",
-        isEcoRoute: true,
-        points: 30,
-        pickupAddress: "123 Green St, City, State 12345",
-        deliveryAddress: "456 Main Ave, City, State 12345",
-        customerPhone: "+1-555-0101"
-      }
-    ],
-    past: [
-      {
-        id: 2,
-        customer: "Bob",
-        restaurant: "Eco Cafe",
-        status: "Delivered",
-        date: "2025-10-22",
-        points: 25,
-        review: {
-          rating: 5,
-          comment: "Very professional and on time!"
-        }
-      },
-      {
-        id: 3,
-        customer: "Carol",
-        restaurant: "Veggie Haven",
-        status: "Delivered",
-        date: "2025-10-21",
-        points: 35,
-        review: {
-          rating: 4,
-          comment: "Great service, food was still hot"
-        }
-      }
-    ],
-    available: [
-      {
-        id: 4,
-        restaurant: "Fresh Foods",
-        distance: "2.5km",
-        estimate: "$18-22",
-        type: "regular",
-        points: 20,
-        ecoRoute: true,
-        pickupAddress: "789 Organic Rd, City, State 12345",
-        deliveryAddress: "321 Delivery Ln, City, State 12345",
-        customerPhone: "+1-555-0102"
-      },
-      {
-        id: 5,
-        restaurant: "Organic Bites",
-        distance: "3.1km",
-        estimate: "$20-25",
-        type: "community",
-        groupSize: 3,
-        points: 45,
-        ecoRoute: true,
-        pickupAddress: "555 Community Way, City, State 12345",
-        deliveryAddress: "777 Unity St, City, State 12345",
-        customerPhone: "+1-555-0103"
-      }
-    ]
+    current: [],
+    past: [],
+    available: []
   });
+      
+
+  // Handle location updates
+  const updateDriverLocation = async (latitude, longitude) => {
+    if (!isAuthenticated || !user) return;
+    
+    setDriverLocation({ latitude, longitude });
+    // Here we would typically send this to the server
+    // We'll need to add this endpoint to the API
+  };
+
+  // Start location tracking
+  const startLocationTracking = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocationTracking(true);
+    navigator.geolocation.watchPosition(
+      (position) => {
+        updateDriverLocation(position.coords.latitude, position.coords.longitude);
+        setLocationError(null);
+      },
+      (error) => {
+        setLocationError(`Error getting location: ${error.message}`);
+        setIsLocationTracking(false);
+      }
+    );
+  };
+
+  // Stop location tracking
+  const stopLocationTracking = () => {
+    setIsLocationTracking(false);
+  };
 
   // Reviews and insights data
   const reviews = {
@@ -163,32 +328,6 @@ export default function Drivers() {
     );
   };
 
-  // Accept order function
-  const handleAcceptOrder = (orderId) => {
-    const acceptedOrder = orders.available.find(order => order.id === orderId);
-    
-    if (acceptedOrder) {
-      setAcceptedOrders([...acceptedOrders, orderId]);
-      setOrderStatusMap(prev => ({
-        ...prev,
-        [orderId]: "accepted"
-      }));
-
-      // Move order to current orders
-      setOrders(prevOrders => ({
-        ...prevOrders,
-        current: [
-          ...prevOrders.current,
-          {
-            ...acceptedOrder,
-            status: "Order Accepted"
-          }
-        ],
-        available: prevOrders.available.filter(order => order.id !== orderId)
-      }));
-    }
-  };
-
   // Reject order function
   const handleRejectOrder = (orderId) => {
     setRejectedOrders([...rejectedOrders, orderId]);
@@ -200,26 +339,11 @@ export default function Drivers() {
     // Remove rejected order from available
     setOrders(prevOrders => ({
       ...prevOrders,
-      available: prevOrders.available.filter(order => order.id !== orderId)
+      available: prevOrders.available.filter(order => (order._id || order.id) !== orderId)
     }));
   };
 
-  // Change order delivery status
-  const handleUpdateOrderStatus = (orderId, newOrderStatus) => {
-    setOrderStatusMap(prev => ({
-      ...prev,
-      [orderId]: newOrderStatus
-    }));
-
-    setOrders(prevOrders => ({
-      ...prevOrders,
-      current: prevOrders.current.map(order =>
-        order.id === orderId
-          ? { ...order, status: newOrderStatus }
-          : order
-      )
-    }));
-  };
+  // Change order delivery status (handled above with API: handleUpdateOrderStatus async)
 
   // Show location modal for specific order
   const handleShowLocationModal = (orderId) => {
@@ -234,30 +358,71 @@ export default function Drivers() {
     setSelectedOrderForLocation(null);
   };
 
-  // Calculate points with multipliers
+  // Calculate potential points with multipliers (for Available list)
   const calculatePoints = (order) => {
-    let pointsValue = order.points;
-    if (driver.vehicle.type === "EV") pointsValue *= driver.rewards.multipliers.ev;
-    if (order.type === "community") pointsValue *= driver.rewards.multipliers.community;
-    if (order.ecoRoute) pointsValue *= driver.rewards.multipliers.efficiency;
-    return Math.round(pointsValue);
+    const base = Number(
+      order?.driverRewardPoints ??
+      order?.points ??
+      getVehicleIncentive() ??
+      0
+    );
+    let pts = base;
+    if ((driver.vehicle.type || "").toLowerCase().includes("ev")) pts *= (driver.rewards.multipliers.ev || 1);
+    if (order?.type === "community") pts *= (driver.rewards.multipliers.community || 1);
+    if (order?.ecoRoute) pts *= (driver.rewards.multipliers.efficiency || 1);
+    const safe = Number.isFinite(pts) ? Math.round(pts) : 0;
+    return Math.max(0, safe);
   };
 
-  // Get status badge color
+  // Awarded points already credited (for Past list)
+  const getAwardedPoints = (order) => {
+    const val = Number(order?.driverRewardPoints ?? order?.points ?? getVehicleIncentive() ?? 0);
+    return Number.isFinite(val) ? Math.max(0, Math.round(val)) : 0;
+  };
+
+  // Best-effort customer name
+  const getCustomerName = (order) => {
+    if (!order) return "Customer";
+    return (
+      order.customerName ||
+      (typeof order.customer === 'string' ? order.customer : order.customer?.name) ||
+      order.customerId?.name ||
+      "Customer"
+    );
+  };
+
+  // ETA/duration fallback
+  const getEta = (order) => {
+    return order?.eta || order?.estimate || "ETA ~12 mins";
+  };
+
+  // Driver green delivery incentive (display only; credited on delivery by server)
+  const getVehicleIncentive = () => {
+    const vt = (driver.vehicle.type || '').toLowerCase();
+    if (vt.includes('ev') || vt.includes('electric')) return DRIVER_INCENTIVES.EV;
+    if (vt.includes('bike') || vt.includes('bicycle')) return DRIVER_INCENTIVES.BIKE;
+    if (vt.includes('scooter') || vt.includes('low')) return DRIVER_INCENTIVES.SCOOTER;
+    return DRIVER_INCENTIVES.DEFAULT;
+  };
+
+  // Safely format address objects for display
+  const formatAddress = (addr) => {
+    if (!addr) return "";
+    if (typeof addr === "string") return addr;
+    if (typeof addr === "object") {
+      const { street, city, zipCode, zip } = addr || {};
+      return [street, city, zipCode || zip].filter(Boolean).join(", ");
+    }
+    try { return String(addr); } catch { return ""; }
+  };
+
+  // Get status badge color using constants
   const getStatusBadgeColor = (orderStatus) => {
-    const statusColorMap = {
-      "Picking up": "bg-blue-100 text-blue-700",
-      "En route": "bg-yellow-100 text-yellow-700",
-      "Arriving": "bg-purple-100 text-purple-700",
-      "Delivered": "bg-green-100 text-green-700",
-      "Order Accepted": "bg-emerald-100 text-emerald-700",
-      "accepted": "bg-emerald-100 text-emerald-700",
-      "rejected": "bg-red-100 text-red-700"
-    };
-    return statusColorMap[orderStatus] || "bg-gray-100 text-gray-700";
+    return STATUS_COLORS[orderStatus] || "bg-gray-100 text-gray-700";
   };
 
   return (
+    user && user.role == 'driver' ? (
     <div className="min-h-screen bg-emerald-50/60">
       {/* Profile Section */}
       <div className="relative overflow-hidden">
@@ -386,63 +551,62 @@ export default function Drivers() {
             {/* Orders Content Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {orders[activeTab].map((order) => (
-                <div key={order.id} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div key={order._id || order.id} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
                   
                   {/* Current Orders */}
                   {activeTab === "current" && (
                     <>
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-medium text-gray-600">Order #{order.id}</span>
+                        <span className="text-sm font-medium text-gray-600">Order #{order.orderNumber || order._id || order.id}</span>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(order.status)}`}>
                           {order.status}
                         </span>
                       </div>
                       <p className="font-medium text-gray-800">{order.restaurant}</p>
-                      <p className="text-sm text-gray-600">Customer: {order.customer}</p>
+                      <p className="text-sm text-gray-600">Customer: {getCustomerName(order)}</p>
                       <p className="text-sm text-gray-600 mt-1">📞 {order.customerPhone}</p>
-                      <p className="text-sm text-emerald-600 font-medium mt-2">ETA: {order.eta}</p>
+                      <p className="text-sm text-emerald-600 font-medium mt-2">ETA: {getEta(order)}</p>
                       
                       {/* Address Details */}
                       <div className="mt-3 space-y-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                        <p><strong>Pickup:</strong> {order.pickupAddress}</p>
-                        <p><strong>Delivery:</strong> {order.deliveryAddress}</p>
+                        <p>
+                          <strong>Pickup:</strong> {order.pickupAddress ? formatAddress(order.pickupAddress) : "Restaurant pickup"}
+                        </p>
+                        <p>
+                          <strong>Delivery:</strong> {formatAddress(order.deliveryAddress)}
+                        </p>
                       </div>
 
                       {/* Status Update Buttons */}
                       <div className="mt-4 space-y-2">
+                        <div className="text-xs text-emerald-700 bg-emerald-50 rounded p-2">Green delivery incentive on completion: +{getVehicleIncentive()} pts</div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleUpdateOrderStatus(order.id, "Picking up")}
+                            onClick={() => handleUpdateOrderStatus(order._id, "OUT_FOR_DELIVERY")}
                             className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors"
                           >
-                            Picking up
+                            Out for delivery
                           </button>
                           <button
-                            onClick={() => handleUpdateOrderStatus(order.id, "En route")}
+                            onClick={() => handleUpdateOrderStatus(order._id, "DELIVERED")}
                             className="flex-1 px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-medium hover:bg-yellow-200 transition-colors"
                           >
-                            En route
+                            Delivered
                           </button>
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleUpdateOrderStatus(order.id, "Arriving")}
-                            className="flex-1 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200 transition-colors"
-                          >
-                            Arriving
-                          </button>
-                          <button
-                            onClick={() => handleUpdateOrderStatus(order.id, "Delivered")}
+                            onClick={() => handleUpdateOrderStatus(order._id, "DELIVERED")}
                             className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors"
                           >
-                            Delivered
+                            Complete Delivery
                           </button>
                         </div>
                       </div>
 
                       {/* Location Button */}
                       <button
-                        onClick={() => handleShowLocationModal(order.id)}
+                        onClick={() => handleShowLocationModal(order._id)}
                         className="w-full mt-3 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium hover:bg-emerald-200 transition-colors"
                       >
                         📍 Share Location
@@ -454,11 +618,11 @@ export default function Drivers() {
                   {activeTab === "past" && (
                     <>
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-medium text-gray-600">Order #{order.id}</span>
+                        <span className="text-sm font-medium text-gray-600">Order #{order.orderNumber || order._id || order.id}</span>
                         <span className="text-xs text-gray-500">{order.date}</span>
                       </div>
                       <p className="font-medium text-gray-800">{order.restaurant}</p>
-                      <p className="text-sm text-gray-600">Customer: {order.customer}</p>
+                      <p className="text-sm text-gray-600">Customer: {getCustomerName(order)}</p>
                       <span className="inline-block mt-2 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
                         {order.status}
                       </span>
@@ -474,7 +638,7 @@ export default function Drivers() {
                         </div>
                       )}
                       <span className="inline-block mt-2 px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
-                        +{order.points} pts
+                        +{getAwardedPoints(order)} pts
                       </span>
                     </>
                   )}
@@ -483,16 +647,23 @@ export default function Drivers() {
                   {activeTab === "available" && (
                     <>
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-medium text-gray-600">{order.restaurant}</span>
-                        {order.type === "community" && (
-                          <span className="px-2 py-1 bg-emerald-100 rounded-full text-xs text-emerald-700">
-                            👥 Group ({order.groupSize})
+                        <span className="text-sm font-medium text-gray-800">{order.restaurant}</span>
+                        {order.status === 'COMBINED' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
+                            👥 Combined Delivery
                           </span>
                         )}
                       </div>
+                      {order.status === 'COMBINED' && (
+                        <div className="mb-2 text-xs text-gray-600">
+                          {(() => { const size = (orders.available || []).filter(o => o.combineGroupId && o.combineGroupId === order.combineGroupId).length; return (
+                            <span>Group {order.combineGroupId} • {size} orders</span>
+                          ); })()}
+                        </div>
+                      )}
                       <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm text-gray-600">📍 {order.distance}</span>
-                        <span className="text-sm font-medium text-emerald-600">{order.estimate}</span>
+                        <span className="text-sm text-gray-600">📍 {order.distance || 'Nearby'}</span>
+                        <span className="text-sm font-medium text-emerald-600">{order.estimate || 'ETA ~12 mins'}</span>
                       </div>
                       <div className="mt-3 flex items-center justify-between text-sm">
                         <span className="text-gray-600">
@@ -505,22 +676,29 @@ export default function Drivers() {
 
                       {/* Address Details */}
                       <div className="mt-3 space-y-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                        <p><strong>Pickup:</strong> {order.pickupAddress}</p>
-                        <p><strong>Delivery:</strong> {order.deliveryAddress}</p>
+                        <p>
+                          <strong>Pickup:</strong> {order.pickupAddress ? formatAddress(order.pickupAddress) : "Restaurant pickup"}
+                        </p>
+                        <p>
+                          <strong>Delivery:</strong> {formatAddress(order.deliveryAddress)}
+                        </p>
                       </div>
 
                       {/* Accept/Reject Buttons */}
                       <div className="flex gap-2 mt-4">
                         <button
-                          onClick={() => handleAcceptOrder(order.id)}
-                          disabled={acceptedOrders.includes(order.id) || rejectedOrders.includes(order.id)}
+                          onClick={() => order.status === 'COMBINED' && (orders.available || []).some(o => o.combineGroupId === order.combineGroupId && o._id !== order._id)
+                            ? handleAcceptCombinedGroup(order.combineGroupId)
+                            : handleAcceptOrder(order._id)
+                          }
+                          disabled={acceptedOrders.some(o => (o._id || o.id) === (order._id || order.id)) || rejectedOrders.includes(order._id || order.id)}
                           className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                          ✓ Accept
+                          {order.status === 'COMBINED' ? '✓ Accept Group' : '✓ Accept'}
                         </button>
                         <button
-                          onClick={() => handleRejectOrder(order.id)}
-                          disabled={acceptedOrders.includes(order.id) || rejectedOrders.includes(order.id)}
+                          onClick={() => handleRejectOrder(order._id || order.id)}
+                          disabled={acceptedOrders.some(o => (o._id || o.id) === (order._id || order.id)) || rejectedOrders.includes(order._id || order.id)}
                           className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
                           ✗ Reject
@@ -661,6 +839,14 @@ export default function Drivers() {
           </div>
         </div>
       )}
-    </div>
+    </div>) : (<div className="min-h-screen flex items-center justify-center bg-emerald-50/60">
+      <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
+        <p className="text-gray-600">You must be logged in as a driver to access this page.</p>
+      </div>
+    </div>)
   );
+
 }
+
+

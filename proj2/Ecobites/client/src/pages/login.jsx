@@ -1,14 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {useAuthContext} from "../context/AuthContext";
+import { authService } from "../api/services/auth.service";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const { login, register} = useAuthContext();
 
 
   const handleSubmit = async (e) => {
@@ -16,12 +22,38 @@ export default function Login() {
     setMessage("");
     setLoading(true);
 
+    try {
+      if(isRegister){
+        await authService.register({ name, email, password, phone });
+        setMessage("Registration successful! You can now log in.");
+        setIsRegister(false);
+      } else {
+        const loginData = await login({ email, password });
+        setMessage("Login successful! Redirecting...");
+        if (loginData.user.role === 'customer') {
+          navigate("/customer");
+        } else if (loginData.user.role === 'driver') {
+          navigate("/driver");
+        } else if (loginData.user.role === 'restaurant') {
+          navigate("/restaurants");
+        } else {
+          navigate("/");
+        }
+      }
+    } catch (error) {
+      console.error("Authentication error:", error);
+      setMessage(error.response?.data?.error || "An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+
+
 
 
 
     console.log("Submitting to:", name, email, password, isRegister);
-    setLoading(false);
   };
+
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-emerald-50 overflow-hidden">
@@ -60,7 +92,9 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+     
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-label={isRegister ? "Registration Form" : "Login Form"}>
           {isRegister && (
             <div className="relative group">
               <input
@@ -95,6 +129,18 @@ export default function Login() {
               className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
             />
           </div>
+          {isRegister && (
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+              />
+            </div>
+          )}
 
           <button
             type="submit"
@@ -105,7 +151,7 @@ export default function Login() {
               {isRegister ? "Create Account" : "Sign In"}
             </span>
             {loading && (
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center" data-testid="loading-spinner">
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
