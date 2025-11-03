@@ -4,188 +4,193 @@ import {User} from "./models/User.model.js";
 import { MenuItem } from "./models/MenuItem.model.js";
 import { Order } from "./models/Order.model.js";
 
+
 export const seedData = async () => {
   try {
-    
     // Clear existing data
     await User.deleteMany({});
     await MenuItem.deleteMany({});
     await Order.deleteMany({});
-    
-    // Create users
-    const customer = await User.create({
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123',
-      phone: '555-0001',
-      role: 'customer',
-      address: {
-        street: '123 Main St',
-        city: 'New York',
-        zipCode: '10001',
-        coordinates: { lat: 40.7128, lng: -74.0060 }
-      }
-    });
-    
-    const restaurant = await User.create({
-      name: 'Mario Rossi',
-      email: 'mario@pizzapalace.com',
-      password: 'password123',
-      phone: '555-0002',
-      role: 'restaurant',
-      restaurantName: 'Pizza Palace',
-      cuisine: ['Italian', 'Pizza'],
-      address: {
-        street: '456 Restaurant Ave',
-        city: 'New York',
-        zipCode: '10002',
-        coordinates: { lat: 40.7150, lng: -74.0050 }
-      }
-    });
-    
-    const driver = await User.create({
-      name: 'Mike Driver',
-      email: 'mike@driver.com',
-      password: 'password123',
-      phone: '555-0003',
-      role: 'driver',
-      vehicleType: 'Motorcycle',
-      licensePlate: 'ABC123',
-      isAvailable: true
-    });
-    
-    // Create menu items
-    const menuItems = await MenuItem.create([
-      {
-        restaurantId: restaurant._id,
-        name: 'Margherita Pizza',
-        description: 'Classic pizza with tomato and mozzarella',
-        price: 12.99,
-        category: 'main',
-        preparationTime: 20,
-        packagingOptions: ['reusable', 'compostable']
-      },
-      {
-        restaurantId: restaurant._id,
-        name: 'Caesar Salad',
-        description: 'Fresh romaine with parmesan and croutons',
-        price: 8.99,
-        category: 'appetizer',
-        preparationTime: 10,
-        packagingOptions: ['compostable', 'minimal']
-      },
-      {
-        restaurantId: restaurant._id,
-        name: 'Tiramisu',
-        description: 'Classic Italian dessert',
-        price: 6.99,
-        category: 'dessert',
-        preparationTime: 5,
-        packagingOptions: ['minimal']
-      }
-    ]);
-    
-    // Create two customers with close geo coordinates
-    const neighbor = await User.create({
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      password: 'password123',
-      phone: '555-0004',
-      role: 'customer',
-      address: {
-        street: '125 Main St',
-        city: 'New York',
-        zipCode: '10001',
-        coordinates: { lat: 40.7129, lng: -74.0061 }
-      }
-    });
 
+    // --- Generate demo users ---
+    const restaurantNames = [
+      'Pizza Palace', 'Green Eats', 'Sushi Zen', 'Burger Haven', 'Taco Fiesta',
+      'Veggie Delight', 'Curry House', 'Pasta Point', 'BBQ Barn', 'Salad Stop',
+      'Dumpling Den', 'Falafel Factory'
+    ];
+    const cuisines = [
+      ['Italian', 'Pizza'], ['Vegan'], ['Japanese', 'Sushi'], ['American', 'Burgers'], ['Mexican'],
+      ['Vegetarian'], ['Indian'], ['Italian', 'Pasta'], ['BBQ'], ['Healthy'], ['Chinese'], ['Middle Eastern']
+    ];
+    const restaurantUsers = [];
+    for (let i = 0; i < restaurantNames.length; i++) {
+      restaurantUsers.push(await User.create({
+        name: `Owner ${i+1}`,
+        email: `owner${i+1}@${restaurantNames[i].replace(/\s/g,'').toLowerCase()}.com`,
+        password: 'password123',
+        phone: `555-01${String(i+1).padStart(2,'0')}`,
+        role: 'restaurant',
+        restaurantName: restaurantNames[i],
+        cuisine: cuisines[i],
+        address: {
+          street: `${100+i} Food Ave`,
+          city: 'Demo City',
+          zipCode: `100${i+1}`,
+          coordinates: { lat: 40.71 + i*0.01, lng: -74.00 - i*0.01 }
+        }
+      }));
+    }
 
-    // Dynamic flow: Place order for John, then Jane, then check for combining
-    // 1. John places order
-    const johnOrder = await Order.create({
-      customerId: customer._id,
-      restaurantId: restaurant._id,
-      items: [
+    const customerUsers = [];
+    // Create customers in 3 neighborhoods - some close together for combining orders
+    const neighborhoods = [
+      { city: 'Demo City', zipCode: '10001', baseLat: 40.72, baseLng: -74.01 }, // Neighborhood 1: customers 1-4
+      { city: 'Demo City', zipCode: '10002', baseLat: 40.75, baseLng: -74.05 }, // Neighborhood 2: customers 5-8
+      { city: 'Demo City', zipCode: '10003', baseLat: 40.78, baseLng: -74.09 }  // Neighborhood 3: customers 9-12
+    ];
+    for (let i = 0; i < 12; i++) {
+      const neighborhood = neighborhoods[Math.floor(i / 4)];
+      customerUsers.push(await User.create({
+        name: `Customer ${i+1}`,
+        email: `customer${i+1}@demo.com`,
+        password: 'password123',
+        phone: `555-02${String(i+1).padStart(2,'0')}`,
+        role: 'customer',
+        address: {
+          street: `${200+i} Main St`,
+          city: neighborhood.city,
+          zipCode: neighborhood.zipCode,
+          // Place customers within 200m of each other in same neighborhood
+          coordinates: { 
+            lat: neighborhood.baseLat + (i % 4) * 0.002, // ~200m apart
+            lng: neighborhood.baseLng - (i % 4) * 0.002 
+          }
+        }
+      }));
+    }
+
+    const driverUsers = [];
+    const vehicles = ['EV', 'Bike', 'Scooter', 'Car', 'Van', 'Motorcycle'];
+    for (let i = 0; i < 6; i++) {
+      driverUsers.push(await User.create({
+        name: `Driver ${i+1}`,
+        email: `driver${i+1}@demo.com`,
+        password: 'password123',
+        phone: `555-03${String(i+1).padStart(2,'0')}`,
+        role: 'driver',
+        vehicleType: vehicles[i],
+        licensePlate: `XYZ${100+i}`,
+        isAvailable: true
+      }));
+    }
+
+    // --- Generate menu items ---
+    const categories = ['appetizer', 'main', 'dessert', 'beverage', 'side'];
+    const packagingOptions = [
+      ['reusable'], ['compostable'], ['minimal'], ['reusable','compostable'], ['compostable','minimal'], ['reusable','minimal']
+    ];
+    const menuItems = [];
+    for (let r = 0; r < restaurantUsers.length; r++) {
+      for (let m = 0; m < 5; m++) {
+        menuItems.push(await MenuItem.create({
+          restaurantId: restaurantUsers[r]._id,
+          name: `${categories[m]} ${restaurantNames[r]} ${m+1}`,
+          description: `Delicious ${categories[m]} from ${restaurantNames[r]}`,
+          price: 5 + m*3 + r,
+          category: categories[m],
+          preparationTime: 10 + m*5,
+          packagingOptions: packagingOptions[(r+m)%packagingOptions.length]
+        }));
+      }
+    }
+
+    // --- Generate orders ---
+    // First, create one active order for each customer in neighborhood 1 (customers 0-3) for combining demo
+    for (let i = 0; i < 4; i++) {
+      const cust = customerUsers[i];
+      const rest = restaurantUsers[i % restaurantUsers.length];
+      const items = menuItems.filter(mi => String(mi.restaurantId) === String(rest._id));
+      const orderItems = [
         {
-          menuItemId: menuItems[0]._id,
-          name: menuItems[0].name,
-          price: menuItems[0].price,
+          menuItemId: items[0]._id,
+          name: items[0].name,
+          price: items[0].price,
           quantity: 2
-        },
-        {
-          menuItemId: menuItems[1]._id,
-          name: menuItems[1].name,
-          price: menuItems[1].price,
-          quantity: 1
         }
-      ],
-      deliveryAddress: customer.address,
-      subtotal: 34.97,
-      deliveryFee: 5,
-      total: 39.97,
-      packagingPreference: 'reusable',
-      ecoRewardPoints: 30,
-      status: 'PLACED',
-      statusHistory: [{
-        status: 'PLACED',
-        updatedBy: 'customer'
-      }]
-    });
-
-    // 2. Jane places order after John
-    const janeOrder = await Order.create({
-      customerId: neighbor._id,
-      restaurantId: restaurant._id,
-      items: [
-        {
-          menuItemId: menuItems[2]._id,
-          name: menuItems[2].name,
-          price: menuItems[2].price,
-          quantity: 1
-        }
-      ],
-      deliveryAddress: neighbor.address,
-      subtotal: 6.99,
-      deliveryFee: 5,
-      total: 11.99,
-      packagingPreference: 'minimal',
-      ecoRewardPoints: 10,
-      status: 'PLACED',
-      statusHistory: [{
-        status: 'PLACED',
-        updatedBy: 'customer'
-      }]
-    });
-
-    // 3. Simulate dynamic check: After Jane's order, check for combining
-    // (In real app, this would be triggered by backend event or polling)
-    const combineController = (await import('./controller/orders.controller.js'));
-    const mockReq = {
-      body: { customerId: neighbor._id, radiusMeters: 500 }
-    };
-    const mockRes = {
-      status(code) { this.statusCode = code; return this; },
-      json(data) { this.data = data; return this; }
-    };
-    await combineController.combineOrdersWithNeighbors(mockReq, mockRes);
-    if (mockRes.data && mockRes.data.combinedOrders && mockRes.data.combinedOrders.length > 0) {
-      console.log(`Jane's order can be combined with:`, mockRes.data.combinedOrders.map(o => o._id));
-    } else {
-      console.log('No eligible orders to combine for Jane.');
+      ];
+      await Order.create({
+        customerId: cust._id,
+        restaurantId: rest._id,
+        items: orderItems,
+        deliveryAddress: cust.address,
+        subtotal: items[0].price * 2,
+        deliveryFee: 5,
+        tax: 2,
+        total: items[0].price * 2 + 7,
+        packagingPreference: 'reusable',
+        ecoRewardPoints: 10,
+        status: 'READY', // All READY so they can be combined
+        statusHistory: [{ status: 'READY', updatedBy: 'restaurant' }],
+        driverId: null,
+        paymentMethod: 'card',
+        specialInstructions: 'For combine demo',
+        estimatedDeliveryTime: new Date(Date.now() + 30*60000)
+      });
     }
     
-    console.log('Demo data seeded successfully!');
-    console.log('Customer ID:', customer._id);
-    console.log('Restaurant ID:', restaurant._id);
-    console.log('Driver ID:', driver._id);
-    console.log('John Order ID:', johnOrder._id);
-    console.log('Jane Order ID:', janeOrder._id);
-    
-    process.exit(0);
+    // Then create additional orders for variety
+    for (let o = 0; o < 20; o++) {
+      const cust = customerUsers[(o + 4) % customerUsers.length]; // Start from customer 5
+      const rest = restaurantUsers[o % restaurantUsers.length];
+      const items = menuItems.filter(mi => String(mi.restaurantId) === String(rest._id));
+      const orderItems = [
+        {
+          menuItemId: items[o%items.length]._id,
+          name: items[o%items.length].name,
+          price: items[o%items.length].price,
+          quantity: 1 + (o%3)
+        },
+        {
+          menuItemId: items[(o+1)%items.length]._id,
+          name: items[(o+1)%items.length].name,
+          price: items[(o+1)%items.length].price,
+          quantity: 1
+        }
+      ];
+      const orderStatus = ['PLACED','ACCEPTED','PREPARING','READY','READY','READY'][o%6];
+      await Order.create({
+        customerId: cust._id,
+        restaurantId: rest._id,
+        items: orderItems,
+        deliveryAddress: cust.address,
+        subtotal: orderItems.reduce((sum, it) => sum + it.price * it.quantity, 0),
+        deliveryFee: 5,
+        tax: 2,
+        total: orderItems.reduce((sum, it) => sum + it.price * it.quantity, 0) + 7,
+        packagingPreference: ['reusable','compostable','minimal'][o%3],
+        ecoRewardPoints: 10 + (o%5)*5,
+        status: orderStatus,
+        statusHistory: [{
+          status: orderStatus,
+          updatedBy: 'customer'
+        }],
+        // Only assign driver for DELIVERED/CANCELLED orders (not in this dataset now)
+        driverId: orderStatus === 'DELIVERED' ? driverUsers[o%driverUsers.length]._id : null,
+        paymentMethod: ['card','cash','online'][o%3],
+        specialInstructions: o%2===0 ? 'Extra napkins please' : '',
+        estimatedDeliveryTime: new Date(Date.now() + (30+o*5)*60000)
+      });
+    }
+
+    console.log('Seeded demo data:');
+    console.log(`Restaurants: ${restaurantUsers.length}`);
+    console.log(`Customers: ${customerUsers.length}`);
+    console.log(`Drivers: ${driverUsers.length}`);
+    console.log(`Menu Items: ${menuItems.length}`);
+    console.log('Orders: 24');
   } catch (error) {
     console.error('Seed error:', error);
-    process.exit(1);
+    throw error;
   }
 };
 

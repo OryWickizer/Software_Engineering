@@ -11,13 +11,23 @@ const Checkout = () => {
   const cart = location.state?.cart || [];
 
   // Hooks must be called unconditionally at the top of the component.
-  const [deliveryAddress, setDeliveryAddress] = useState({
-    name: '',
-    address: '',
-    city: '',
-    zip: '',
-    phone: '',
-  });
+
+  // Prefill address from user if available
+  const getUserAddress = (u) => {
+    if (!u || !u.address) return {
+      name: u?.name || '',
+      address: '', city: '', zip: '', phone: u?.phone || ''
+    };
+    return {
+      name: u.name || '',
+      address: u.address.street || '',
+      city: u.address.city || '',
+      zip: u.address.zipCode || '',
+      phone: u.phone || ''
+    };
+  };
+  const [useSavedAddress, setUseSavedAddress] = useState(true);
+  const [deliveryAddress, setDeliveryAddress] = useState(() => getUserAddress(user));
 
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'cod'
 
@@ -33,11 +43,16 @@ const Checkout = () => {
 
   // Redirect to login when user is not authenticated. Do this in an effect
   // so hooks remain in the same order across renders.
+
   React.useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: location } });
     }
-  }, [isAuthenticated, navigate, location]);
+    // If user changes, update address only if using saved address
+    if (useSavedAddress) {
+      setDeliveryAddress(getUserAddress(user));
+    }
+  }, [isAuthenticated, navigate, location, user, useSavedAddress]);
 
   // Packaging choices from constants
   const packagingChoices = [
@@ -54,8 +69,10 @@ const Checkout = () => {
     return cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0).toFixed(2);
   };
 
+
   const handleAddressChange = (e) => {
     setDeliveryAddress({ ...deliveryAddress, [e.target.name]: e.target.value });
+    if (useSavedAddress) setUseSavedAddress(false);
   };
 
   const handlePaymentChange = (e) => {
@@ -155,7 +172,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50 p-6 pt-24">
+  <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-50 p-6 pt-24">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <button
@@ -164,7 +181,7 @@ const Checkout = () => {
           >
             ← Back to Restaurants
           </button>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent mb-2">Checkout</h1>
+          <h1 className="text-4xl font-bold bg-linear-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent mb-2">Checkout</h1>
           <p className="text-gray-600">Complete your order with ease</p>
         </div>
 
@@ -194,6 +211,7 @@ const Checkout = () => {
             </div>
           </div>
 
+
           {/* Delivery Address */}
           <div className="bg-white rounded-xl p-6 shadow-lg border border-emerald-100">
             <div className="flex items-center gap-3 mb-4">
@@ -202,6 +220,25 @@ const Checkout = () => {
               </div>
               <h2 className="text-xl font-semibold text-gray-800">Delivery Address</h2>
             </div>
+            {user?.address && (
+              <div className="mb-2 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={useSavedAddress}
+                  onChange={() => {
+                    if (!useSavedAddress) {
+                      setDeliveryAddress(getUserAddress(user));
+                    }
+                    setUseSavedAddress(!useSavedAddress);
+                  }}
+                  id="useSavedAddress"
+                  className="mr-2"
+                />
+                <label htmlFor="useSavedAddress" className="text-sm text-gray-700 cursor-pointer">
+                  Use saved address
+                </label>
+              </div>
+            )}
             <form className="space-y-4">
               <input
                 type="text"
@@ -345,7 +382,7 @@ const Checkout = () => {
             )}
 
             {paymentMethod === 'cod' && (
-              <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-lg p-6">
+              <div className="bg-linear-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-lg p-6">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
                     <span className="text-2xl">💵</span>
@@ -395,7 +432,7 @@ const Checkout = () => {
           <button
             onClick={handleConfirmOrder}
             disabled={isProcessing}
-            className="px-10 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl disabled:opacity-60 hover:from-emerald-700 hover:to-emerald-600 transition-all transform hover:scale-105"
+            className="px-10 py-4 bg-linear-to-r from-emerald-600 to-emerald-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl disabled:opacity-60 hover:from-emerald-700 hover:to-emerald-600 transition-all transform hover:scale-105"
           >
             {isProcessing ? (
               <div className="flex items-center gap-2">
