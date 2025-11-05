@@ -18,128 +18,55 @@
 [![Contributing](https://img.shields.io/badge/Contributing-Read-blue)](CONTRIBUTING.md)
 [![GitHub last commit](https://img.shields.io/github/last-commit/OryWickizer/Software_Engineering)](https://github.com/OryWickizer/Software_Engineering/commits/main/)
 
-# EcoBites Monorepo (Client + Server)
+# EcoBites
 
 
-This repo contains a React frontend (Vite + Tailwind) and a Node/Express backend with MongoDB and Jest tests.
-## Structure
+At EcoBites, we are redefining food delivery with sustainability at its core, empowering customers to make every meal an eco-conscious choice. Through our food delivery website, we provide flexible eco-friendly options, from reusable or compostable packaging to rewards for low-carbon delivery methods, while encouraging shared orders to reduce trips. Our goal is to create a food delivery experience that benefits people, communities, and the planet—one conscious meal at a time.
 
-- `Ecobites/client/` — React 18 app built with Vite and Tailwind CSS
-  - Routing via `react-router-dom`
-  - Pages: `Index`, `login`, `Drivers`, `Customer`, `Checkout`, `Profile`
-  - Sections: `Hero`, `Mission`, `HowItWorks`, `WhatsNew`
-  - Site chrome: `Header`, `Footer`
-  - Authentication with JWT and context
-  - Tests with Vitest + React Testing Library
-- `Ecobites/server/` — Express API with Mongoose models
-  - Auth endpoints: register, login (JWT)
-  - Order management, menu items, restaurant management
-  - Health endpoint
-  - Mongo connection via `mongoose`
-  - Tests with Jest + Supertest and an in-memory MongoDB
-- `docs/` — Project documentation (how, what, why)
+## Our Mission
 
-## Backend (Ecobites/server)
+## Development Roadmap
 
-### Tech
-- Express 5, Mongoose 8, JWT, bcrypt
-- ESM modules (`type: module`)
-- Jest 30 + Supertest + `mongodb-memory-server` for integration tests
+### **October – Release 1: Prototype**
 
-### Key files
-- `src/app.js` — Express app setup (CORS, JSON, routes)
-- `src/server.js` — Starts server after DB connection
-- `src/config/env.js` — Loads env vars, connects to Mongo
-- `src/routes/index.js` — `GET /api/health`
-- `src/routes/auth.routes.js` — `POST /api/auth/register`, `POST /api/auth/login`
-- `src/controller/auth.controller.js` — Register/login logic, issues JWT
-- `src/models/User.model.js` — Mongoose user model with password hashing + compare
-- `src/middleware/auth.middleware.js` — JWT auth/authorize helpers (not yet applied to routes)
-- `src/setupTests.js` — Test helpers for in-memory Mongo
+### **November – Release 2: Enhanced System**
 
-### Endpoints
-- `GET /api/health` — Service status
-- `POST /api/auth/register` — Body: `{ name, email, password, role? }` → Creates user, returns `{ token, user }`
-- `POST /api/auth/login` — Body: `{ email, password }` → Returns `{ token, user }`
+## Tech Stack
 
-### Env vars (.env)
-- `MONGODB_URI` — Required to run server locally (not used by tests)
-- `PORT` (default 3000)
-- `JWT_SECRET` (default insecure fallback)
+| Layer          | Technology                                    |
+| -------------- | --------------------------------------------- |
+| **Frontend**   | Next.js |
+| **Backend**    | Next.js API Routes, Node.js                   |
+| **Database**   | MongoDB                      |
+| **Auth**       | JWt                                 |
+| **CI/CD**      | GitHub Actions                                |
 
-### Run (Windows, cmd.exe)
-From `Ecobites/server`:
+---
 
-```
-npm install
-npm start
-```
+## Third‑party dependencies
 
-Optional dev reload:
-```
-npm run dev
-```
+## Example Use Cases
 
-### Test (Windows, cmd.exe)
-The `package.json` uses POSIX env var syntax. On Windows cmd.exe, run:
+Here are some example scenarios demonstrating how SnapMealAI can be used:
 
-```
-set "NODE_OPTIONS=--experimental-vm-modules" && npx jest --coverage
-```
+## Setup & Installation
+To run SnapMealAI locally, follow the full installation guide here: [INSTALL.md](INSTALL.md)
 
-Or install cross-env and update scripts:
+## 🧯 Troubleshooting
 
-```
-npm i -D cross-env
-```
-Then in `package.json` scripts:
-```
-"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-"test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch"
-```
+For common issues and step‑by‑step fixes, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-## Frontend (Ecobites/client)
+## 📘 User Guide
 
-### Tech
-- React 18 + Vite 7 + Tailwind CSS 4
-- React Router DOM
-- Vitest + React Testing Library
+Step-by-step usage instructions, screenshots, and walkthroughs are available in the project user guide:
 
-### App flow
-- `src/main.jsx` mounts `<App />` with `<BrowserRouter />`
-- `src/App.jsx` defines routes:
-  - `/` → `Index` (landing, uses `Hero`, `Mission`, `HowItWorks`)
-  - `/login` → `login` (authentication with backend API integration)
-  - `/driver` → `Drivers` (driver dashboard with order management)
-  - `/customer` → `Customer` (customer interface with cart and orders)
-  - `/checkout` → `Checkout` (order placement and eco-rewards)
-  - `/profile` → `Profile` (user profile management)
-- Header/Footer provide navigation and brand; Tailwind used for styling
-- Authentication context manages user state and API calls
+- Read the user guide: [USER_GUIDE.md](USER_GUIDE.md)
 
-### Run (Windows, cmd.exe)
-From `Ecobites/client`:
 
-```
-npm install
-npm run dev
-```
-
-Vite dev server starts (typically http://localhost:5173).
-
-### Test
-From `Ecobites/client`:
-```
-npm test
-```
 
 ## Getting Started
 
 See [INSTALL.md](INSTALL.md) for detailed setup instructions.
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ## Documentation
 
@@ -148,6 +75,13 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 - [API Reference](docs/api.md) — Complete API documentation
 - [Why it matters](docs/why.md) — Project mission and impact
 - [Changelog](CHANGELOG.md) — Version history and release notes
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## Video Tutorial
+
 
 ## License
 
