@@ -70,7 +70,10 @@ const Customer = () => {
                   description: item.description,
                   price: item.price,
                   category: item.category,
-                  isAvailable: item.isAvailable
+                  isAvailable: item.isAvailable,
+                  isSeasonal: item.isSeasonal || false,
+                  seasonalRewardPoints: item.seasonalRewardPoints || 0,
+                  packagingOptions: item.packagingOptions || []
                 }))
               }));
           }
@@ -85,6 +88,16 @@ const Customer = () => {
 
 
   const [query, setQuery] = useState('');
+  const [showSeasonalNudge, setShowSeasonalNudge] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('showSeasonalNudge') === '1') {
+        setShowSeasonalNudge(true);
+        sessionStorage.removeItem('showSeasonalNudge');
+      }
+    } catch {}
+  }, []);
   const [cuisineFilter, setCuisineFilter] = useState('All');
 
   // Cart structure: [{ name, price, restaurant, quantity }]
@@ -179,7 +192,15 @@ const Customer = () => {
     <div className="min-h-screen bg-gray-50 p-6 pt-24">
       {/* Hero */}
       <header className="max-w-6xl mx-auto mb-8">
-        <div className="bg-gradient-to-r from-emerald-600 to-emerald-400 text-white rounded-xl p-8 shadow-md flex flex-col md:flex-row items-start md:items-center gap-6">
+        {showSeasonalNudge && (
+          <div className="mb-3 p-3 rounded-lg bg-orange-50 text-orange-800 flex items-center justify-between">
+            <div className="text-sm">
+              Seasonal Highlights are live! Choose seasonal items to earn extra eco rewards on delivery.
+            </div>
+            <button onClick={() => setShowSeasonalNudge(false)} className="text-orange-700 text-sm font-semibold">Dismiss</button>
+          </div>
+        )}
+  <div className="bg-linear-to-r from-emerald-600 to-emerald-400 text-white rounded-xl p-8 shadow-md flex flex-col md:flex-row items-start md:items-center gap-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold">Discover local eco-friendly restaurants</h1>
             <p className="mt-2 text-emerald-100">Fresh, sustainable meals delivered fast — curated for you.</p>
@@ -271,6 +292,14 @@ const Customer = () => {
                       </div>
                       <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                       <div className="text-xs text-gray-400 mt-2">Category: {item.category}</div>
+                      {item.isSeasonal && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-700">Seasonal Highlight</span>
+                          {item.seasonalRewardPoints > 0 && (
+                            <span className="text-[10px] text-orange-700">Earn +{item.seasonalRewardPoints} pts</span>
+                          )}
+                        </div>
+                      )}
                       {item.packagingOptions && item.packagingOptions.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {item.packagingOptions.map((opt, idx) => (

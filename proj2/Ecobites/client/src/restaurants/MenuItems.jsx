@@ -11,6 +11,8 @@ export default function MenuItems() {
     description: '',
     price: '',
     category: '',
+    isSeasonal: false,
+    seasonalRewardPoints: 0,
     packagingOptions: ['reusable','compostable','minimal']
   });
   const [menuItems, setMenuItems] = useState([]);
@@ -58,7 +60,7 @@ export default function MenuItems() {
       }
 
       setShowForm(false);
-      setMenuItem({ name: '', description: '', price: '', category: '', packagingOptions: ['reusable','compostable','minimal'] });
+  setMenuItem({ name: '', description: '', price: '', category: '', isSeasonal: false, seasonalRewardPoints: 0, packagingOptions: ['reusable','compostable','minimal'] });
       setError(null);
     } catch (err) {
       console.error('Failed to save menu item:', err);
@@ -89,7 +91,7 @@ export default function MenuItems() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingIndex(null);
-  setMenuItem({ name: '', description: '', price: '', category: '', packagingOptions: ['reusable','compostable','minimal'] });
+  setMenuItem({ name: '', description: '', price: '', category: '', isSeasonal: false, seasonalRewardPoints: 0, packagingOptions: ['reusable','compostable','minimal'] });
   };
 
   return (
@@ -171,6 +173,28 @@ export default function MenuItems() {
                 <option value="side">Side</option>
               </select>
             </div>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={menuItem.isSeasonal}
+                  onChange={(e) => setMenuItem({ ...menuItem, isSeasonal: e.target.checked })}
+                />
+                Seasonal highlight
+              </label>
+              {menuItem.isSeasonal && (
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Reward Points</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={menuItem.seasonalRewardPoints}
+                    onChange={(e) => setMenuItem({ ...menuItem, seasonalRewardPoints: Number(e.target.value || 0) })}
+                    className="w-28 px-2 py-1 border rounded"
+                  />
+                </div>
+              )}
+            </div>
             <div>
               <label className="block text-sm font-medium mb-1">Packaging Options</label>
               <div className="flex flex-wrap gap-3">
@@ -228,6 +252,14 @@ export default function MenuItems() {
                   {item.packagingOptions.map((opt, idx) => (
                     <span key={idx} className="px-2 py-1 rounded-full text-xs bg-emerald-50 text-emerald-700 capitalize">{opt}</span>
                   ))}
+                </div>
+              )}
+              {item.isSeasonal && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-700">Seasonal</span>
+                  {typeof item.seasonalRewardPoints === 'number' && item.seasonalRewardPoints > 0 && (
+                    <span className="text-xs text-orange-700">+{item.seasonalRewardPoints} pts</span>
+                  )}
                 </div>
               )}
               <div className="mt-4 flex gap-2">

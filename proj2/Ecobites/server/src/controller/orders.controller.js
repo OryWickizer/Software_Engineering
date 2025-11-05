@@ -150,7 +150,17 @@ export const createOrder = async (req, res) => {
     const selectedPackaging = ['reusable', 'compostable', 'minimal'].includes(packagingPreference)
       ? packagingPreference
       : 'minimal';
-    const ecoRewardPoints = calculateEcoReward(selectedPackaging);
+    // Seasonal highlights bonus: sum per item
+    const seasonalBonus = items.reduce((sum, it) => {
+      const mi = menuItems.find(m => m._id.toString() === it.menuItemId.toString());
+      const qty = Number(it.quantity) || 1;
+      if (mi && mi.isSeasonal) {
+        const pts = Number(mi.seasonalRewardPoints || 0);
+        return sum + (pts * qty);
+      }
+      return sum;
+    }, 0);
+    const ecoRewardPoints = calculateEcoReward(selectedPackaging) + seasonalBonus;
 
     const order = new Order({
       customerId: req.user._id,

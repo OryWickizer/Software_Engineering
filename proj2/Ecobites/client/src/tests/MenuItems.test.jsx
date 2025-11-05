@@ -1,6 +1,25 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { vi } from 'vitest';
+
+// Provide a minimal AuthContext mock so MenuItems can render without wrapping providers
+vi.mock('../context/AuthContext', () => ({
+  useAuthContext: () => ({
+    user: { _id: 'rest-1', role: 'restaurant' },
+    isAuthenticated: true,
+  }),
+}));
+
+// Stub menu.service to avoid HTTP and control responses
+vi.mock('../api/services/menu.service', () => ({
+  menuService: {
+    getByRestaurant: async () => [],
+    create: async (menuData) => ({ _id: 'mi-'+Math.random().toString(36).slice(2), ...menuData }),
+    update: async (id, data) => ({ success: true, data: { _id: id, ...data } }),
+    delete: async () => ({ success: true }),
+  },
+}));
+
 import MenuItems from '../restaurants/MenuItems';
 
 describe('MenuItems', () => {
@@ -10,33 +29,34 @@ describe('MenuItems', () => {
 
   // Helper to get form inputs by their position/type
   const getFormInputs = (container) => {
-    const inputs = container.querySelectorAll('input[type="text"]');
-    const textarea = container.querySelector('textarea');
+    const nameInput = container.querySelector('input[type="text"]');
+    const descriptionInput = container.querySelector('textarea');
     const priceInput = container.querySelector('input[type="number"]');
+    const categorySelect = container.querySelector('select');
 
     return {
-      nameInput: inputs[0],
-      categoryInput: inputs[inputs.length - 1], // Last text input is category
-      descriptionInput: textarea,
-      priceInput: priceInput
+      nameInput,
+      descriptionInput,
+      priceInput,
+      categorySelect,
     };
   };
 
   // Test 1: Component should render with initial state - form hidden
-  test('should render with form hidden by default', () => {
+  test('should render with form hidden by default', async () => {
     render(<MenuItems />);
 
     expect(screen.getByText('Menu Items')).toBeInTheDocument();
     expect(screen.getByText('Create, edit, and organize your restaurant\'s offerings.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add Item' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Add Item/i })).toBeInTheDocument();
     expect(screen.queryByText('Create New Menu Item')).not.toBeInTheDocument();
   });
 
   // Test 2: Form should toggle visibility when "Add Item" button is clicked
-  test('should toggle form visibility when Add Item button is clicked', () => {
+  test('should toggle form visibility when Add Item button is clicked', async () => {
     const { container } = render(<MenuItems />);
 
-    const addButton = screen.getByRole('button', { name: 'Add Item' });
+    const addButton = await screen.findByRole('button', { name: /Add Item/i });
 
     // Initially form is hidden
     expect(screen.queryByText('Create New Menu Item')).not.toBeInTheDocument();
@@ -60,16 +80,16 @@ describe('MenuItems', () => {
     const { container } = render(<MenuItems />);
 
     // Open form
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
 
     // Get form inputs
-    const { nameInput, descriptionInput, priceInput, categoryInput } = getFormInputs(container);
+  const { nameInput, descriptionInput, priceInput, categorySelect } = getFormInputs(container);
 
     // Fill in form fields
     fireEvent.change(nameInput, { target: { value: 'Veggie Burger' } });
     fireEvent.change(descriptionInput, { target: { value: 'Delicious plant-based burger' } });
     fireEvent.change(priceInput, { target: { value: '12.99' } });
-    fireEvent.change(categoryInput, { target: { value: 'Main Course' } });
+  fireEvent.change(categorySelect, { target: { value: 'main' } });
 
     // Submit form
     fireEvent.click(screen.getByRole('button', { name: 'Create Item' }));
@@ -79,7 +99,7 @@ describe('MenuItems', () => {
       expect(screen.getByText('Veggie Burger')).toBeInTheDocument();
       expect(screen.getByText('Delicious plant-based burger')).toBeInTheDocument();
       expect(screen.getByText('$12.99')).toBeInTheDocument();
-      expect(screen.getByText('Category: Main Course')).toBeInTheDocument();
+      expect(screen.getByText('Category: main')).toBeInTheDocument();
     });
   });
 
@@ -88,12 +108,12 @@ describe('MenuItems', () => {
     const { container } = render(<MenuItems />);
 
     // Add first item
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
-    const inputs1 = getFormInputs(container);
+    fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
+  const inputs1 = getFormInputs(container);
     fireEvent.change(inputs1.nameInput, { target: { value: 'Pizza' } });
     fireEvent.change(inputs1.descriptionInput, { target: { value: 'Cheese pizza' } });
     fireEvent.change(inputs1.priceInput, { target: { value: '15.00' } });
-    fireEvent.change(inputs1.categoryInput, { target: { value: 'Italian' } });
+  fireEvent.change(inputs1.categorySelect, { target: { value: 'main' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create Item' }));
 
     await waitFor(() => {
@@ -101,12 +121,12 @@ describe('MenuItems', () => {
     });
 
     // Add second item
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
-    const inputs2 = getFormInputs(container);
+  fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
+  const inputs2 = getFormInputs(container);
     fireEvent.change(inputs2.nameInput, { target: { value: 'Salad' } });
     fireEvent.change(inputs2.descriptionInput, { target: { value: 'Fresh greens' } });
     fireEvent.change(inputs2.priceInput, { target: { value: '9.99' } });
-    fireEvent.change(inputs2.categoryInput, { target: { value: 'Appetizer' } });
+  fireEvent.change(inputs2.categorySelect, { target: { value: 'appetizer' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create Item' }));
 
     // Verify both items are displayed
@@ -121,12 +141,12 @@ describe('MenuItems', () => {
     const { container } = render(<MenuItems />);
 
     // Add an item first
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
-    const inputs = getFormInputs(container);
+    fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
+  const inputs = getFormInputs(container);
     fireEvent.change(inputs.nameInput, { target: { value: 'Burger' } });
     fireEvent.change(inputs.descriptionInput, { target: { value: 'Beef burger' } });
     fireEvent.change(inputs.priceInput, { target: { value: '10.00' } });
-    fireEvent.change(inputs.categoryInput, { target: { value: 'Main' } });
+  fireEvent.change(inputs.categorySelect, { target: { value: 'main' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create Item' }));
 
     await waitFor(() => {
@@ -138,11 +158,11 @@ describe('MenuItems', () => {
     fireEvent.click(editButtons[0]);
 
     // Verify form is populated with existing data
-    const editInputs = getFormInputs(container);
+  const editInputs = getFormInputs(container);
     expect(editInputs.nameInput).toHaveValue('Burger');
     expect(editInputs.descriptionInput).toHaveValue('Beef burger');
     expect(editInputs.priceInput).toHaveValue(10);
-    expect(editInputs.categoryInput).toHaveValue('Main');
+  expect(editInputs.categorySelect).toHaveValue('main');
     expect(screen.getByText('Edit Menu Item')).toBeInTheDocument();
   });
 
@@ -151,12 +171,12 @@ describe('MenuItems', () => {
     const { container } = render(<MenuItems />);
 
     // Add an item
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
-    const inputs = getFormInputs(container);
+    fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
+  const inputs = getFormInputs(container);
     fireEvent.change(inputs.nameInput, { target: { value: 'Pasta' } });
     fireEvent.change(inputs.descriptionInput, { target: { value: 'Spaghetti' } });
     fireEvent.change(inputs.priceInput, { target: { value: '14.00' } });
-    fireEvent.change(inputs.categoryInput, { target: { value: 'Italian' } });
+  fireEvent.change(inputs.categorySelect, { target: { value: 'main' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create Item' }));
 
     await waitFor(() => {
@@ -188,12 +208,12 @@ describe('MenuItems', () => {
     const { container } = render(<MenuItems />);
 
     // Add an item
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
-    const inputs = getFormInputs(container);
+    fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
+  const inputs = getFormInputs(container);
     fireEvent.change(inputs.nameInput, { target: { value: 'Tacos' } });
     fireEvent.change(inputs.descriptionInput, { target: { value: 'Mexican tacos' } });
     fireEvent.change(inputs.priceInput, { target: { value: '8.99' } });
-    fireEvent.change(inputs.categoryInput, { target: { value: 'Mexican' } });
+  fireEvent.change(inputs.categorySelect, { target: { value: 'main' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create Item' }));
 
     await waitFor(() => {
@@ -215,8 +235,8 @@ describe('MenuItems', () => {
     const { container } = render(<MenuItems />);
 
     // Open form and fill it
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
-    const inputs = getFormInputs(container);
+    fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
+  const inputs = getFormInputs(container);
     fireEvent.change(inputs.nameInput, { target: { value: 'Test Item' } });
     fireEvent.change(inputs.descriptionInput, { target: { value: 'Test description' } });
     fireEvent.change(inputs.priceInput, { target: { value: '5.00' } });
@@ -238,11 +258,11 @@ describe('MenuItems', () => {
   });
 
   // Test 9: Should toggle packaging options
-  test('should toggle packaging options when checkboxes are clicked', () => {
+  test('should toggle packaging options when checkboxes are clicked', async () => {
     render(<MenuItems />);
 
     // Open form
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
 
     // Get packaging checkboxes
     const reusableCheckbox = screen.getByRole('checkbox', { name: /reusable/i });
@@ -269,12 +289,12 @@ describe('MenuItems', () => {
     const { container } = render(<MenuItems />);
 
     // Add an item with default packaging options
-    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }));
-    const inputs = getFormInputs(container);
+    fireEvent.click(await screen.findByRole('button', { name: /Add Item/i }));
+  const inputs = getFormInputs(container);
     fireEvent.change(inputs.nameInput, { target: { value: 'Eco Salad' } });
     fireEvent.change(inputs.descriptionInput, { target: { value: 'Green salad' } });
     fireEvent.change(inputs.priceInput, { target: { value: '7.99' } });
-    fireEvent.change(inputs.categoryInput, { target: { value: 'Salads' } });
+  fireEvent.change(inputs.categorySelect, { target: { value: 'side' } });
 
     // Keep all packaging options checked (default state)
     fireEvent.click(screen.getByRole('button', { name: 'Create Item' }));

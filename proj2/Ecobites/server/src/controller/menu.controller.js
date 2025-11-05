@@ -3,7 +3,7 @@ import { User } from '../models/User.model.js';
 
 export const createMenuItem = async (req, res) => {
   try {
-    let { restaurantId, name, description, price, category, image, preparationTime, packagingOptions } = req.body;
+    let { restaurantId, name, description, price, category, image, preparationTime, packagingOptions, isSeasonal, seasonalLabel, seasonalRewardPoints } = req.body;
 
     // If restaurantId not supplied, and the authenticated user is a restaurant, use their id
     if (!restaurantId && req.user && req.user.role === 'restaurant') {
@@ -34,7 +34,10 @@ export const createMenuItem = async (req, res) => {
       category,
       image,
       preparationTime,
-      packagingOptions
+      packagingOptions,
+      isSeasonal,
+      seasonalLabel,
+      seasonalRewardPoints
     });
     
     await menuItem.save();
@@ -64,6 +67,30 @@ export const getMenuByRestaurant = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+// Get seasonal highlights for a restaurant
+export const getSeasonalByRestaurant = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const menuItems = await MenuItem.find({ restaurantId, isAvailable: true, isSeasonal: true })
+      .sort({ name: 1 });
+    res.json(menuItems);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get seasonal highlights across all restaurants (limited)
+export const getSeasonalAll = async (_req, res) => {
+  try {
+    const menuItems = await MenuItem.find({ isAvailable: true, isSeasonal: true })
+      .sort({ updatedAt: -1 })
+      .limit(20);
+    res.json(menuItems);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

@@ -102,6 +102,38 @@ export const seedData = async () => {
           packagingOptions: packagingOptions[(r+m)%packagingOptions.length]
         }));
       }
+      // Add 1-2 seasonal Halloween highlights per restaurant
+      const seasonalCommon = [
+        {
+          name: 'Pumpkin Harvest Bowl',
+          description: `Halloween seasonal special at ${restaurantNames[r]}`,
+          category: 'main',
+          price: 12.99,
+          seasonalRewardPoints: 25
+        },
+        {
+          name: 'Pumpkin Spice Latte',
+          description: `Spiced pumpkin latte – limited time at ${restaurantNames[r]}`,
+          category: 'beverage',
+          price: 4.99,
+          seasonalRewardPoints: 15
+        }
+      ];
+      for (const s of seasonalCommon) {
+        const created = await MenuItem.create({
+          restaurantId: restaurantUsers[r]._id,
+          name: s.name,
+          description: s.description,
+          price: s.price,
+          category: s.category,
+          preparationTime: 10,
+          packagingOptions: ['compostable','minimal'],
+          isSeasonal: true,
+          seasonalLabel: 'Halloween',
+          seasonalRewardPoints: s.seasonalRewardPoints
+        });
+        menuItems.push(created);
+      }
     }
 
     // --- Generate orders ---
