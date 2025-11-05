@@ -19,7 +19,7 @@ This repo contains two major subprojects: `proj1` and `proj2`.
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd Software_Engineering/proj2
+   cd Software_Engineering/proj2/Ecobites
    ```
 2. Run the Client:
    ```bash
