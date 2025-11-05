@@ -157,13 +157,19 @@ export default function MenuItems() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Category</label>
-              <input
-                type="text"
+              <select
                 value={menuItem.category}
                 onChange={(e) => setMenuItem({ ...menuItem, category: e.target.value })}
                 className="w-full px-3 py-2 border rounded"
                 required
-              />
+              >
+                <option value="">Select a category...</option>
+                <option value="appetizer">Appetizer</option>
+                <option value="main">Main</option>
+                <option value="dessert">Dessert</option>
+                <option value="beverage">Beverage</option>
+                <option value="side">Side</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Packaging Options</label>
