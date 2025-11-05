@@ -249,7 +249,10 @@ Create a new menu item (restaurant only).
   "category": "appetizer|main|dessert|beverage|side",
   "image": "string (URL)",
   "preparationTime": "number (minutes)",
-  "packagingOptions": ["reusable", "compostable", "minimal"]
+  "packagingOptions": ["reusable", "compostable", "minimal"],
+  "isSeasonal": "boolean (default: false)",
+  "seasonalLabel": "string (e.g., 'Halloween', 'Christmas')",
+  "seasonalRewardPoints": "number (default: 0)"
 }
 ```
 
@@ -265,7 +268,10 @@ Create a new menu item (restaurant only).
   "image": "https://example.com/pizza.jpg",
   "isAvailable": true,
   "preparationTime": 15,
-  "packagingOptions": ["reusable", "compostable"]
+  "packagingOptions": ["reusable", "compostable"],
+  "isSeasonal": false,
+  "seasonalLabel": "",
+  "seasonalRewardPoints": 0
 }
 ```
 
@@ -296,10 +302,12 @@ Get menu items for a restaurant.
     "image": "https://example.com/pizza.jpg",
     "isAvailable": true,
     "preparationTime": 15,
-    "packagingOptions": ["reusable", "compostable"]
+    "packagingOptions": ["reusable", "compostable"],
+    "isSeasonal": false,
+    "seasonalLabel": "",
+    "seasonalRewardPoints": 0
   }
-]
-```
+````
 
 #### PUT /menu/:id
 
@@ -357,6 +365,66 @@ Delete a menu item (restaurant only).
 **Error Responses:**
 - 403: Not authorized
 - 404: Menu item not found
+- 500: Server error
+
+#### GET /menu/restaurant/:restaurantId/seasonal
+
+Get seasonal menu items for a restaurant.
+
+**Authentication:** None required
+
+**Parameters:**
+- `restaurantId` (path): Restaurant ID
+
+**Response (200):**
+```json
+[
+  {
+    "_id": "menu-item-id",
+    "restaurantId": "restaurant-id",
+    "name": "Pumpkin Harvest Bowl",
+    "description": "Seasonal fall harvest bowl with roasted pumpkin",
+    "price": 14.99,
+    "category": "main",
+    "isAvailable": true,
+    "preparationTime": 20,
+    "packagingOptions": ["compostable"],
+    "isSeasonal": true,
+    "seasonalLabel": "Halloween",
+    "seasonalRewardPoints": 25
+  }
+]
+```
+
+**Error Responses:**
+- 404: Restaurant not found
+- 500: Server error
+
+#### GET /menu/seasonal
+
+Get all seasonal menu items across all restaurants (up to 20 items).
+
+**Authentication:** None required
+
+**Response (200):**
+```json
+[
+  {
+    "_id": "menu-item-id",
+    "restaurantId": "restaurant-id",
+    "name": "Pumpkin Spice Latte",
+    "description": "Festive seasonal beverage",
+    "price": 5.99,
+    "category": "beverage",
+    "isAvailable": true,
+    "isSeasonal": true,
+    "seasonalLabel": "Halloween",
+    "seasonalRewardPoints": 15
+  }
+]
+```
+
+**Error Responses:**
 - 500: Server error
 
 ### Orders
@@ -614,6 +682,11 @@ All error responses follow this format:
   - `reusable`: +10 eco-points
   - `compostable`: +5 eco-points
   - `minimal`: +0 eco-points
+
+- **Seasonal Items:** Variable eco-points per item (set by restaurant)
+  - Seasonal items add bonus points to order total
+  - Example: Pumpkin Harvest Bowl = +25 points, Pumpkin Spice Latte = +15 points
+  - Total seasonal bonus = sum of (seasonalRewardPoints × quantity) for all seasonal items in order
 
 - **Order Combination:** +20 eco-points for participating customers
 

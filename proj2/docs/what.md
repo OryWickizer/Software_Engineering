@@ -16,6 +16,9 @@ This document provides point descriptions of each class/function in the EcoBites
 
 ### MenuItem Model (`proj2/Ecobites/server/src/models/MenuItem.model.js`)
 - **MenuItem Schema**: Defines menu item structure with restaurantId, name, description, price, category (appetizer/main/dessert/beverage/side), image, isAvailable, preparationTime, packagingOptions (reusable/compostable/minimal).
+- **isSeasonal**: Boolean field to mark seasonal/limited-time menu items (default: false).
+- **seasonalLabel**: String field for seasonal theme/label (e.g., "Halloween", "Christmas", "Summer").
+- **seasonalRewardPoints**: Number field for bonus eco-points earned when ordering seasonal items (default: 0).
 
 ## Backend Controllers
 
@@ -25,7 +28,7 @@ This document provides point descriptions of each class/function in the EcoBites
 - **me Function**: Returns current authenticated user's profile data (set by middleware).
 
 ### Orders Controller (`proj2/Ecobites/server/src/controller/orders.controller.js`)
-- **createOrder Function**: Creates new order, validates items belong to same restaurant, calculates subtotal/total, applies eco-rewards based on packaging preference, saves order with status history.
+- **createOrder Function**: Creates new order, validates items belong to same restaurant, calculates subtotal/total, applies eco-rewards based on packaging preference and seasonal items, saves order with status history.
 - **getOrdersByRole Function**: Retrieves orders filtered by user role (customer/restaurant/driver), populates restaurant name for drivers.
 - **getOrderById Function**: Retrieves single order by ID.
 - **updateOrderStatus Function**: Updates order status with authorization checks (customers can cancel, restaurants can prepare, drivers can deliver), credits eco-rewards on delivery, awards driver incentives.
@@ -33,9 +36,11 @@ This document provides point descriptions of each class/function in the EcoBites
 - **combineOrdersWithNeighbors Function**: Combines nearby orders for delivery optimization, awards eco-points to participating customers.
 
 ### Menu Controller (`proj2/Ecobites/server/src/controller/menu.controller.js`)
-- **createMenuItem Function**: Creates new menu item for restaurant, validates restaurant ownership, saves with default availability.
+- **createMenuItem Function**: Creates new menu item for restaurant, validates restaurant ownership, saves with default availability, supports seasonal item fields.
 - **getMenuByRestaurant Function**: Retrieves all available menu items for specified restaurant, sorted by category and name.
-- **updateMenuItem Function**: Updates menu item details, validates restaurant ownership.
+- **getSeasonalByRestaurant Function**: Retrieves only seasonal items (isSeasonal: true) for a specific restaurant, sorted by most recently updated.
+- **getSeasonalAll Function**: Retrieves up to 20 seasonal items across all restaurants, sorted by most recently created.
+- **updateMenuItem Function**: Updates menu item details, validates restaurant ownership, allows updating seasonal status and reward points.
 - **deleteMenuItem Function**: Removes menu item, validates restaurant ownership.
 
 ### Restaurant Controller (`proj2/Ecobites/server/src/controller/restaurant.controller.js`)
@@ -60,6 +65,8 @@ This document provides point descriptions of each class/function in the EcoBites
 ### Customer Component (`proj2/Ecobites/client/src/customers/Customer.jsx`)
 - **Restaurant Discovery Interface**: Fetches and displays restaurants, handles search/filtering by cuisine, manages cart functionality.
 - **Menu Viewing**: When restaurant selected, fetches and displays menu items with add-to-cart functionality.
+- **Seasonal Highlights Display**: Shows seasonal item badges and reward point bonuses on menu items.
+- **Seasonal Banner**: Displays dismissible post-login banner encouraging customers to try seasonal highlights.
 - **Cart Management**: Maintains cart state with quantity adjustments, calculates totals, navigates to checkout.
 - **State Management**: Uses RestaurantContext for selected restaurant/menu data, local state for cart and UI interactions.
 
@@ -78,10 +85,12 @@ This document provides point descriptions of each class/function in the EcoBites
 - **State Management**: Manages local state for menu items and orders.
 
 ### Menu Items Component (`proj2/Ecobites/client/src/restaurants/MenuItems.jsx`)
-- **Menu Display**: Shows current menu items for restaurant with edit/delete options.
-- **Add Item Form**: Modal/form for creating new menu items with validation.
-- **Edit Item Form**: Inline editing for existing menu items.
-- **Category Filtering**: Filters menu items by category (appetizer, main, dessert, etc.).
+- **Menu Display**: Shows current menu items for restaurant with edit/delete options, displays seasonal badges and reward points.
+- **Add Item Form**: Modal/form for creating new menu items with validation, includes seasonal highlight toggle and reward points input.
+- **Edit Item Form**: Inline editing for existing menu items, allows updating seasonal status and points.
+- **Seasonal Item Management**: Checkbox to mark items as seasonal, input field for bonus reward points, visual badges in item list.
+- **Category Management**: Dropdown selection for menu item categories (appetizer, main, dessert, beverage, side).
+- **Packaging Options**: Multi-select checkboxes for packaging types (reusable, compostable, minimal).
 
 ### Customer Orders Component (`proj2/Ecobites/client/src/restaurants/CustomerOrders.jsx`)
 - **Order List**: Displays incoming orders with status indicators.
@@ -121,10 +130,12 @@ This document provides point descriptions of each class/function in the EcoBites
 - **logout Function**: Clears stored tokens and redirects to login.
 
 ### Menu Service (`proj2/Ecobites/client/src/api/services/menu.service.js`)
-- **getMenuByRestaurant Function**: Calls GET /api/menu/restaurant/:id.
-- **createMenuItem Function**: Calls POST /api/menu with item data.
-- **updateMenuItem Function**: Calls PUT /api/menu/:id with updates.
-- **deleteMenuItem Function**: Calls DELETE /api/menu/:id.
+- **getByRestaurant Function**: Calls GET /api/menu/restaurant/:id.
+- **getSeasonalByRestaurant Function**: Calls GET /api/menu/restaurant/:id/seasonal.
+- **getSeasonalAll Function**: Calls GET /api/menu/seasonal.
+- **create Function**: Calls POST /api/menu with item data (including seasonal fields).
+- **update Function**: Calls PUT /api/menu/:id with updates.
+- **delete Function**: Calls DELETE /api/menu/:id.
 
 ### Order Service (`proj2/Ecobites/client/src/api/services/order.service.js`)
 - **createOrder Function**: Calls POST /api/orders with order data.
@@ -210,10 +221,13 @@ This document provides point descriptions of each class/function in the EcoBites
 - **Order Retrieval**: Tests fetching orders by role.
 
 ### Component Tests
-- **Login Test** (`proj2/Ecobites/client/src/tests/Login.test.jsx`): Tests login form functionality.
-- **Order Detail Test** (`proj2/Ecobites/client/src/tests/OrderDetail.test.jsx`): Tests order display components.
+- **Login Test** (`proj2/Ecobites/client/src/tests/Login.test.jsx`): Tests login form functionality, registration flow, validation.
+- **MenuItems Test** (`proj2/Ecobites/client/src/tests/MenuItems.test.jsx`): Tests menu CRUD operations, seasonal item toggles, packaging options, form validation.
+- **Order Detail Test** (`proj2/Ecobites/client/src/tests/OrderDetail.test.jsx`): Tests order display components, combine orders functionality.
 - **Order Status Test** (`proj2/Ecobites/client/src/tests/OrderStatus.test.jsx`): Tests status update UI.
-- **Drivers Test** (`proj2/Ecobites/client/src/tests/Drivers.test.jsx`): Tests driver dashboard components.
+- **Customer Orders Test** (`proj2/Ecobites/client/src/tests/CustomerOrders.test.jsx`): Tests restaurant order management interface.
+- **Drivers Test** (`proj2/Ecobites/client/src/tests/Drivers.test.jsx`): Tests driver dashboard components, order acceptance, status updates.
+- **Combine Orders Test** (`proj2/Ecobites/client/src/tests/CombineOrders.test.jsx`): Tests order combination feature for delivery optimization.
 
 ## Backend Middleware
 
