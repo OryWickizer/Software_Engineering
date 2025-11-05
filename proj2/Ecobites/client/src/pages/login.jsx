@@ -31,6 +31,7 @@ export default function Login() {
         const loginData = await login({ email, password });
         setMessage("Login successful! Redirecting...");
         if (loginData.user.role === 'customer') {
+          try { sessionStorage.setItem('showSeasonalNudge', '1'); } catch {}
           navigate("/customer");
         } else if (loginData.user.role === 'driver') {
           navigate("/driver");
@@ -64,7 +65,7 @@ export default function Login() {
       </div>
 
       <div className="relative bg-white/90 backdrop-blur-sm shadow-xl rounded-2xl p-8 w-full max-w-md mx-4">
-        <div className="absolute -z-10 inset-0 bg-gradient-to-b from-emerald-50/50 to-white/50 rounded-2xl" />
+        <div className="absolute -z-10 inset-0 bg-linear-to-b from-emerald-50/50 to-white/50 rounded-2xl" />
         
         {/* Brand element matching Hero section */}
         <div className="text-center mb-6">

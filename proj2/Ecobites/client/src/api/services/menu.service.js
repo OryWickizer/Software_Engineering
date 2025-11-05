@@ -5,6 +5,14 @@ export const menuService = {
     const response = await api.get(`/menu/restaurant/${restaurantId}`);
     return response.data;
   },
+  getSeasonalByRestaurant: async (restaurantId) => {
+    const response = await api.get(`/menu/restaurant/${restaurantId}/seasonal`);
+    return response.data;
+  },
+  getSeasonalAll: async () => {
+    const response = await api.get('/menu/seasonal');
+    return response.data;
+  },
 
   create: async (menuData) => {
     const response = await api.post('/menu', menuData);
