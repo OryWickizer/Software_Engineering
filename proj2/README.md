@@ -71,6 +71,9 @@ delivery.
 
 ### **October – Release 1: Prototype**
 
+- Implement authentication flow for different users (Customers, Restaurants, and Drivers).
+- Build a frontend UI to allow users to browse ecofriendly restaurants, place orders, and track deliveries.
+
 ### **November – Release 2: Enhanced System**
 
 ## Tech Stack
@@ -92,7 +95,7 @@ delivery.
 Here are some example scenarios demonstrating how EcoBites can be used:
 
 ## Setup & Installation
-To run SnapMealAI locally, follow the full installation guide here: [INSTALL.md](INSTALL.md)
+To run EcoBites locally, follow the full installation guide here: [INSTALL.md](INSTALL.md)
 
 ## 🧯 Troubleshooting
 
