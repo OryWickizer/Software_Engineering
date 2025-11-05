@@ -30,6 +30,19 @@ const menuItemSchema = new mongoose.Schema({
     type: Number, // in minutes
     default: 15
   },
+  // Seasonal highlights
+  isSeasonal: {
+    type: Boolean,
+    default: false
+  },
+  seasonalLabel: {
+    type: String,
+    default: ''
+  },
+  seasonalRewardPoints: {
+    type: Number,
+    default: 0
+  },
   // Supported sustainable packaging options for this item/restaurant
   packagingOptions: {
     type: [
