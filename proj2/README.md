@@ -20,10 +20,52 @@
 
 # EcoBites
 
+## Our Mission
 
 At EcoBites, we are redefining food delivery with sustainability at its core, empowering customers to make every meal an eco-conscious choice. Through our food delivery website, we provide flexible eco-friendly options, from reusable or compostable packaging to rewards for low-carbon delivery methods, while encouraging shared orders to reduce trips. Our goal is to create a food delivery experience that benefits people, communities, and the planet—one conscious meal at a time.
 
-## Our Mission
+### How It Works
+
+### Impact
+
+- **Customers:** Customers are at the heart of our
+mission. They seek convenient,
+delicious meals while making
+environmentally conscious
+choices. Our app provides them
+with tools to track their personal
+impact, select sustainable options,
+and participate in eco-friendly
+challenges. By engaging customers
+through rewards, gamification, and
+transparency, we empower them
+to make food choices that are
+better for the planet
+- **Restaurants:** Restaurants are our partners in
+creating a sustainable food
+ecosystem. We collaborate with
+them to offer locally-sourced,
+seasonal, and plant-forward menu
+options, while encouraging ecofriendly packaging and practices. By
+showcasing restaurants’
+sustainability efforts, we help them
+atrract conscious customers and
+build a reputation as
+environmentally responsible
+businesses.
+- **Delivery Platforms/Admins:** Delivery drivers are essential for
+connecting meals from
+restaurants to customers. We
+support drivers by promoting
+low-emission delivery methods,
+such as bicycles, electric vehicles,
+or route-optimized trips. Drivers
+are incentivized to adopt
+sustainable practices through
+rewards and recognition,
+contributing directly to reducing
+the carbon footprint of each
+delivery.
 
 ## Development Roadmap
 
@@ -47,7 +89,7 @@ At EcoBites, we are redefining food delivery with sustainability at its core, em
 
 ## Example Use Cases
 
-Here are some example scenarios demonstrating how SnapMealAI can be used:
+Here are some example scenarios demonstrating how EcoBites can be used:
 
 ## Setup & Installation
 To run SnapMealAI locally, follow the full installation guide here: [INSTALL.md](INSTALL.md)
