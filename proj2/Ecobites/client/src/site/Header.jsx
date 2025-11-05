@@ -1,20 +1,13 @@
-import { useEffect, useState } from "react";
 import {useAuthContext} from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 
 export default function SiteHeader({ onMenuClick, showMenuButton }) {
-  const [role, setRole] = useState(null);
-
-  const { isAuthenticated, logout } = useAuthContext();
+  const { isAuthenticated, logout, user } = useAuthContext();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const storedRole = localStorage.getItem("userRole");
-    if (storedRole) setRole(storedRole);
-  }, []);
-
-  
+  // Get role from user object
+  const role = user?.role;
 
   // Determine dashboard route by role
   const getDashboardLink = () => {
@@ -22,7 +15,7 @@ export default function SiteHeader({ onMenuClick, showMenuButton }) {
       case "customer":
         return "/customer";
       case "restaurant":
-        return "/restaurant";
+        return "/restaurants";
       case "driver":
         return "/driver";
       default:
@@ -32,15 +25,11 @@ export default function SiteHeader({ onMenuClick, showMenuButton }) {
 
   const handleLogout = async () => {
     try {
-          
-            await logout();
-            navigate("/login");
-        } catch (error) {
-          console.error("Authentication error:", error);
-        } finally {
-          setRole(false);
-        }
-    // window.location.href = "/"; // redirect to home
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Authentication error:", error);
+    }
   };
 
   return (

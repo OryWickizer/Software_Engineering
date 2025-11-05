@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuthContext } from '../context/AuthContext';
+import { menuService } from '../api/services/menu.service';
 
 export default function MenuItems() {
+  const { user } = useAuthContext();
   const [showForm, setShowForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [menuItem, setMenuItem] = useState({
@@ -11,21 +14,56 @@ export default function MenuItems() {
     packagingOptions: ['reusable','compostable','minimal']
   });
   const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  // Fetch menu items when component loads
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      if (!user?._id) return;
+      
+      try {
+        setLoading(true);
+        const response = await menuService.getByRestaurant(user._id);
+        setMenuItems(response || []);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch menu items:', err);
+        setError('Failed to load menu items');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, [user?._id]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (editingIndex !== null) {
-      const updatedItems = [...menuItems];
-      updatedItems[editingIndex] = menuItem;
-      setMenuItems(updatedItems);
-      setEditingIndex(null);
-    } else {
-      setMenuItems([...menuItems, menuItem]);
-    }
+    try {
+      if (editingIndex !== null) {
+        // Update existing menu item
+        const itemToUpdate = menuItems[editingIndex];
+        await menuService.update(itemToUpdate._id, menuItem);
+        
+        const updatedItems = [...menuItems];
+        updatedItems[editingIndex] = { ...itemToUpdate, ...menuItem };
+        setMenuItems(updatedItems);
+        setEditingIndex(null);
+      } else {
+        // Create new menu item
+        const newItem = await menuService.create(menuItem);
+        setMenuItems([...menuItems, newItem]);
+      }
 
-  setShowForm(false);
-  setMenuItem({ name: '', description: '', price: '', category: '', packagingOptions: ['reusable','compostable','minimal'] });
+      setShowForm(false);
+      setMenuItem({ name: '', description: '', price: '', category: '', packagingOptions: ['reusable','compostable','minimal'] });
+      setError(null);
+    } catch (err) {
+      console.error('Failed to save menu item:', err);
+      setError('Failed to save menu item');
+    }
   };
 
   const handleEdit = (index) => {
@@ -34,9 +72,18 @@ export default function MenuItems() {
     setShowForm(true);
   };
 
-  const handleDelete = (index) => {
-    const updatedItems = menuItems.filter((_, i) => i !== index);
-    setMenuItems(updatedItems);
+  const handleDelete = async (index) => {
+    try {
+      const itemToDelete = menuItems[index];
+      await menuService.delete(itemToDelete._id);
+      
+      const updatedItems = menuItems.filter((_, i) => i !== index);
+      setMenuItems(updatedItems);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to delete menu item:', err);
+      setError('Failed to delete menu item');
+    }
   };
 
   const handleCancel = () => {
@@ -50,14 +97,26 @@ export default function MenuItems() {
       <h1 className="text-3xl font-bold mb-2">Menu Items</h1>
       <p className="text-gray-600 mb-6">Create, edit, and organize your restaurant's offerings.</p>
 
-      <div className="mt-4">
-        <button
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded"
-          onClick={() => setShowForm(!showForm)}
-        >
-          {showForm ? 'Cancel' : 'Add Item'}
-        </button>
-      </div>
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Loading menu items...</p>
+        </div>
+      ) : (
+        <>
+          <div className="mt-4">
+            <button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded"
+              onClick={() => setShowForm(!showForm)}
+            >
+              {showForm ? 'Cancel' : 'Add Item'}
+            </button>
+          </div>
 
       {showForm && (
         <div className="mt-6 bg-gray-100 p-6 rounded-lg">
@@ -98,13 +157,19 @@ export default function MenuItems() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Category</label>
-              <input
-                type="text"
+              <select
                 value={menuItem.category}
                 onChange={(e) => setMenuItem({ ...menuItem, category: e.target.value })}
                 className="w-full px-3 py-2 border rounded"
                 required
-              />
+              >
+                <option value="">Select a category...</option>
+                <option value="appetizer">Appetizer</option>
+                <option value="main">Main</option>
+                <option value="dessert">Dessert</option>
+                <option value="beverage">Beverage</option>
+                <option value="side">Side</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Packaging Options</label>
@@ -183,6 +248,8 @@ export default function MenuItems() {
           ))}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
