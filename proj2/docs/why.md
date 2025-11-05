@@ -19,12 +19,15 @@ EcoBites reimagines food delivery as a force for good by integrating sustainabil
 ### For Customers
 - **Packaging Choices**: Select from reusable, compostable, or minimal packaging options
 - **Eco-Rewards Program**: Earn points for sustainable choices that can be redeemed for discounts
+- **Seasonal Highlights**: Discover limited-time menu items with bonus reward points
 - **Transparent Impact**: See the environmental impact of your orders
 - **Community Building**: Connect with like-minded food lovers who care about the planet
+- **Order Combination**: Coordinate with neighbors to reduce delivery trips and earn bonus points
 
 ### For Restaurants
 - **Sustainable Partnerships**: Work with restaurants committed to eco-friendly practices
 - **Menu Optimization**: Highlight sustainable menu items and preparation methods
+- **Seasonal Promotions**: Feature limited-time seasonal items with customizable reward points to encourage sustainable eating habits
 - **Waste Reduction**: Tools to minimize food waste and optimize ordering
 - **Brand Enhancement**: Position as environmentally conscious businesses
 
@@ -38,6 +41,8 @@ EcoBites reimagines food delivery as a force for good by integrating sustainabil
 
 ### Reward Points System
 - Customers earn points based on packaging choices (reusable = 10 points, compostable = 5 points)
+- Seasonal menu items offer bonus reward points set by restaurants (e.g., 15-25 points per item)
+- Order combination with neighbors earns +20 points for participating customers
 - Drivers earn points based on vehicle type (electric vehicles earn more)
 - Points can be redeemed for discounts on future orders or donated to environmental causes
 
@@ -48,8 +53,9 @@ EcoBites reimagines food delivery as a force for good by integrating sustainabil
 
 ### Technology for Good
 - Real-time carbon footprint tracking
-- AI-optimized delivery routes
+- AI-optimized delivery routes and order combination for efficiency
 - Smart inventory management to reduce waste
+- Seasonal menu features to promote sustainable, locally-sourced ingredients
 - Transparent reporting on environmental impact
 
 ## Our Vision
