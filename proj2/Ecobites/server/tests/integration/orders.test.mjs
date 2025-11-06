@@ -5,7 +5,8 @@ import MenuItem from '../../src/models/MenuItem.model.js';
 import Order from '../../src/models/Order.model.js';
 import User from '../../src/models/User.model.js';
 
-let authToken;
+let customerAgent;
+let restaurantAgent;
 let userId;
 let restaurantId;
 let menuItemId;
@@ -13,8 +14,12 @@ let menuItemId;
 beforeAll(async () => {
   await connectDB();
 
-  // Create a test restaurant user
-  const restaurantResponse = await request(app)
+  // Create agents to maintain cookies
+  customerAgent = request.agent(app);
+  restaurantAgent = request.agent(app);
+
+  // Create a test restaurant user and login
+  const restaurantResponse = await restaurantAgent
     .post('/api/auth/register')
     .send({
       name: 'Test Restaurant',
@@ -24,8 +29,8 @@ beforeAll(async () => {
     });
   restaurantId = restaurantResponse.body.user._id;
 
-  // Create a test customer
-  const customerResponse = await request(app)
+  // Create a test customer and login
+  const customerResponse = await customerAgent
     .post('/api/auth/register')
     .send({
       name: 'Test Customer',
@@ -33,7 +38,6 @@ beforeAll(async () => {
       password: 'password123',
       role: 'customer'
     });
-  authToken = customerResponse.body.token;
   userId = customerResponse.body.user._id;
 
   // Create a test menu item
@@ -57,9 +61,8 @@ afterAll(async () => {
 
 describe('Menu Items API', () => {
   test('GET /api/menu/restaurant/:restaurantId - gets restaurant menu items', async () => {
-    const response = await request(app)
-      .get(`/api/menu/restaurant/${restaurantId}`)
-      .set('Authorization', `Bearer ${authToken}`);
+    const response = await customerAgent
+      .get(`/api/menu/restaurant/${restaurantId}`);
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
@@ -68,16 +71,8 @@ describe('Menu Items API', () => {
   });
 
   test('POST /api/menu - creates new menu item (restaurant only)', async () => {
-    const restaurantLogin = await request(app)
-      .post('/api/auth/login')
-      .send({
-        email: 'restaurant@test.com',
-        password: 'password123'
-      });
-
-    const response = await request(app)
+    const response = await restaurantAgent
       .post('/api/menu')
-      .set('Authorization', `Bearer ${restaurantLogin.body.token}`)
       .send({
         name: 'New Item',
         price: 12.99,
@@ -105,9 +100,8 @@ describe('Orders API', () => {
       status: 'pending'
     };
 
-    const response = await request(app)
+    const response = await customerAgent
       .post('/api/orders')
-      .set('Authorization', `Bearer ${authToken}`)
       .send(orderData);
 
     expect(response.status).toBe(201);
@@ -132,9 +126,8 @@ describe('Orders API', () => {
       status: 'pending'
     });
 
-    const response = await request(app)
-      .get(`/api/orders/customer/${userId}`)
-      .set('Authorization', `Bearer ${authToken}`);
+    const response = await customerAgent
+      .get(`/api/orders/customer/${userId}`);
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
@@ -157,16 +150,8 @@ describe('Orders API', () => {
       status: 'pending'
     });
 
-    const restaurantLogin = await request(app)
-      .post('/api/auth/login')
-      .send({
-        email: 'restaurant@test.com',
-        password: 'password123'
-      });
-
-    const response = await request(app)
+    const response = await restaurantAgent
       .put(`/api/orders/${order._id}/status`)
-      .set('Authorization', `Bearer ${restaurantLogin.body.token}`)
       .send({ status: 'preparing' });
 
     expect(response.status).toBe(200);

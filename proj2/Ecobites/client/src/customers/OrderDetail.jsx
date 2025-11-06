@@ -1,7 +1,7 @@
   import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
-import { authService } from '../api/services/auth.service';
+import { useAuthContext } from '../context/AuthContext';
   // Combine with neighbors
   
 
@@ -36,11 +36,11 @@ const OrderDetail = () => {
   };
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuthContext();
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updating, setUpdating] = useState(false);
-  const currentUser = authService.getCurrentUser();
 
   // Load order from API
   useEffect(() => {
@@ -261,7 +261,7 @@ const OrderDetail = () => {
                       <li key={o._id} className="border rounded p-3 flex flex-col">
                         <span className="font-medium">Order #{o.orderNumber || o._id?.slice(-6)}</span>
                         <span className="text-sm text-gray-600">{o.deliveryAddress?.street}, {o.deliveryAddress?.city}</span>
-                        <span className="text-sm text-gray-500">Customer: {String(o.customerId) !== String(currentUser._id) ? o.customerId : 'You'}</span>
+                        <span className="text-sm text-gray-500">Customer: {String(o.customerId) !== String(currentUser._id) ? 'Neighbor' : 'You'}</span>
                       </li>
                     ))}
                   </ul>

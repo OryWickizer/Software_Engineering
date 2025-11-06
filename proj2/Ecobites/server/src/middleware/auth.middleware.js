@@ -42,7 +42,12 @@ export const protect = async (req, res, next) => {
   try {
     let token;
     
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    // Check for token in cookies first (httpOnly cookie approach)
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+    // Fallback to Authorization header for backwards compatibility
+    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
     

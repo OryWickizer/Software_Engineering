@@ -18,8 +18,9 @@ export default function CustomerOrders() {
       // map server status to UI category (incoming | accepted | rejected)
       const mapStatusToCategory = (status) => {
         const s = (status || '').toString().toUpperCase();
-        const incoming = new Set(['PLACED', 'PENDING', 'RECEIVED', 'RECEIVED']);
-        const accepted = new Set(['ACCEPTED', 'PREPARING', 'READY', 'DRIVER_ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY']);
+        const incoming = new Set(['PLACED', 'PENDING', 'RECEIVED']);
+        // Treat COMBINED as part of accepted/active workflow so restaurants still see and act on them
+        const accepted = new Set(['ACCEPTED', 'PREPARING', 'READY', 'DRIVER_ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'COMBINED']);
         const rejected = new Set(['CANCELLED']);
         if (incoming.has(s)) return 'incoming';
         if (accepted.has(s)) return 'accepted';
@@ -112,7 +113,7 @@ export default function CustomerOrders() {
             <div key={order._id} className="bg-white p-4 rounded-lg shadow">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="text-lg font-semibold">{order.customerName || order.customer || order.customerId}</h3>
+                  <h3 className="text-lg font-semibold">{order.customerName || order.customer || 'Customer'}</h3>
                   <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString()}</p>
                 </div>
                 <span

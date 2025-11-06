@@ -5,22 +5,14 @@ import { MenuItem } from '../../src/models/MenuItem.model.js';
 import { Order } from '../../src/models/Order.model.js';
 import { User } from '../../src/models/User.model.js';
 
-let tokens = {};
+let agents = {};
 let ids = {};
 let menuItemId;
 
-const register = async (payload) => {
-  const res = await request(app).post('/api/auth/register').send(payload);
+const register = async (agent, payload) => {
+  const res = await agent.post('/api/auth/register').send(payload);
   if (res.status >= 400) {
     throw new Error(`Register failed: ${res.status} ${res.text}`);
-  }
-  return res.body;
-};
-
-const login = async (payload) => {
-  const res = await request(app).post('/api/auth/login').send(payload);
-  if (res.status >= 400) {
-    throw new Error(`Login failed: ${res.status} ${res.text}`);
   }
   return res.body;
 };
@@ -28,32 +20,38 @@ const login = async (payload) => {
 beforeAll(async () => {
   await connectDB();
 
+  // Create agents for each user to maintain cookies
+  agents.restaurant = request.agent(app);
+  agents.driver = request.agent(app);
+  agents.c1 = request.agent(app);
+  agents.c2 = request.agent(app);
+
   // Restaurant
-  const rest = await register({
+  const rest = await register(agents.restaurant, {
     name: 'Resto', email: 'r@e.com', password: 'secret12', role: 'restaurant',
     restaurantName: 'Resto A', cuisine: 'Fusion'
   });
-  tokens.restaurant = rest.token; ids.restaurant = rest.user._id;
+  ids.restaurant = rest.user._id;
 
   // Driver (EV)
-  const drv = await register({
+  const drv = await register(agents.driver, {
     name: 'Dan Driver', email: 'd@e.com', password: 'secret12', role: 'driver',
     vehicleType: 'EV', licensePlate: 'ECO-123'
   });
-  tokens.driver = drv.token; ids.driver = drv.user._id;
+  ids.driver = drv.user._id;
 
   // Two customers nearby (same city/zip, with geo coords)
-  const cust1 = await register({
+  const cust1 = await register(agents.c1, {
     name: 'Alice', email: 'a@e.com', password: 'secret12', role: 'customer',
     address: { street: '1 Main', city: 'Raleigh', zipCode: '27606', coordinates: { lat: 35.78, lng: -78.67 } }
   });
-  tokens.c1 = cust1.token; ids.c1 = cust1.user._id;
+  ids.c1 = cust1.user._id;
 
-  const cust2 = await register({
+  const cust2 = await register(agents.c2, {
     name: 'Bob', email: 'b@e.com', password: 'secret12', role: 'customer',
     address: { street: '2 Main', city: 'Raleigh', zipCode: '27606', coordinates: { lat: 35.7805, lng: -78.6705 } }
   });
-  tokens.c2 = cust2.token; ids.c2 = cust2.user._id;
+  ids.c2 = cust2.user._id;
 
   // Menu item owned by restaurant
   const mi = await MenuItem.create({ name: 'Bowl', price: 10, description: 'Vegan bowl', restaurantId: ids.restaurant });
@@ -70,10 +68,9 @@ afterEach(async () => {
 });
 
 describe('Orders end-to-end including combine and driver flows', () => {
-  const createOrderFor = async (token, customerId, packagingPreference = 'reusable', coords) => {
-    const res = await request(app)
+  const createOrderFor = async (agent, customerId, packagingPreference = 'reusable', coords) => {
+    const res = await agent
       .post('/api/orders')
-      .set('Authorization', `Bearer ${token}`)
       .send({
         customerId,
         restaurantId: ids.restaurant,
@@ -91,30 +88,27 @@ describe('Orders end-to-end including combine and driver flows', () => {
   });
 
   test('customer cannot create order for another customer', async () => {
-    const res = await request(app)
+    const res = await agents.c1
       .post('/api/orders')
-      .set('Authorization', `Bearer ${tokens.c1}`)
       .send({ customerId: ids.c2, items: [{ menuItemId, quantity: 1 }] });
     expect(res.status).toBe(403);
   });
 
   test('create, ready, combine, available for drivers, assign and deliver with rewards', async () => {
     // Create two nearby orders
-  const o1 = await createOrderFor(tokens.c1, ids.c1, 'reusable', { lat: 35.78, lng: -78.67 });
-  const o2 = await createOrderFor(tokens.c2, ids.c2, 'reusable', { lat: 35.7805, lng: -78.6705 });
+  const o1 = await createOrderFor(agents.c1, ids.c1, 'reusable', { lat: 35.78, lng: -78.67 });
+  const o2 = await createOrderFor(agents.c2, ids.c2, 'reusable', { lat: 35.7805, lng: -78.6705 });
 
     // Restaurant marks both READY
-    const toReady = async (orderId) => request(app)
+    const toReady = async (orderId) => agents.restaurant
       .put(`/api/orders/${orderId}/status`)
-      .set('Authorization', `Bearer ${tokens.restaurant}`)
       .send({ status: 'READY' });
     expect((await toReady(o1._id)).status).toBe(200);
     expect((await toReady(o2._id)).status).toBe(200);
 
     // Customer1 combines with neighbors
-    const comb = await request(app)
+    const comb = await agents.c1
       .post('/api/orders/combine')
-      .set('Authorization', `Bearer ${tokens.c1}`)
       .send({ customerId: ids.c1, radiusMeters: 1000 });
     expect(comb.status).toBe(200);
     expect(Array.isArray(comb.body.combinedOrders)).toBe(true);
@@ -131,9 +125,8 @@ describe('Orders end-to-end including combine and driver flows', () => {
     expect((cu2.rewardPoints || 0)).toBeGreaterThanOrEqual(20);
 
     // Driver sees available combined orders with enriched fields
-    const avail = await request(app)
-      .get('/api/orders/available/drivers')
-      .set('Authorization', `Bearer ${tokens.driver}`);
+    const avail = await agents.driver
+      .get('/api/orders/available/drivers');
     expect(avail.status).toBe(200);
     expect(Array.isArray(avail.body)).toBe(true);
     expect(avail.body.some(o => o.status === 'COMBINED')).toBe(true);
@@ -143,16 +136,22 @@ describe('Orders end-to-end including combine and driver flows', () => {
     expect(one.customerName).toBeTruthy();
 
     // Driver assigns and delivers one order
-    const assign = await request(app)
+    const assign = await agents.driver
       .put(`/api/orders/${one._id}/status`)
-      .set('Authorization', `Bearer ${tokens.driver}`)
       .send({ status: 'DRIVER_ASSIGNED', driverId: ids.driver });
     expect(assign.status).toBe(200);
-    expect(assign.body.status).toBe('DRIVER_ASSIGNED');
+    expect(assign.status).toBe(200);
 
-    const deliver = await request(app)
+    // NEW: Group acceptance should assign all orders in the same combineGroupId
+    const groupAssigned = await Order.find({ combineGroupId: assign.body.combineGroupId });
+    expect(groupAssigned.length).toBeGreaterThan(0);
+    groupAssigned.forEach(o => {
+      expect(String(o.driverId)).toBe(String(ids.driver));
+      expect(o.status).toBe('DRIVER_ASSIGNED');
+    });
+
+    const deliver = await agents.driver
       .put(`/api/orders/${one._id}/status`)
-      .set('Authorization', `Bearer ${tokens.driver}`)
       .send({ status: 'DELIVERED' });
     expect(deliver.status).toBe(200);
     expect(deliver.body.status).toBe('DELIVERED');

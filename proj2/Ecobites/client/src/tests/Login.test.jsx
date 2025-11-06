@@ -13,6 +13,21 @@ vi.mock("../api/axios.config", () => ({
   },
 }));
 
+// Mock the profile service
+vi.mock("../api/services/profile.service", () => ({
+  profileService: {
+    updateAddress: vi.fn().mockResolvedValue({
+      success: true,
+      address: {
+        street: "123 Test St",
+        city: "Test City",
+        zipCode: "12345",
+        coordinates: { lat: 40.7128, lng: -74.006 }
+      }
+    }),
+  },
+}));
+
 // Mock the auth service
 vi.mock("../api/services/auth.service", () => ({
   authService: {
@@ -221,6 +236,7 @@ describe("Login Component", () => {
         email: testData.email,
         password: testData.password,
         phone: "",
+         role: "customer",
       });
     });
   });

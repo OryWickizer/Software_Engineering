@@ -22,13 +22,16 @@ describe('Combine Orders Integration Tests', () => {
   let restaurant;
   let menuItem;
   let order1, order2, order3, order4;
-  let authToken;
+  let customerAgent;
 
   beforeEach(async () => {
     // Clear data before each test
     await User.deleteMany({});
     await Order.deleteMany({});
     await MenuItem.deleteMany({});
+
+    // Create agent to maintain cookies
+    customerAgent = request.agent(app);
 
     // Create restaurant user
     restaurant = await User.create({
@@ -164,17 +167,15 @@ describe('Combine Orders Integration Tests', () => {
       status: 'READY'
     });
 
-    // Login as customer1
-    const loginRes = await request(app)
+    // Login as customer1 using agent
+    await customerAgent
       .post('/api/auth/login')
       .send({ email: 'customer1@test.com', password: 'password123' });
-    authToken = loginRes.body.token;
   });
 
   it('should successfully combine orders from nearby customers', async () => {
-    const res = await request(app)
+    const res = await customerAgent
       .post('/api/orders/combine')
-      .set('Authorization', `Bearer ${authToken}`)
       .send({ customerId: customer1._id.toString() });
 
     expect(res.status).toBe(200);
@@ -200,9 +201,8 @@ describe('Combine Orders Integration Tests', () => {
   });
 
   it('should not combine orders from different cities', async () => {
-    const res = await request(app)
+    const res = await customerAgent
       .post('/api/orders/combine')
-      .set('Authorization', `Bearer ${authToken}`)
       .send({ customerId: customer1._id.toString() });
 
     expect(res.status).toBe(200);
@@ -216,9 +216,8 @@ describe('Combine Orders Integration Tests', () => {
     // Delete customer1's order
     await Order.deleteOne({ _id: order1._id });
 
-    const res = await request(app)
+    const res = await customerAgent
       .post('/api/orders/combine')
-      .set('Authorization', `Bearer ${authToken}`)
       .send({ customerId: customer1._id.toString() });
 
     expect(res.status).toBe(400);
@@ -229,9 +228,8 @@ describe('Combine Orders Integration Tests', () => {
     // Delete all other customers' orders
     await Order.deleteMany({ customerId: { $ne: customer1._id } });
 
-    const res = await request(app)
+    const res = await customerAgent
       .post('/api/orders/combine')
-      .set('Authorization', `Bearer ${authToken}`)
       .send({ customerId: customer1._id.toString() });
 
     expect(res.status).toBe(200);
@@ -240,9 +238,8 @@ describe('Combine Orders Integration Tests', () => {
   });
 
   it('should assign same combineGroupId to all combined orders', async () => {
-    const res = await request(app)
+    const res = await customerAgent
       .post('/api/orders/combine')
-      .set('Authorization', `Bearer ${authToken}`)
       .send({ customerId: customer1._id.toString() });
 
     expect(res.status).toBe(200);

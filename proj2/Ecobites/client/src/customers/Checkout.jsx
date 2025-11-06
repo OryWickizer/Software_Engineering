@@ -1,23 +1,37 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
+import { profileService } from '../api/services/profile.service';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { PACKAGING_OPTIONS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
 
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthContext();
+  const { user, isAuthenticated, refreshUser } = useAuthContext();
   const cart = location.state?.cart || [];
 
-  // Hooks must be called unconditionally at the top of the component.
+  // Try to refresh user from backend on mount to get latest data including address
+  React.useEffect(() => {
+    if (isAuthenticated && refreshUser) {
+      refreshUser().catch(err => {
+        console.error('Failed to refresh user:', err);
+      });
+    }
+  }, []);
 
   // Prefill address from user if available
   const getUserAddress = (u) => {
-    if (!u || !u.address) return {
-      name: u?.name || '',
-      address: '', city: '', zip: '', phone: u?.phone || ''
-    };
+    // Check if address exists AND has actual data (not just an empty object)
+    const hasValidAddress = u?.address && 
+      (u.address.street || u.address.city || u.address.zipCode);
+    
+    if (!u || !hasValidAddress) {
+      return {
+        name: u?.name || '',
+        address: '', city: '', zip: '', phone: u?.phone || ''
+      };
+    }
     return {
       name: u.name || '',
       address: u.address.street || '',
@@ -48,11 +62,16 @@ const Checkout = () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: location } });
     }
-    // If user changes, update address only if using saved address
-    if (useSavedAddress) {
-      setDeliveryAddress(getUserAddress(user));
+  }, [isAuthenticated, navigate, location]);
+
+  // Update address when user changes and we're using saved address
+  React.useEffect(() => {
+    // Only update if checkbox is explicitly checked
+    if (user && useSavedAddress === true) {
+      const newAddress = getUserAddress(user);
+      setDeliveryAddress(newAddress);
     }
-  }, [isAuthenticated, navigate, location, user, useSavedAddress]);
+  }, [user?.address?.street, user?.address?.city, user?.address?.zipCode, useSavedAddress]);
 
   // Packaging choices from constants
   const packagingChoices = [
@@ -71,8 +90,12 @@ const Checkout = () => {
 
 
   const handleAddressChange = (e) => {
-    setDeliveryAddress({ ...deliveryAddress, [e.target.name]: e.target.value });
-    if (useSavedAddress) setUseSavedAddress(false);
+    const newAddress = { ...deliveryAddress, [e.target.name]: e.target.value };
+    setDeliveryAddress(newAddress);
+    // Uncheck "use saved address" when user manually changes any field
+    if (useSavedAddress) {
+      setUseSavedAddress(false);
+    }
   };
 
   const handlePaymentChange = (e) => {
@@ -111,6 +134,10 @@ const Checkout = () => {
         return;
       }
 
+      // Note: Address geocoding is now handled automatically by the backend when creating the order
+      // The backend will geocode the delivery address and store coordinates with the order
+      // This does NOT update the user's profile address
+
       // Prepare order data in the full shape you requested.
       // Note: server will still validate/override authoritative fields (customerId from token, restaurantId from menu items, prices/totals)
       const itemsForPayload = cart.map(item => ({
@@ -142,7 +169,7 @@ const Checkout = () => {
         specialInstructions: '',
         packagingPreference
       };
-      console.log('Order Data:', orderData);
+      
       // Create the order
       const response = await orderService.create(orderData);
       
@@ -220,14 +247,15 @@ const Checkout = () => {
               </div>
               <h2 className="text-xl font-semibold text-gray-800">Delivery Address</h2>
             </div>
-            {user?.address && (
+            {user?.address && (user.address.street || user.address.city || user.address.zipCode) && (
               <div className="mb-2 flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={useSavedAddress}
                   onChange={() => {
                     if (!useSavedAddress) {
-                      setDeliveryAddress(getUserAddress(user));
+                      const addr = getUserAddress(user);
+                      setDeliveryAddress(addr);
                     }
                     setUseSavedAddress(!useSavedAddress);
                   }}

@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
-import { authService } from '../api/services/auth.service';
+import { useAuthContext } from '../context/AuthContext';
 import { STATUS_COLORS, ORDER_STATUS } from '../utils/constants';
 
 const OrderStatus = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuthContext();
 
   const [pastOrders, setPastOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const user = authService.getCurrentUser();
     const load = async () => {
       try {
+        if (authLoading) return; // wait for auth to resolve
         if (!user?._id) throw new Error('Not authenticated');
         setLoading(true);
         const data = await orderService.getByRole('customer', user._id);
@@ -38,7 +39,7 @@ const OrderStatus = () => {
       }
     };
     load();
-  }, []);
+  }, [user, authLoading]);
 
   const formatCurrency = (num) => {
     return Number(num).toLocaleString(undefined, { style: 'currency', currency: 'USD' });

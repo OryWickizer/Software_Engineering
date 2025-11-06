@@ -7,10 +7,20 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // On mount, check if user is authenticated by calling /me
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
+    const checkAuth = async () => {
+      try {
+        const userData = await authService.fetchMe();
+        setUser(userData);
+      } catch (error) {
+        // Not authenticated or token expired
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
   }, []);
 
   const login = async (credentials) => {
@@ -21,8 +31,8 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
   };
 
@@ -32,8 +42,8 @@ export const AuthProvider = ({ children }) => {
       if (updated) setUser(updated);
       return updated;
     } catch (e) {
-      // if token invalid, logout
       console.error('Failed to refresh user', e);
+      setUser(null);
       return null;
     }
   };
@@ -41,7 +51,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     setUser,
-    isAuthenticated: authService.isAuthenticated(),
+    isAuthenticated: !!user,
     loading,
     login,
     logout,

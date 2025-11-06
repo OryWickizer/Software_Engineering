@@ -7,7 +7,8 @@ export const useOrders = (role, userId) => {
     queryFn: () => orderService.getByRole(role, userId),
     enabled: !!userId,
     refetchInterval: 10000, // Refetch every 10 seconds
-    select: (data) => data.data,
+    // Service already returns response.data from axios, so no nested .data
+    select: (data) => data,
   });
 };
 
@@ -17,7 +18,7 @@ export const useOrder = (orderId) => {
     queryFn: () => orderService.getById(orderId),
     enabled: !!orderId,
     refetchInterval: 5000, // Refetch every 5 seconds for real-time tracking
-    select: (data) => data.data,
+    select: (data) => data,
   });
 };
 
@@ -26,7 +27,7 @@ export const useAvailableOrders = () => {
     queryKey: ['availableOrders'],
     queryFn: () => orderService.getAvailableForDrivers(),
     refetchInterval: 5000,
-    select: (data) => data.data,
+    select: (data) => data,
   });
 };
 

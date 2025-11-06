@@ -545,8 +545,8 @@ describe('Drivers', () => {
     });
   });
 
-  // Test 16: Updates localStorage when reward points are earned on delivery
-  it('updates localStorage and calls refreshUser when delivery is completed with rewards', async () => {
+  // Test 16: Updates user context and calls refreshUser when delivery is completed with rewards
+  it('updates user context and calls refreshUser when delivery is completed with rewards', async () => {
     const { orderService } = await import('../api/services/order.service');
     const currentOrder = {
       _id: 'o1',
@@ -567,14 +567,6 @@ describe('Drivers', () => {
       driverRewardPoints: 30
     });
 
-    // Mock localStorage
-    const localStorageMock = {
-      getItem: vi.fn(),
-      setItem: vi.fn(),
-      clear: vi.fn()
-    };
-    global.localStorage = localStorageMock;
-
     render(
       <MemoryRouter>
         <Drivers />
@@ -593,9 +585,6 @@ describe('Drivers', () => {
       const setUserCall = mockSetUser.mock.calls[0][0];
       const updatedUser = setUserCall({ _id: 'drv1', role: 'driver', name: 'Dan', vehicleType: 'EV', rewardPoints: 150 });
       expect(updatedUser.rewardPoints).toBe(180); // 150 + 30
-
-      // Verify localStorage was updated
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('user', expect.any(String));
 
       // Verify refreshUser was called
       expect(mockRefreshUser).toHaveBeenCalled();
