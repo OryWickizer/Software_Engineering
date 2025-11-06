@@ -48,7 +48,7 @@ beforeAll(async () => {
     restaurantId
   });
   menuItemId = menuItem._id;
-});
+}, 30000); // 30 second timeout for beforeAll
 
 afterEach(async () => {
   await Order.deleteMany({});

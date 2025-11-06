@@ -7,7 +7,7 @@ import { connectDB, closeDB, clearDB } from '../../src/setupTests.js';
 
 beforeAll(async () => {
   await connectDB();
-});
+}, 30000); // 30 second timeout for beforeAll
 
 afterEach(async () => {
   await clearDB();
