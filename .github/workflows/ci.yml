@@ -40,6 +40,14 @@ jobs:
       - name: Run tests with coverage
         run: npm test -- --coverage
 
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: proj2/Ecobites/server/coverage/lcov.info
+          flags: server
+          fail_ci_if_error: true
+
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
@@ -69,14 +77,21 @@ jobs:
 
       - name: Lint (client)
         run: npm run lint --if-present
-        # allow lint failures so tests still run and provide feedback
-        continue-on-error: true
+        continue-on-error: true # allow lint failures so tests still run
 
       - name: Run unit tests
         run: npm test -- --run
 
       - name: Coverage (vitest)
         run: npm run test:coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: proj2/Ecobites/client/coverage/lcov.info
+          flags: client
+          fail_ci_if_error: true
 
       - name: Upload client coverage
         uses: actions/upload-artifact@v4
