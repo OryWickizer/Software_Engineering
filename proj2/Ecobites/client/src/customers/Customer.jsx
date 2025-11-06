@@ -21,22 +21,30 @@ const Customer = () => {
         const response = await restaurantService.getAll();
         if (response.success && response.data) {
           // Transform the data to match our component's needs
-          const transformedData = response.data.map(restaurant => ({
-            id: restaurant._id,
-            name: restaurant.restaurantName,
-            ownerName: restaurant.name,
-            email: restaurant.email,
-            phone: restaurant.phone,
-            cuisine: restaurant.cuisine.join(', '), // Join array into string for compatibility
-            address: `${restaurant.address.street}, ${restaurant.address.city}, ${restaurant.address.zipCode}`,
-            isAvailable: restaurant.isAvailable,
-            // Add default values for missing fields
-            rating: 4.5, // Default rating
-            deliveryTime: '30-45', // Default delivery time
-            image: '🍽️', // Default image
-            description: `${restaurant.restaurantName} - ${restaurant.cuisine.join(' & ')} cuisine`,
-            menuItems: [] // We'll need to fetch menu items separately
-          }));
+          const transformedData = response.data.map(restaurant => {
+            const cuisineArray = Array.isArray(restaurant.cuisine)
+              ? restaurant.cuisine
+              : (restaurant.cuisine ? [restaurant.cuisine] : []);
+            const addr = restaurant.address || {};
+            return {
+              id: restaurant._id,
+              name: restaurant.restaurantName || restaurant.name || 'Restaurant',
+              ownerName: restaurant.name || '',
+              email: restaurant.email || '',
+              phone: restaurant.phone || '',
+              cuisine: cuisineArray.join(', '), // Join array into string for compatibility
+              address: addr.street && addr.city && addr.zipCode
+                ? `${addr.street}, ${addr.city}, ${addr.zipCode}`
+                : 'Address unavailable',
+              isAvailable: (restaurant.isAvailable ?? true),
+              // Add default values for missing fields
+              rating: 4.5, // Default rating
+              deliveryTime: '30-45', // Default delivery time
+              image: '🍽️', // Default image
+              description: `${restaurant.restaurantName || restaurant.name || 'Restaurant'} - ${cuisineArray.join(' & ')} cuisine`,
+              menuItems: [] // We'll need to fetch menu items separately
+            };
+          });
           setRestaurants(transformedData);
         } else {
           throw new Error('Invalid response format');
@@ -192,6 +200,11 @@ const Customer = () => {
     <div className="min-h-screen bg-gray-50 p-6 pt-24">
       {/* Hero */}
       <header className="max-w-6xl mx-auto mb-8">
+        {error && (
+          <div className="mb-3 p-3 rounded-lg bg-red-50 text-red-700">
+            {error}
+          </div>
+        )}
         {showSeasonalNudge && (
           <div className="mb-3 p-3 rounded-lg bg-orange-50 text-orange-800 flex items-center justify-between">
             <div className="text-sm">

@@ -151,7 +151,7 @@ export default function Drivers() {
         setUser((prev) => {
           if (!prev) return prev;
           const next = { ...prev, rewardPoints: (prev.rewardPoints || 0) + (updatedOrder.driverRewardPoints || 0) };
-          localStorage.setItem('user', JSON.stringify(next));
+          // No localStorage - Context is source of truth
           return next;
         });
         // Also refresh from server in background to ensure consistency

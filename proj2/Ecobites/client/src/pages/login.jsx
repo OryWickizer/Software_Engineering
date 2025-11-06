@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {useAuthContext} from "../context/AuthContext";
 import { authService } from "../api/services/auth.service";
+import { profileService } from "../api/services/profile.service";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
@@ -9,6 +10,14 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("customer");
+  const [restaurantName, setRestaurantName] = useState("");
+  const [cuisine, setCuisine] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
+  const [licensePlate, setLicensePlate] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [zipCode, setZipCode] = useState("");
   const [isRegister, setIsRegister] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,9 +33,60 @@ export default function Login() {
 
     try {
       if(isRegister){
-        await authService.register({ name, email, password, phone });
+        const registrationData = { 
+          name, 
+          email, 
+          password, 
+          phone,
+          role 
+        };
+        
+        // Add role-specific fields
+        if (role === 'restaurant') {
+          registrationData.restaurantName = restaurantName;
+          registrationData.cuisine = cuisine.split(',').map(c => c.trim()).filter(c => c);
+        } else if (role === 'driver') {
+          registrationData.vehicleType = vehicleType;
+          registrationData.licensePlate = licensePlate;
+        }
+        
+        const registerResponse = await authService.register(registrationData);
+        
+        // If customer provided address, geocode and update profile
+        if (role === 'customer' && address && city && zipCode) {
+          try {
+            // Login first to get token
+            const loginData = await login({ email, password });
+            // Now update address with geocoding
+            await profileService.updateAddress({
+              street: address,
+              city: city,
+              zipCode: zipCode
+            });
+            setMessage("Registration successful with address! Redirecting...");
+            // Navigate based on role
+            if (loginData.user.role === 'customer') {
+              try { sessionStorage.setItem('showSeasonalNudge', '1'); } catch {}
+              navigate("/customer");
+            }
+            return;
+          } catch (addressError) {
+            console.warn('Failed to geocode address during registration:', addressError);
+            // Continue with success message even if geocoding fails
+          }
+        }
+        
         setMessage("Registration successful! You can now log in.");
         setIsRegister(false);
+        // Reset form
+        setRole("customer");
+        setRestaurantName("");
+        setCuisine("");
+        setVehicleType("");
+        setLicensePlate("");
+        setAddress("");
+        setCity("");
+        setZipCode("");
       } else {
         const loginData = await login({ email, password });
         setMessage("Login successful! Redirecting...");
@@ -97,16 +157,38 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-label={isRegister ? "Registration Form" : "Login Form"}>
           {isRegister && (
-            <div className="relative group">
-              <input
-                type="text"
-                placeholder="Full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
-              />
-            </div>
+            <>
+              <div className="relative group">
+                <input
+                  type="text"
+                  placeholder="Full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                />
+              </div>
+
+              <div className="relative group">
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  <option value="customer">Customer</option>
+                  <option value="restaurant">Restaurant</option>
+                  <option value="driver">Driver</option>
+                </select>
+              </div>
+            </>
           )}
 
           <div className="relative group">
@@ -130,17 +212,122 @@ export default function Login() {
               className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
             />
           </div>
+          
           {isRegister && (
-            <div className="relative group">
-              <input
-                type="text"
-                placeholder="Phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
-              />
-            </div>
+            <>
+              <div className="relative group">
+                <input
+                  type="text"
+                  placeholder="Phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                />
+              </div>
+
+              {/* Restaurant-specific fields */}
+              {role === 'restaurant' && (
+                <>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      placeholder="Restaurant name"
+                      value={restaurantName}
+                      onChange={(e) => setRestaurantName(e.target.value)}
+                      required
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                    />
+                  </div>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      placeholder="Cuisine types (e.g., Italian, Pizza)"
+                      value={cuisine}
+                      onChange={(e) => setCuisine(e.target.value)}
+                      required
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                    />
+                    <p className="text-xs text-gray-500 mt-1 ml-1">Separate multiple cuisines with commas</p>
+                  </div>
+                </>
+              )}
+
+              {/* Driver-specific fields */}
+              {role === 'driver' && (
+                <>
+                  <div className="relative group">
+                    <select
+                      value={vehicleType}
+                      onChange={(e) => setVehicleType(e.target.value)}
+                      required
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300 appearance-none cursor-pointer"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                        backgroundPosition: 'right 0.5rem center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: '1.5em 1.5em',
+                        paddingRight: '2.5rem'
+                      }}
+                    >
+                      <option value="">Select vehicle type</option>
+                      <option value="electric">Electric (15 pts/delivery)</option>
+                      <option value="hybrid">Hybrid (10 pts/delivery)</option>
+                      <option value="gas">Gas (5 pts/delivery)</option>
+                    </select>
+                  </div>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      placeholder="License plate"
+                      value={licensePlate}
+                      onChange={(e) => setLicensePlate(e.target.value)}
+                      required
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Customer address fields (optional but recommended for order combining) */}
+              {role === 'customer' && (
+                <>
+                  <div className="text-sm text-gray-600 mt-2 mb-1">
+                    <span className="font-medium">📍 Delivery Address (Optional)</span>
+                    <p className="text-xs text-gray-500">Add your address to enable order combining with neighbors</p>
+                  </div>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      placeholder="Street address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative group">
+                      <input
+                        type="text"
+                        placeholder="City"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                      />
+                    </div>
+                    <div className="relative group">
+                      <input
+                        type="text"
+                        placeholder="ZIP code"
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           <button
@@ -172,6 +359,14 @@ export default function Login() {
               onClick={() => {
                 setIsRegister(!isRegister);
                 setMessage("");
+                setRole("customer");
+                setRestaurantName("");
+                setCuisine("");
+                setVehicleType("");
+                setLicensePlate("");
+                setAddress("");
+                setCity("");
+                setZipCode("");
               }}
             >
               {isRegister ? "Already have an account? Sign in" : "New to EcoBites? Join now"}

@@ -11,8 +11,7 @@ export const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: authService.login,
     onSuccess: (data) => {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // No localStorage - token is in httpOnly cookie
       // update context user so components depending on auth get updated
       try { setUser && setUser(data.user); } catch (e) { /* ignore if not available */ }
 
@@ -31,8 +30,7 @@ export const useAuth = () => {
   const registerMutation = useMutation({
     mutationFn: authService.register,
     onSuccess: (data) => {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // No localStorage - token is in httpOnly cookie
       try { setUser && setUser(data.user); } catch (e) { /* ignore if not available */ }
 
       const role = data.user.role;
@@ -42,8 +40,8 @@ export const useAuth = () => {
     },
   });
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await authService.logout();
     try { setUser && setUser(null); } catch (e) {}
     queryClient.clear();
     navigate('/login');
