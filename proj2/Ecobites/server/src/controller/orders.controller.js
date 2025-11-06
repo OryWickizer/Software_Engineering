@@ -2,23 +2,40 @@
 export const combineOrdersWithNeighbors = async (req, res) => {
   try {
     const { customerId, radiusMeters = 500 } = req.body;
-    console.log('Combine request from customer:', customerId, 'radius:', radiusMeters);
     
-    // Get the customer's address
-    const customer = await (await import('../models/User.model.js')).User.findById(customerId);
-    if (!customer || !customer.address || !customer.address.coordinates) {
-      return res.status(400).json({ message: 'Customer address/coordinates not found' });
+    // Get the customer's most recent active order to use its delivery address
+    const activeStatuses = ['PLACED', 'PREPARING', 'READY'];
+    const myOrder = await Order.findOne({ customerId, status: { $in: activeStatuses } }).sort({ createdAt: -1 });
+    
+    if (!myOrder) {
+      return res.status(400).json({ message: 'You don\'t have any active orders to combine' });
     }
-    console.log('Customer address:', customer.address);
+    
+    // Ensure initiating order has coordinates; if missing, compute deterministic fallback
+    if (!myOrder.deliveryAddress) myOrder.deliveryAddress = {};
+    const ensureCoords = (addr) => {
+      if (!addr) return null;
+      if (addr.coordinates && typeof addr.coordinates.lat === 'number' && typeof addr.coordinates.lng === 'number') {
+        return addr.coordinates;
+      }
+      const { street = '', city = '', zipCode = '' } = addr;
+      const addressHash = `${String(street)}|${String(city)}|${String(zipCode)}`.toLowerCase();
+      const hash = addressHash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const lat = 35.7796 + (hash % 100) / 10000; // Raleigh base + small offset
+      const lng = -78.6382 + (hash % 100) / 10000;
+      return { lat, lng };
+    };
+    if (!myOrder.deliveryAddress.coordinates) {
+      myOrder.deliveryAddress.coordinates = ensureCoords(myOrder.deliveryAddress);
+      try { await myOrder.save(); } catch {}
+    }
     
     // Find other customers with orders in PLACED/PREPARING/READY status, within city/zip
-    const activeStatuses = ['PLACED', 'PREPARING', 'READY'];
     const orders = await Order.find({
       status: { $in: activeStatuses },
-      'deliveryAddress.city': customer.address.city,
-      'deliveryAddress.zipCode': customer.address.zipCode,
+      'deliveryAddress.city': myOrder.deliveryAddress.city,
+      'deliveryAddress.zipCode': myOrder.deliveryAddress.zipCode,
     });
-    console.log('Found orders in same city/zip:', orders.length);
     // Filter by geo proximity (Haversine formula)
     function getDistanceMeters(coord1, coord2) {
       if (!coord1 || !coord2) return Infinity;
@@ -33,15 +50,19 @@ export const combineOrdersWithNeighbors = async (req, res) => {
       return R * c;
     }
     const nearbyOrders = orders.filter(o => {
-      if (!o.deliveryAddress?.coordinates) return false;
-      const dist = getDistanceMeters(customer.address.coordinates, o.deliveryAddress.coordinates);
-      const isNearby = dist <= radiusMeters && String(o.customerId) !== String(customerId);
-      if (dist <= radiusMeters) {
-        console.log('Order', o._id, 'distance:', dist, 'customer:', o.customerId, 'isNearby:', isNearby);
+      // Skip the initiating customer's own order
+      if (String(o._id) === String(myOrder._id)) return false;
+      // Ensure neighbor has coordinates; compute deterministic fallback if missing
+      if (!o.deliveryAddress) o.deliveryAddress = {};
+      if (!o.deliveryAddress.coordinates) {
+        o.deliveryAddress.coordinates = ensureCoords(o.deliveryAddress);
+        // best-effort persist; ignore errors
+        try { o.markModified && o.markModified('deliveryAddress'); o.save(); } catch {}
       }
+      const dist = getDistanceMeters(myOrder.deliveryAddress.coordinates, o.deliveryAddress.coordinates);
+      const isNearby = dist <= radiusMeters && String(o.customerId) !== String(customerId);
       return isNearby;
     });
-    console.log('Nearby orders after filtering:', nearbyOrders.length);
     
     if (nearbyOrders.length === 0) {
       return res.status(200).json({ message: 'No nearby orders to combine', combinedOrders: [] });
@@ -51,12 +72,6 @@ export const combineOrdersWithNeighbors = async (req, res) => {
     const COMBINED_REWARD = 20; // points for combining
     const updatedOrderIds = [];
     // Determine combine group id
-    const myOrder = await Order.findOne({ customerId, status: { $in: activeStatuses } });
-    
-    if (!myOrder) {
-      return res.status(400).json({ message: 'You don\'t have any active orders to combine' });
-    }
-    
     const groupId = `GRP${myOrder._id.toString().slice(-6)}`;
     const allOrders = [myOrder, ...nearbyOrders].filter(Boolean);
     const allIds = allOrders.map(o => o._id);
@@ -91,6 +106,28 @@ import {Order} from '../models/Order.model.js';
 import { User } from '../models/User.model.js';
 import { MenuItem } from '../models/MenuItem.model.js';
 import { calculateEcoReward, calculateDriverIncentive } from '../config/constants.js';
+import axios from 'axios';
+
+// Helper function to geocode address
+async function geocodeAddress({ street, city, zipCode }) {
+  try {
+    const query = encodeURIComponent(`${street}, ${city}, ${zipCode}`);
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}`;
+    const response = await axios.get(url, {
+      headers: { 'User-Agent': 'EcoBites/1.0 (contact@example.com)' },
+      timeout: 5000
+    });
+    if (response.data && response.data.length > 0) {
+      const { lat, lon } = response.data[0];
+      const coords = { lat: parseFloat(lat), lng: parseFloat(lon) };
+      return coords;
+    }
+    return null;
+  } catch (error) {
+    console.error('Geocoding failed:', error.message);
+    return null;
+  }
+}
 
 export const createOrder = async (req, res) => {
   try {
@@ -111,9 +148,7 @@ export const createOrder = async (req, res) => {
 
     // Extract menu item ids and fetch from DB
     const menuItemIds = bodyItems.map(i => i.menuItemId || i.menuItem || i._id).filter(Boolean);
-  const menuItems = await MenuItem.find({ _id: { $in: menuItemIds } });
-  console.log('🔎 menuItemIds:', menuItemIds);
-  console.log('🔎 menuItems from DB:', menuItems.map(m => ({ id: m._id.toString(), restaurantId: m.restaurantId })));
+    const menuItems = await MenuItem.find({ _id: { $in: menuItemIds } });
 
     if (menuItems.length !== menuItemIds.length) {
       return res.status(400).json({ success: false, message: 'One or more menu items are invalid' });
@@ -162,11 +197,36 @@ export const createOrder = async (req, res) => {
     }, 0);
     const ecoRewardPoints = calculateEcoReward(selectedPackaging) + seasonalBonus;
 
+    // Geocode the delivery address for this order (not updating user profile)
+    let addressWithCoordinates = { ...deliveryAddress };
+    if (deliveryAddress?.street && deliveryAddress?.city && deliveryAddress?.zipCode) {
+      // Add a small delay to respect API rate limits
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const coordinates = await geocodeAddress({
+        street: deliveryAddress.street,
+        city: deliveryAddress.city,
+        zipCode: deliveryAddress.zipCode
+      });
+      
+      if (coordinates) {
+        addressWithCoordinates.coordinates = coordinates;
+      } else {
+        // Fallback: Create deterministic coordinates based on address hash
+        // This ensures orders with identical addresses get identical coordinates
+        const addressHash = `${deliveryAddress.street}|${deliveryAddress.city}|${deliveryAddress.zipCode}`.toLowerCase();
+        const hash = addressHash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const lat = 35.7796 + (hash % 100) / 10000; // Raleigh base + small offset
+        const lng = -78.6382 + (hash % 100) / 10000;
+        addressWithCoordinates.coordinates = { lat, lng };
+      }
+    }
+
     const order = new Order({
       customerId: req.user._id,
       restaurantId,
       items,
-      deliveryAddress,
+      deliveryAddress: addressWithCoordinates,
       subtotal,
       deliveryFee,
       tax,
@@ -178,10 +238,10 @@ export const createOrder = async (req, res) => {
       statusHistory: [{ status: 'PLACED', updatedBy: req.user._id.toString() }]
     });
 
-  await order.save();
+    await order.save();
 
-  // Return the created order directly (without populating) so IDs remain as strings
-  res.status(201).json(order);
+    // Return the created order directly (without populating) so IDs remain as strings
+    res.status(201).json(order);
   } catch (error) {
     console.error('createOrder error:', error);
     res.status(500).json({
@@ -279,11 +339,9 @@ export const getOrderById = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
-    console.log('updateOrderStatus called for orderId:', orderId);
     const { status, driverId } = req.body;
     
     const order = await Order.findById(orderId);
-  console.log('updateOrderStatus found order:', order);
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -292,7 +350,6 @@ export const updateOrderStatus = async (req, res) => {
     }
     
     // Authorization checks
-  console.log('updateOrderStatus details:', { status, reqUserId: req.user._id.toString(), reqUserRole: req.user.role, orderCustomerId: order.customerId?.toString(), orderRestaurantId: order.restaurantId?.toString() });
     if (status === 'CANCELLED' && req.user._id.toString() !== order.customerId.toString()) {
       return res.status(403).json({
         success: false,
@@ -346,6 +403,23 @@ export const updateOrderStatus = async (req, res) => {
         }
       }
       await order.save();
+
+      // If this order is part of a combined group and a driver was assigned,
+      // atomically assign the same driver to the rest of the group and mark them DRIVER_ASSIGNED too.
+      if (status === 'DRIVER_ASSIGNED' && order.combineGroupId && driverId) {
+        const others = await Order.find({
+          combineGroupId: order.combineGroupId,
+          _id: { $ne: order._id },
+          driverId: null
+        });
+        for (const other of others) {
+          other.driverId = driverId;
+          other.status = 'DRIVER_ASSIGNED';
+          other.statusHistory.push({ status: 'DRIVER_ASSIGNED', updatedBy: req.user.role });
+          await other.save();
+        }
+      }
+
       // Return updated order directly (without population)
       res.json(order);
     } catch (saveError) {

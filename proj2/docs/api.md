@@ -55,7 +55,7 @@ Register a new user account.
   "email": "string (required)",
   "password": "string (required, min 6 chars)",
   "phone": "string (optional)",
-  "role": "customer|restaurant|driver (default: customer)",
+  "role": "customer|restaurant|driver (required)",
   "address": {
     "street": "string",
     "city": "string",
@@ -66,11 +66,11 @@ Register a new user account.
     }
   },
   // Restaurant-specific fields (if role === 'restaurant')
-  "restaurantName": "string",
-  "cuisine": ["string"],
+  "restaurantName": "string (required if role is restaurant)",
+  "cuisine": ["string"] (required if role is restaurant),
   // Driver-specific fields (if role === 'driver')
-  "vehicleType": "gas|electric|hybrid",
-  "licensePlate": "string"
+  "vehicleType": "gas|electric|hybrid (required if role is driver)",
+  "licensePlate": "string (required if role is driver)"
 }
 ```
 

@@ -9,11 +9,38 @@ This document provides worked examples showing how to use key EcoBites features.
 2. Click "New to EcoBites? Join now" to switch to registration mode
 3. Fill in required fields:
    - Full name: "John Doe"
+  - Role: "Customer" (dropdown selection)
    - Email: "john@example.com"
    - Password: "password123" (minimum 6 characters)
    - Phone: "+1234567890"
 4. Click "Create Account"
 5. On success, switch back to login mode and proceed to login
+
+### Registering as a Restaurant
+1. Navigate to `/login` page
+2. Click "New to EcoBites? Join now"
+3. Fill in required fields:
+  - Full name: "Chef Mario"
+  - Role: "Restaurant" (select from dropdown)
+  - Email: "mario@pizzeria.com"
+  - Password: "password123"
+  - Phone: "+1234567890"
+  - Restaurant name: "Mario's Pizzeria"
+  - Cuisine types: "Italian, Pizza" (comma-separated)
+4. Click "Create Account"
+
+### Registering as a Driver
+1. Navigate to `/login` page
+2. Click "New to EcoBites? Join now"
+3. Fill in required fields:
+  - Full name: "Dave Driver"
+  - Role: "Driver" (select from dropdown)
+  - Email: "dave@delivery.com"
+  - Password: "password123"
+  - Phone: "+1234567890"
+  - Vehicle type: "Electric" (dropdown - earns 15 pts/delivery)
+  - License plate: "ECO-123"
+4. Click "Create Account"
 
 ### Logging In
 1. On login page, enter:

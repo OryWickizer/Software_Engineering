@@ -15,7 +15,6 @@ export const register = async (req, res) => {
       cuisine,
       vehicleType,
       licensePlate  } = req.body;
-    console.log("📦 Request body:", req.body); // Add this line
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Please provide all fields" });
@@ -59,11 +58,16 @@ export const register = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    console.log("✅ User registered:", email);
+    // Set httpOnly cookie with JWT token
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     res.status(201).json({
       message: "User registered successfully",
-      token,
       user: {
         id: user._id.toString(),
         _id: user._id.toString(),
@@ -75,6 +79,8 @@ export const register = async (req, res) => {
         licensePlate: user.licensePlate || null,
         restaurantName: user.restaurantName || null,
         cuisine: user.cuisine || null,
+        address: user.address || null,
+        phone: user.phone || null,
       },
     });
   } catch (error) {
@@ -107,11 +113,16 @@ export const login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    console.log("✅ User logged in:", email);
+    // Set httpOnly cookie with JWT token
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     res.json({
       message: "Login successful",
-      token,
       user: {
         id: user._id.toString(),
         _id: user._id.toString(),
@@ -123,6 +134,8 @@ export const login = async (req, res) => {
         licensePlate: user.licensePlate || null,
         restaurantName: user.restaurantName || null,
         cuisine: user.cuisine || null,
+        address: user.address || null,
+        phone: user.phone || null,
       },
     });
   } catch (error) {
@@ -149,10 +162,28 @@ export const me = async (req, res) => {
         licensePlate: req.user.licensePlate || null,
         restaurantName: req.user.restaurantName || null,
         cuisine: req.user.cuisine || null,
+        address: req.user.address || null,
+        phone: req.user.phone || null,
       }
     });
   } catch (error) {
     console.error("Me error:", error);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    // Clear the httpOnly cookie
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
+    
+    res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ error: "Server error during logout" });
   }
 };

@@ -25,8 +25,11 @@ describe('POST /api/auth/register', () => {
       });
 
     expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty('token');
+    // Token is now in httpOnly cookie, not response body
+    expect(res.headers['set-cookie']).toBeDefined();
+    expect(res.headers['set-cookie'][0]).toMatch(/token=/);
     expect(res.body.user).toHaveProperty('email', 'test@example.com');
+    expect(res.body).not.toHaveProperty('token'); // Should not expose token in body
   });
 
   it('should not register user with existing email', async () => {
