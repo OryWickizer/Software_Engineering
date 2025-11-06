@@ -3,7 +3,6 @@
 [![CI](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
 [![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=flat&logo=eslint&logoColor=white)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
 [![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/OryWickizer/Software_Engineering/branch/main/graph/badge.svg?flag=server)](https://codecov.io/gh/OryWickizer/Software_Engineering)
 [![Babel](https://img.shields.io/badge/Babel-F9DC3E?style=flat&logo=babel&logoColor=black)](https://babeljs.io/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
