@@ -1,4 +1,4 @@
-import api from '../config/axios.config';
+import api from '../axios.config';
 
 export const userService = {
   getProfile: async (userId) => {
