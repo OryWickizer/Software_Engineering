@@ -1,4 +1,5 @@
 [![DOI](https://zenodo.org/badge/1044954690.svg)](https://doi.org/10.5281/zenodo.17497556)
+[![codecov](https://codecov.io/gh/OryWickizer/Software_Engineering/graph/badge.svg?token=JBXHACOW8D)](https://codecov.io/gh/OryWickizer/Software_Engineering)
 [![CI](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
 [![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=flat&logo=eslint&logoColor=white)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
 [![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black)](https://github.com/OryWickizer/Software_Engineering/actions/workflows/ci.yml)
