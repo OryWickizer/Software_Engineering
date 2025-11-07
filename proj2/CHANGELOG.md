@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Detailed component and function descriptions
 - Changelog following Keep a Changelog format
 
-## [0.2.0] - 2024-01-XX
+## [0.2.0] 
 
 ### Added
 - Order combination feature for delivery optimization
@@ -31,8 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced order management with status workflows
 - Improved user experience with eco-rewards feedback
 
-## [0.1.0] - 2024-01-XX
-
+## [0.1.0]
 ### Added
 - Basic user authentication (register/login)
 - Role-based access control (customer/restaurant/driver)

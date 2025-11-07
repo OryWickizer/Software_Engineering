@@ -67,6 +67,19 @@ contributing directly to reducing
 the carbon footprint of each
 delivery.
 
+## Demo Video
+
+**Watch our project demonstration on YouTube:**
+
+<div align="center">
+  
+[![EcoBites Demo Video](https://img.youtube.com/vi/CwN2WATvJYQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=CwN2WATvJYQ)
+
+**[▶️ Watch on YouTube](https://youtu.be/K2KGYuvrB_Y)** | 4 minutes
+
+</div>
+
+
 ## Development Roadmap
 
 ### **October – Release 1: Prototype**
@@ -75,18 +88,6 @@ delivery.
 - Build a frontend UI to allow users to browse ecofriendly restaurants, place orders, and track deliveries.
 
 ### **November – Release 2: Enhanced System**
-
-## Tech Stack
-
-| Layer          | Technology                                    |
-| -------------- | --------------------------------------------- |
-| **Frontend**   | Next.js |
-| **Backend**    | Next.js API Routes, Node.js                   |
-| **Database**   | MongoDB                      |
-| **Auth**       | JWt                                 |
-| **CI/CD**      | GitHub Actions                                |
-
----
 
 ## Third‑party dependencies
 
