@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import { authService } from '../api/services/auth.service';
 
-const AuthContext = createContext(null);
+// Export context from separate module to avoid Fast Refresh warnings
+export { AuthContext } from './contexts';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -13,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const userData = await authService.fetchMe();
         setUser(userData);
-      } catch (error) {
+      } catch {
         // Not authenticated or token expired
         setUser(null);
       } finally {
@@ -61,15 +62,5 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuthContext = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuthContext must be used within AuthProvider');
-  }
-  return context;
-};
-
-// NOTE: AuthContext also exports helpers/constants; keep in separate module if Fast Refresh issues arise
-// Intentionally do not export the raw AuthContext object to avoid
-// react-refresh "only-export-components" warnings. Consumers should
-// use `useAuthContext` or `AuthProvider` instead.
+// NOTE: Custom hooks are exported from the hooks/ directory to avoid
+// react-refresh "only-export-components" warnings.

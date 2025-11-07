@@ -15,7 +15,7 @@ export default function Profile() {
 
   // If localStorage changes elsewhere, sync role/user (lightweight)
   useEffect(() => {
-    setUser(authUser || user);
+    setUser((prevUser) => authUser || prevUser);
     if (authUser?.role) setRole(authUser.role);
   }, [authUser]);
 

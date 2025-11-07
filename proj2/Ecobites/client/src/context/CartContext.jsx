@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { CartContext } from './contexts';
 
 export const CartProvider = ({ children }) => {
@@ -62,12 +62,5 @@ export const CartProvider = ({ children }) => {
   );
 };
 
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
-};
-
-// Note: raw CartContext is exported from `contexts.js`.
+// NOTE: Custom hooks are exported from the hooks/ directory to avoid
+// react-refresh "only-export-components" warnings.

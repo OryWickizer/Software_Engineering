@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
-import { profileService } from '../api/services/profile.service';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { PACKAGING_OPTIONS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
 
@@ -18,7 +17,7 @@ const Checkout = () => {
         console.error('Failed to refresh user:', err);
       });
     }
-  }, []);
+  }, [isAuthenticated, refreshUser]);
 
   // Prefill address from user if available
   const getUserAddress = (u) => {
@@ -71,7 +70,7 @@ const Checkout = () => {
       const newAddress = getUserAddress(user);
       setDeliveryAddress(newAddress);
     }
-  }, [user?.address?.street, user?.address?.city, user?.address?.zipCode, useSavedAddress]);
+  }, [user, useSavedAddress]);
 
   // Packaging choices from constants
   const packagingChoices = [

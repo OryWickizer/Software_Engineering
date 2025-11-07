@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { RestaurantContext } from './contexts';
 import { restaurantService } from '../api/services/restaurant.service';
 
@@ -29,6 +29,5 @@ export const RestaurantProvider = ({ children }) => {
   );
 };
 
-export const useRestaurantContext = () => useContext(RestaurantContext);
-
-// raw RestaurantContext is exported from `contexts.js`.
+// NOTE: Custom hooks are exported from the hooks/ directory to avoid
+// react-refresh "only-export-components" warnings.
