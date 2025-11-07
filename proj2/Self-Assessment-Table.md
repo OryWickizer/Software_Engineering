@@ -2,23 +2,23 @@
 |-----------|-----------|---------|-----------|
 | **Q1 - Software Overview** | | | |
 | Question 1.1 | Does your website and documentation provide a clear, high-level overview of your software? | ✅ | High-level overview in `proj2/README.md` and `proj2/docs/README.md` |
-| Question 1.2 | Does your website and documentation clearly describe the type of user who should use your software? | ✅ | Target users described in `proj2/README.md:15` (health-focused users) |
-| Question 1.3 | Do you publish case studies to show how your software has been used by yourself and others? | ❌ | No real case studies published; only planned mentions in `proj2/docs/1-REQUIREMENTS/functional-requirements.md` |
+| Question 1.2 | Does your website and documentation clearly describe the type of user who should use your software? | ✅ | Target users described in `proj2/docs/why.md` (eco conscious users) |
+| Question 1.3 | Do you publish case studies to show how your software has been used by yourself and others? | ❌ | No real case studies published |
 | **Q2 - Identity** | | | |
-| Question 2.1 | Is the name of your project/software unique? | ✅ | Verified through Google Search, no overlapped software |
+| Question 2.1 | Is the name of your project/software unique? | ❌ | Several similarly named products, no service exactly like this |
 | Question 2.2 | Is your project/software name free from trademark violations? | ❌ | No trademark clearance/process documented in repo |
 | **Q3 - Availability** | | | |
-| Question 3.1 | Is your software available as a package that can be deployed without building it? | ✅ | Utilized package managers (as Professor stated) |
-| Question 3.2 | Is your software available for free? | ✅ | AGPL-3.0 license in `proj2/LICENSE` and noted in `proj2/README.md` |
-| Question 3.3 | Is your source code publicly available to download, either as a downloadable bundle or via access to a source code repository? | ✅ | Public repo structure present; GitHub badges in `proj2/README.md:3` |
+| Question 3.1 | Is your software available as a package that can be deployed without building it? | ❌ | Can be easily cloned and ran |
+| Question 3.2 | Is your software available for free? | ✅ | GNU AFFERO GENERAL PUBLIC LICENSE in `proj2/LICENSE.md`|
+| Question 3.3 | Is your source code publicly available to download, either as a downloadable bundle or via access to a source code repository? | ✅ | Public repo structure present |
 | Question 3.4 | Is your software hosted in an established, third-party repository like GitHub, BitBucket, LaunchPad, or SourceForge? | ✅ | Hosted on GitHub (badges and links in `proj2/README.md`) |
 | **Q4 - Documentation** | | | |
 | Question 4.1 | Is your documentation clearly available on your website or within your software? | ✅ | Docs in repo at `proj2/docs/` and guides in `proj2/INSTALL.md` |
 | Question 4.2 | Does your documentation include a "quick start" guide, that provides a short overview of how to use your software with some basic examples of use? | ✅ | Quick start in `proj2/README.md:31` and `proj2/INSTALL.md` |
-| Question 4.3 | If you provide more extensive documentation, does this provide clear, step-by-step instructions on how to deploy and use your software? | ✅ | Detailed docs in `proj2/docs/` and CI/CD/deploy guidance in `proj2/docs/3-IMPLEMENTATION/ci-cd-pipeline.md` |
-| Question 4.4 | Do you provide a comprehensive guide to all your software’s commands, functions and options? | ✅ | API specs in `proj2/docs/2-DESIGN/api-design.md` and `proj2/docs/AGENT-PLAN/03-API-SPECIFICATIONS.md`, also in http://127.0.0.1:8000/docs after started the backend server |
-| Question 4.5 | Do you provide troubleshooting information that describes the symptoms and step-by-step solutions for problems and error messages? | ✅ | Troubleshooting sections in `proj2/INSTALL.md`, backend `proj2/backend/README.md:289`, CI docs |
-| Question 4.6 | If your software can be used as a library, package or service by other software, do you provide comprehensive API documentation? | ✅ | Detailed API docs in `proj2/docs/2-DESIGN/api-design.md` , also in http://127.0.0.1:8000/docs after started the backend server |
+| Question 4.3 | If you provide more extensive documentation, does this provide clear, step-by-step instructions on how to deploy and use your software? | ✅ | Detailed docs in `proj2/INSTALL.md/` |
+| Question 4.4 | Do you provide a comprehensive guide to all your software’s commands, functions and options? | ✅ | proj2/docs |
+| Question 4.5 | Do you provide troubleshooting information that describes the symptoms and step-by-step solutions for problems and error messages? | ✅ | Troubleshooting sections in `proj2/INSTALL.md` |
+| Question 4.6 | If your software can be used as a library, package or service by other software, do you provide comprehensive API documentation? | ❌ |  |
 | Question 4.7 | Do you store your documentation under revision control with your source code? | ✅ | Documentation lives in repo under `proj2/docs/` |
 | Question 4.8 | Do you publish your release history (release date, version numbers, key features, etc.) on your web site or in your documentation? | ✅ | Managed through Github Release|
 | **Q5 - Support** | | | |
@@ -26,7 +26,7 @@
 | Question 5.2 | Does your website and documentation describe what support, if any, you provide to users and developers? | ✅ | Contribution and support scope in `proj2/CONTRIBUTING.md` and `proj2/README.md` |
 | Question 5.3 | Does your project have an e-mail address or forum that is solely for supporting users? | ❌ | No dedicated support email/forum documented in repo |
 | Question 5.4 | Are e-mails to your support e-mail address received by more than one person? | ❌ | No support email configured; not applicable |
-| Question 5.5 | Does your project have a ticketing system to manage bug reports and feature requests? | ✅ | GitHub Issues with templates in `.github/issue_template/` |
+| Question 5.5 | Does your project have a ticketing system to manage bug reports and feature requests? | ✅ | GitHub Issues  |
 | Question 5.6 | Is your project's ticketing system publicly visible to your users, so they can view bug reports and feature requests? | ✅ | GitHub Issues are public for the repository |
 | **Q6 - Maintainability** | | | |
 | Question 6.1 | Is your software’s architecture and design modular? | ✅ | Clear modular structure under `proj2/backend/src/eatsential/` and `proj2/frontend/src/` |
