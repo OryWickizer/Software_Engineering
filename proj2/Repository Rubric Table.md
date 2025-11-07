@@ -40,7 +40,7 @@ Each team starts with full marks but **loses** 0.33 marks for missing items:
 | Badges showing your code formatters. | `proj2/.github/workflows/ci.yml` | 3 |
 | Badges showing your syntax checkers. | `proj2/.github/workflows/ci.yml` | 3 |
 | Badges showing your code coverage tools | `proj2/.github/workflows/ci.yml` | 3 |
-| Badges showing any other Other automated analysis tools | `proj2/.github/dependabot.yml` | 3 |
+| Badges showing any other Other automated analysis tools | `proj2/.github/workflows/deploy.yml` | 3 |
 | **TOTAL SCORE (Scorable Items)** |  |  |
 
 <!-- prettier-ignore-end -->
