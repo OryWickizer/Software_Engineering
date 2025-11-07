@@ -4,6 +4,5 @@ import { createContext } from 'react';
 // files that export React components (providers) do not also export plain
 // values or helpers which would trip the react-refresh rule.
 
-export const AuthContext = createContext(null);
 export const CartContext = createContext(null);
 export const RestaurantContext = createContext(null);

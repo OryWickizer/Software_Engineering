@@ -12,6 +12,10 @@ export default function OrderDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    fetchOrderDetails();
+  }, [orderId]);
+
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
@@ -23,10 +27,6 @@ export default function OrderDetails() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchOrderDetails();
-  }, [orderId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusUpdate = async (newStatus) => {
     try {

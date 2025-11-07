@@ -7,11 +7,12 @@ import { useRestaurantContext } from '../context/RestaurantContext';
 
 const Customer = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Fetch restaurants from API
   const [restaurants, setRestaurants] = useState([]);
-  const { selectedRestaurant, setSelectedRestaurant, fetchMenu } = useRestaurantContext();
+  const { selectedRestaurant, setSelectedRestaurant, menu, fetchMenu } = useRestaurantContext();
 
 
   useEffect(() => {
@@ -48,8 +49,10 @@ const Customer = () => {
         } else {
           throw new Error('Invalid response format');
         }
+        setLoading(false);
       } catch (err) {
         setError('Failed to fetch restaurants: ' + err.message);
+        setLoading(false);
       }
     };
 
@@ -89,7 +92,7 @@ const Customer = () => {
     };
 
     fetchMenuItems();
-  }, [selectedRestaurant?.id, setSelectedRestaurant, selectedRestaurant]);
+  }, [selectedRestaurant?.id, setSelectedRestaurant]);
 
 
   const [query, setQuery] = useState('');
@@ -101,10 +104,7 @@ const Customer = () => {
         setShowSeasonalNudge(true);
         sessionStorage.removeItem('showSeasonalNudge');
       }
-    } catch (err) {
-      // Ignore sessionStorage errors (e.g., in private browsing mode)
-      console.warn('SessionStorage not available:', err);
-    }
+    } catch {}
   }, []);
   const [cuisineFilter, setCuisineFilter] = useState('All');
 
@@ -151,6 +151,19 @@ const Customer = () => {
       return [...prev, { ...item, quantity: 1 }];
     });
     setIsCartOpen(true);
+  };
+
+  // Decrease quantity or remove
+  const removeFromCart = (index) => {
+    setCart((prev) => {
+      const copy = [...prev];
+      if (copy[index].quantity > 1) {
+        copy[index].quantity -= 1;
+      } else {
+        copy.splice(index, 1);
+      }
+      return copy;
+    });
   };
 
   // Explicit increase/decrease to avoid accidental double-calls

@@ -9,13 +9,14 @@ export default function Drivers() {
   const [driverLocation, setDriverLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [isLocationTracking, setIsLocationTracking] = useState(false);
-  const [_orderStatusMap, setOrderStatusMap] = useState({});
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [orderStatusMap, setOrderStatusMap] = useState({});
   const [acceptedOrders, setAcceptedOrders] = useState([]);
   const [rejectedOrders, setRejectedOrders] = useState([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [selectedOrderForLocation, setSelectedOrderForLocation] = useState(null);
   const [availableOrders, setAvailableOrders] = useState([]);
-  const [_isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { user, setUser, isAuthenticated, refreshUser } = useAuthContext();
 
   // Fetch available orders
@@ -50,7 +51,7 @@ export default function Drivers() {
     } else if (acceptedOrders.length === 0 && availableOrders.length > 0 && activeTab !== 'available') {
       setActiveTab('available');
     }
-  }, [acceptedOrders, availableOrders, activeTab]);
+  }, [acceptedOrders, availableOrders]);
   
   // Handler for accepting orders
   const handleAcceptOrder = async (orderId) => {
@@ -253,7 +254,7 @@ export default function Drivers() {
   };
 
   // Start location tracking
-  const _startLocationTracking = () => {
+  const startLocationTracking = () => {
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser");
       return;
@@ -273,7 +274,7 @@ export default function Drivers() {
   };
 
   // Stop location tracking
-  const _stopLocationTracking = () => {
+  const stopLocationTracking = () => {
     setIsLocationTracking(false);
   };
 
