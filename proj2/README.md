@@ -119,6 +119,11 @@ For common issues and step‑by‑step fixes, see [TROUBLESHOOTING.md](TROUBLESH
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
+## Funding
+
+- This project is self‑funded by the project contributors.
+- Funding is not tied to any guaranteed external funding period.
+
 ## Authors
 
 This project is brought to you by Group 22 (Yash Dive, Stephen Liu,  Atharva Waingankar, Ory Wickizer).
