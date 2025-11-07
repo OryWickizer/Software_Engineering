@@ -103,10 +103,6 @@ Eco Impact Receipts - View a personalized impact dashboard showing water saved, 
 ## Setup & Installation
 To run EcoBites locally, follow the full installation guide here: [INSTALL.md](INSTALL.md)
 
-## Getting Started
-
-See [INSTALL.md](INSTALL.md) for detailed setup instructions.
-
 ## Documentation
 
 - [How it works](docs/how.md) — User tutorials and workflows
@@ -122,6 +118,10 @@ For common issues and step‑by‑step fixes, see [TROUBLESHOOTING.md](TROUBLESH
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## Authors
+
+This project is brought to you by Group 22 (Yash Dive, Stephen Liu,  Atharva Waingankar, Ory Wickizer).
 
 ## License
 
