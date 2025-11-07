@@ -123,9 +123,6 @@ For common issues and step‑by‑step fixes, see [TROUBLESHOOTING.md](TROUBLESH
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-## Video Tutorial
-
-
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details.
