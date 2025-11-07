@@ -75,7 +75,7 @@ delivery.
   
 [![EcoBites Demo Video](https://img.youtube.com/vi/CwN2WATvJYQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=CwN2WATvJYQ)
 
-**[▶️ Watch on YouTube](https://youtu.be/K2KGYuvrB_Y)** | 4 minutes
+**[▶️ Watch on YouTube](https://www.youtube.com/watch?v=CwN2WATvJYQ)** | 4 minutes
 
 </div>
 
