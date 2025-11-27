@@ -1,0 +1,40 @@
+services:
+  test-mongo:
+    image: mongo:6.0
+    container_name: test_mongo
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: test_meal_db
+    networks: [test-network]
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  test-meals:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: test_meals
+    depends_on:
+      test-mongo:
+        condition: service_healthy
+    environment:
+      - TEST_MONGO_URL=mongodb://test-mongo:27017
+      - TEST_DB_NAME=test_meal_db
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/pytest.ini:/app/pytest.ini
+      - ./backend/.coveragerc:/app/.coveragerc
+      - ./backend/htmlcov:/app/htmlcov
+    networks: [test-network]
+    command: pytest app/tests/test_meals.py -v --tb=short --color=yes
+
+networks:
+  test-network:
+    driver: bridge
