@@ -1,0 +1,74 @@
+# =====================================
+# Python
+# =====================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+seproj3/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Pytest cache
+.pytest_cache/
+.coverage
+htmlcov/
+.cache/
+
+# VSCode / IDE files
+.vscode/
+.idea/
+
+# =====================================
+# Node / React frontend
+# =====================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Frontend build output
+frontend/build/
+frontend/dist/
+frontend/.parcel-cache/
+frontend/.next/
+frontend/out/
+
+# =====================================
+# Docker
+# =====================================
+*.log
+docker-compose.override.yml
+*.pid
+*.seed
+*.pid.lock
+
+# =====================================
+# OS / Misc
+# =====================================
+.DS_Store
+Thumbs.db
+
+# =====================================
+# Custom project-specific ignores
+# =====================================
+backend/__pycache__/
+backend/app/__pycache__/
+backend/app/tests/__pycache__/
+backend/app/*.pyc
+frontend/.eslintcache

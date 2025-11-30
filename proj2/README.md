@@ -75,7 +75,7 @@ delivery.
   
 [![EcoBites Demo Video](https://img.youtube.com/vi/CwN2WATvJYQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=CwN2WATvJYQ)
 
-**[▶️ Watch on YouTube](https://youtu.be/K2KGYuvrB_Y)** | 4 minutes
+**[▶️ Watch on YouTube](https://www.youtube.com/watch?v=CwN2WATvJYQ)** | 4 minutes
 
 </div>
 
@@ -84,35 +84,24 @@ delivery.
 
 ### **October – Release 1: Prototype**
 
-- Implement authentication flow for different users (Customers, Restaurants, and Drivers).
+- Implement authentication flow for different users (Customers, Restaurants, and Drivers). Restaurants can add menu items, customers can order, and drivers can update deliveries. Users are able to login to accounts with appropriate functionality.
 - Build a frontend UI to allow users to browse ecofriendly restaurants, place orders, and track deliveries.
+- Eco Packaging Selection - Restaurants can choose if their packaging is reusable, minimal, or compostable, and customers can use that information to inform their eco-friendly selections.
+- Seasonal Menu Highlight - When adding items to their menu, restaurants can highlight an item as seasonal and customers can earn points for ordering seasonal items
+- Community Sharing / Group Orders - Customers can opt-in to having their order combined with a neighbor or co-workers order to reduce packaging and waste. This will earn them rewards, in order to encourage eco-freiendly choices.
+- Rewards System Partially Implemented - When customers select seasonal items or group their orders to reduce packaging waste, driver's earn points for selecting those orders
 
 ### **November – Release 2: Enhanced System**
 
-## Third‑party dependencies
-
-## Example Use Cases
-
-Here are some example scenarios demonstrating how EcoBites can be used:
+- Eco Challenge & Gamification - Participate in challenges like reducing single-use plastics or trying plant-based meals to earn rewards and points on the leaderboard
+- Canceled Orders & Leftovers - If someone cancels an order or has leftovers, others can bid to claim it, reducing food waste.
+Eco Impact Receipts - View a personalized impact dashboard showing water saved, CO₂ prevented, and weekly comparisons.
+- ML / LLM Eco-Friendly Restaurant & Food Recommendations - Get AI-powered recommendations for meals and restaurants with the lowest environmental impact.
+- Drivers get Incentives for Using eco Friendly Vehicles - Drivers using electric vehicles, bikes, or low-emission methods earn incentives for greener deliveries.
+- Implement Ratying System and Carbon Tracker
 
 ## Setup & Installation
 To run EcoBites locally, follow the full installation guide here: [INSTALL.md](INSTALL.md)
-
-## 🧯 Troubleshooting
-
-For common issues and step‑by‑step fixes, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
-
-## 📘 User Guide
-
-Step-by-step usage instructions, screenshots, and walkthroughs are available in the project user guide:
-
-- Read the user guide: [USER_GUIDE.md](USER_GUIDE.md)
-
-
-
-## Getting Started
-
-See [INSTALL.md](INSTALL.md) for detailed setup instructions.
 
 ## Documentation
 
@@ -122,12 +111,22 @@ See [INSTALL.md](INSTALL.md) for detailed setup instructions.
 - [Why it matters](docs/why.md) — Project mission and impact
 - [Changelog](CHANGELOG.md) — Version history and release notes
 
+## Troubleshooting
+
+For common issues and step‑by‑step fixes, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-## Video Tutorial
+## Funding
 
+- This project is self‑funded by the project contributors.
+- Funding is not tied to any guaranteed external funding period.
+
+## Authors
+
+This project is brought to you by Group 22 (Yash Dive, Stephen Liu,  Atharva Waingankar, Ory Wickizer).
 
 ## License
 
