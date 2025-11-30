@@ -1,6 +1,9 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://mongodb:27017")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "myapp")

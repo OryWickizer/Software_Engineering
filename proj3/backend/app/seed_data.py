@@ -1,6 +1,11 @@
 from datetime import datetime, timedelta
-from .database import get_database
-from .utils import hash_password
+
+if __name__ == "__main__":
+    from database import get_database
+    from utils import hash_password
+else:
+    from .database import get_database
+    from .utils import hash_password
 
 
 async def seed():
@@ -399,3 +404,15 @@ async def seed():
         print(
             f"✅ Seeded {len(result.inserted_ids)} users and {len(meals_result.inserted_ids)} meals"
         )
+
+
+if __name__ == "__main__":
+    import asyncio
+    from database import connect_to_mongo, close_mongo_connection
+    
+    async def main():
+        await connect_to_mongo()
+        await seed()
+        await close_mongo_connection()
+    
+    asyncio.run(main())
