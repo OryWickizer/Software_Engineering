@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"; // adjust your 
 import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
+import ReviewsList from './ReviewsList';
 
 export default function Profile({ user, onUpdate }) {
   const navigate = useNavigate();
@@ -130,11 +131,14 @@ export default function Profile({ user, onUpdate }) {
       {/* Dialog Content */}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/30" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-lg p-6 w-full max-w-md max-h-[90vh] overflow-auto">
-          <Dialog.Title className="text-lg font-semibold mb-4">Your Profile</Dialog.Title>
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-lg w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="px-6 py-4 border-b">
+            <Dialog.Title className="text-xl font-bold">Your Profile</Dialog.Title>
+          </div>
+          <div className="flex-1 overflow-y-auto px-6 py-4">
 
           {!isEditing ? (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <p><strong>Full Name:</strong> {user?.full_name || "Guest"}</p>
               <p><strong>Email:</strong> {user.email}</p>
               <p><strong>Phone:</strong> {user.phone || "-"}</p>
@@ -145,6 +149,12 @@ export default function Profile({ user, onUpdate }) {
                 {user.social_media?.instagram && ` IG: ${user.social_media.instagram}`}
                 {user.social_media?.twitter && ` TW: ${user.social_media.twitter}`}
               </p>
+
+              {/* Reviews Section */}
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-lg font-semibold mb-4">My Reviews</h3>
+                <ReviewsList userId={user.id} />
+              </div>
 
               <div className="flex justify-between mt-4">
                 <button
@@ -200,6 +210,7 @@ export default function Profile({ user, onUpdate }) {
               </div>
             </form>
           )}
+          </div>
 
           <Dialog.Close className="cursor-pointer absolute top-3 right-3 text-gray-500 hover:text-gray-700">
             ✕

@@ -11,6 +11,8 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import ReviewForm from './ReviewForm';
+import ReviewsList from './ReviewsList';
 
 
 export default function RecommendationsTab({ preferences, userRatings, onRateRestaurant, userLocation, addToCart, currentUserId }) {
@@ -269,28 +271,21 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
 
       {selectedMeal && (
         <Dialog open={!!selectedMeal} onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Rate {selectedMeal.name}</DialogTitle>
-              <DialogDescription>Provide a rating and review for this meal</DialogDescription>
+              <DialogTitle>Review: {selectedMeal.title}</DialogTitle>
+              <DialogDescription>Share your experience with this meal from {selectedMeal.seller_name}</DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
-              <div>
-                <Label>Rating</Label>
-                {renderStars(ratingValue, true, setRatingValue)}
-              </div>
-
-              <div>
-                <Label>Review</Label>
-                <Textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Write your review..." />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="secondary" onClick={() => setSelectedMeal(null)}>Cancel</Button>
-                <Button onClick={handleRateMeal}>Submit</Button>
-              </div>
-            </div>
+            <ReviewForm
+              mealId={selectedMeal.id}
+              sellerId={selectedMeal.seller_id}
+              onSubmitSuccess={(review) => {
+                console.log('Review submitted:', review);
+                setSelectedMeal(null);
+              }}
+              onCancel={() => setSelectedMeal(null)}
+            />
           </DialogContent>
         </Dialog>
       )}
@@ -355,6 +350,12 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
               className="w-32 h-32 object-cover rounded-full border"
             />
           )}
+          
+          {/* Seller Reviews */}
+          <div className="mt-6 border-t pt-4">
+            <h3 className="text-lg font-semibold mb-4">Reviews</h3>
+            <ReviewsList userId={selectedSeller.id} />
+          </div>
         </div>
       ) : (
         <p>Loading seller info...</p>
