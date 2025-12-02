@@ -378,3 +378,68 @@ class MealSearchFilters(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     min_rating: Optional[float] = None
+
+
+# ============================================================
+# REVIEW/RATING MODELS
+# ============================================================
+
+
+class ReviewCreate(BaseModel):
+    """Create a review for a meal and its seller"""
+
+    meal_id: str
+    seller_id: str  # User who created the meal
+    rating: float = Field(..., ge=1, le=5, description="Rating from 1 to 5")
+    comment: Optional[str] = Field(None, max_length=500)
+    transaction_type: TransactionType  # "sale" or "swap"
+
+    @validator("rating")
+    def validate_rating(cls, v):
+        if not (1 <= v <= 5):
+            raise ValueError("Rating must be between 1 and 5")
+        # Allow half stars (e.g., 3.5, 4.5)
+        if v % 0.5 != 0:
+            raise ValueError("Rating must be in increments of 0.5")
+        return v
+
+
+class ReviewUpdate(BaseModel):
+    """Update an existing review"""
+
+    rating: Optional[float] = Field(None, ge=1, le=5)
+    comment: Optional[str] = Field(None, max_length=500)
+
+    @validator("rating")
+    def validate_rating(cls, v):
+        if v is not None and not (1 <= v <= 5):
+            raise ValueError("Rating must be between 1 and 5")
+        if v is not None and v % 0.5 != 0:
+            raise ValueError("Rating must be in increments of 0.5")
+        return v
+
+
+class ReviewResponse(BaseModel):
+    """Review response model"""
+
+    id: str
+    reviewer_id: str
+    reviewer_name: str
+    reviewer_profile_picture: Optional[str]
+    meal_id: str
+    meal_title: str
+    seller_id: str
+    rating: float
+    comment: Optional[str]
+    transaction_type: TransactionType
+    created_at: datetime
+    updated_at: datetime
+
+
+class UserReviewsSummary(BaseModel):
+    """Summary of user's reviews and ratings"""
+
+    total_reviews: int
+    average_rating: float
+    rating_distribution: dict  # {"5": 10, "4": 5, "3": 2, "2": 0, "1": 0}
+    recent_reviews: List[ReviewResponse]

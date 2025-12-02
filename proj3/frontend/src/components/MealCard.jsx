@@ -327,7 +327,7 @@ export default function MealCard({
           </Button>
         </div>
         </div>
-        </DialogContent>
+      </DialogContent>
       </Dialog>
 
     </>
