@@ -22,6 +22,7 @@ export default function Dashboard({ onLogout }) {
   const [loading, setLoading] = useState(true);
   const [myMeals, setMyMeals] = useState([]);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("browse");
   const backendURL = "http://localhost:8000";
   const navigate = useNavigate();
   
@@ -225,12 +226,18 @@ export default function Dashboard({ onLogout }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
             {/* Logo and title */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <button 
+              onClick={() => {
+                navigate('/dashboard');
+                setActiveTab('browse');
+              }}
+              className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-2xl flex items-center justify-center">
                 <span className="text-primary-foreground text-base sm:text-lg">🍽️</span>
               </div>
               <h1 className="text-lg sm:text-2xl font-serif font-semibold text-primary">Taste Buddiez</h1>
-            </div>
+            </button>
 
             {/* User section */}
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -277,7 +284,7 @@ export default function Dashboard({ onLogout }) {
           </p>
         </div>
 
-        <Tabs defaultValue="browse" className="space-y-4 sm:space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full max-w-8xl grid-cols-5 h-auto">
             <TabsTrigger
               value="browse"
