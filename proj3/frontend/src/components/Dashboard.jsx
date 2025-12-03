@@ -12,6 +12,8 @@ import { PreferencesTab } from './PreferencesTab';
 import RecommendationsTab from './RecommendationsTab';
 import MyMealsTab from './MyMealsTab';
 import CartTab from './CartTab';
+import DisputesTab from './DisputesTab';
+import OrderHistoryTab from './OrderHistoryTab';
 import { useNavigate } from 'react-router-dom';
 import Profile from './Profile';
 import { toast } from 'react-toastify';
@@ -285,7 +287,7 @@ export default function Dashboard({ onLogout }) {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full max-w-8xl grid-cols-5 h-auto">
+          <TabsList className="grid w-full max-w-8xl grid-cols-7 h-auto">
             <TabsTrigger
               value="browse"
               className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
@@ -305,6 +307,33 @@ export default function Dashboard({ onLogout }) {
             </TabsTrigger>
 
             <TabsTrigger
+              value="cart"
+              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
+            >
+              <span className="text-base sm:text-lg">🛒</span>
+              <span className="hidden sm:inline">Meal Cart ({cart.length})</span>
+              <span className="sm:hidden">Cart ({cart.length})</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="orders"
+              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
+            >
+              <span className="text-base sm:text-lg">📦</span>
+              <span className="hidden sm:inline">Orders</span>
+              <span className="sm:hidden">Orders</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="disputes"
+              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
+            >
+              <span className="text-base sm:text-lg">⚖️</span>
+              <span className="hidden sm:inline">Disputes</span>
+              <span className="sm:hidden">Disputes</span>
+            </TabsTrigger>
+
+            <TabsTrigger
               value="badges"
               className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
             >
@@ -319,15 +348,6 @@ export default function Dashboard({ onLogout }) {
               <span className="text-base sm:text-lg">⚙️</span>
               <span className="hidden lg:inline">Preferences</span>
               <span className="lg:hidden">Settings</span>
-            </TabsTrigger>
-
-            <TabsTrigger
-              value="cart"
-              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
-            >
-              <span className="text-base sm:text-lg">🛒</span>
-              <span className="hidden sm:inline">Meal Cart ({cart.length})</span>
-              <span className="sm:hidden">Cart ({cart.length})</span>
             </TabsTrigger>
           </TabsList>
 
@@ -429,6 +449,14 @@ export default function Dashboard({ onLogout }) {
               swappedMealIds={swappedMealIds}
               clearCart={clearCart}
             />
+          </TabsContent>
+
+          <TabsContent value="orders">
+            <OrderHistoryTab />
+          </TabsContent>
+
+          <TabsContent value="disputes">
+            <DisputesTab />
           </TabsContent>
         </Tabs>
       </main>

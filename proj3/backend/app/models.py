@@ -38,6 +38,24 @@ class BadgeType(str, Enum):
     SWAP_MASTER = "swap_master"
 
 
+class DisputeStatus(str, Enum):
+    PENDING = "pending"
+    UNDER_REVIEW = "under_review"
+    RESOLVED = "resolved"
+    REJECTED = "rejected"
+    REFUNDED = "refunded"
+
+
+class DisputeReason(str, Enum):
+    WRONG_MEAL = "wrong_meal"
+    MISSING_ITEMS = "missing_items"
+    POOR_QUALITY = "poor_quality"
+    FOOD_SAFETY = "food_safety"
+    NOT_AS_DESCRIBED = "not_as_described"
+    SELLER_NO_SHOW = "seller_no_show"
+    OTHER = "other"
+
+
 # User Models
 class Location(BaseModel):
     """User location for nearby meal discovery"""
@@ -358,6 +376,27 @@ class TransactionResponse(BaseModel):
     updated_at: datetime
 
 
+class OrderHistoryResponse(BaseModel):
+    """Order history response with meal details"""
+
+    id: str
+    transaction_id: str
+    meal_id: str
+    meal_title: str
+    meal_cuisine: Optional[str]
+    meal_photos: List[str]
+    buyer_id: str
+    seller_id: str
+    seller_name: str
+    transaction_type: TransactionType
+    status: str
+    amount: Optional[float]
+    offered_meal_id: Optional[str]
+    message: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+
 # ============================================================
 # SEARCH/FILTER MODELS
 # ============================================================
@@ -443,3 +482,49 @@ class UserReviewsSummary(BaseModel):
     average_rating: float
     rating_distribution: dict  # {"5": 10, "4": 5, "3": 2, "2": 0, "1": 0}
     recent_reviews: List[ReviewResponse]
+
+
+# ============================================================
+# DISPUTE/REFUND MODELS
+# ============================================================
+
+
+class DisputeCreate(BaseModel):
+    """Create a dispute for a transaction"""
+
+    transaction_id: str
+    meal_id: str
+    seller_id: str
+    reason: DisputeReason
+    description: str = Field(..., min_length=10, max_length=1000)
+    photos: List[str] = []  # Evidence photos
+
+
+class DisputeUpdate(BaseModel):
+    """Update dispute status (admin only)"""
+
+    status: DisputeStatus
+    admin_notes: Optional[str] = None
+    refund_amount: Optional[float] = None
+
+
+class DisputeResponse(BaseModel):
+    """Dispute response model"""
+
+    id: str
+    transaction_id: str
+    meal_id: str
+    meal_title: str
+    buyer_id: str
+    buyer_name: str
+    seller_id: str
+    seller_name: str
+    reason: DisputeReason
+    description: str
+    photos: List[str]
+    status: DisputeStatus
+    admin_notes: Optional[str]
+    refund_amount: Optional[float]
+    created_at: datetime
+    updated_at: datetime
+    resolved_at: Optional[datetime]
