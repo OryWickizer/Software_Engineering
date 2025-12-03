@@ -19,6 +19,7 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
   const [meals, setMeals] = useState([]);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [filteredMeals, setFilteredMeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [ratingValue, setRatingValue] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -31,9 +32,11 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
   // fetch meals
   useEffect(() => {
     async function fetchMeals() {
+      setIsLoading(true);
       const data = await getAllMeals();
       console.log('Fetched meals from DB:', data);
       setMeals(data);
+      setIsLoading(false);
     } fetchMeals();
   }, []);
 
@@ -139,6 +142,19 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
       <span className="ml-2 text-sm text-muted-foreground">{rating.toFixed(1)}</span>
     </div>
   );
+
+  // show loading state
+  if (isLoading) {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <div className="flex justify-center items-center space-x-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <h3 className="text-lg">Loading delicious meals...</h3>
+        </div>
+        <p className="text-muted-foreground">Finding the perfect meals for you</p>
+      </div>
+    );
+  }
 
   // if no meals match preferences
   if (!filteredMeals.length) {
