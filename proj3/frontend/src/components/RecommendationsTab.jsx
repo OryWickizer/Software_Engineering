@@ -344,14 +344,14 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
 
       {/** seller info dialog box */}
       <Dialog open={sellerDialogOpen} onOpenChange={setSellerDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{selectedSeller?.name || "Seller Info"}</DialogTitle>
           <DialogDescription>Learn more about this seller</DialogDescription>
         </DialogHeader>
 
       {selectedSeller ? (
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-y-auto pr-2">
           <p><strong>Seller:</strong> {selectedSeller.full_name || "No name available."}</p>
           <p><strong>Bio:</strong> {selectedSeller.bio || "No bio available."}</p>
           <p><strong>Social Media:</strong> 
@@ -377,7 +377,7 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
         <p>Loading seller info...</p>
       )}
 
-      <div className="flex justify-end mt-4">
+      <div className="flex justify-end mt-4 flex-shrink-0">
         <Button className="cursor-pointer" onClick={() => setSellerDialogOpen(false)}>Close</Button>
       </div>
         </DialogContent>
