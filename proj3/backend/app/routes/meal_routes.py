@@ -4,12 +4,47 @@ from bson import ObjectId
 from typing import List, Optional
 import os
 import uuid
+import math
 
 from ..models import MealCreate, MealUpdate, MealResponse, MealStatus
 from ..database import get_database
 from ..dependencies import get_current_user, get_optional_current_user
 
 router = APIRouter(prefix="/api/meals", tags=["Meals"])
+
+
+def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    Calculate the great circle distance between two points on earth in miles.
+    Uses the Haversine formula.
+
+    Args:
+        lat1, lon1: Latitude and longitude of point 1
+        lat2, lon2: Latitude and longitude of point 2
+
+    Returns:
+        Distance in miles
+    """
+    if None in [lat1, lon1, lat2, lon2]:
+        return None
+
+    # Convert latitude and longitude to radians
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+
+    # Haversine formula
+    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    c = 2 * math.asin(math.sqrt(a))
+
+    # Earth's radius in miles
+    radius_miles = 3959.0
+
+    # Calculate the distance
+    distance = radius_miles * c
+
+    return round(distance, 1)  # Round to 1 decimal place
 
 
 # Helper function to get dietary restriction exclusion rules
@@ -124,8 +159,17 @@ def get_dietary_exclusions(dietary_restriction: str):
 
 
 # Helper function to serialize MongoDB meal
-def meal_to_response(meal: dict, seller: dict) -> MealResponse:
+def meal_to_response(meal: dict, seller: dict, user_lat: Optional[float] = None, user_lon: Optional[float] = None) -> MealResponse:
     """Convert MongoDB meal document to MealResponse"""
+    # Calculate distance if user location and seller location are available
+    distance = None
+    if user_lat is not None and user_lon is not None:
+        seller_location = meal.get("seller_location", {})
+        seller_lat = seller_location.get("latitude")
+        seller_lon = seller_location.get("longitude")
+        if seller_lat is not None and seller_lon is not None:
+            distance = calculate_distance(user_lat, user_lon, seller_lat, seller_lon)
+
     return MealResponse(
         id=str(meal["_id"]),
         seller_id=str(meal["seller_id"]),
@@ -153,6 +197,7 @@ def meal_to_response(meal: dict, seller: dict) -> MealResponse:
         views=meal.get("views", 0),
         created_at=meal["created_at"],
         updated_at=meal["updated_at"],
+        distance=distance,
     )
 
 
@@ -223,8 +268,17 @@ async def create_meal(meal: MealCreate, current_user: dict = Depends(get_current
     """Create a new meal listing"""
     db = get_database()
 
+    # Get seller's location from their profile for distance calculations
+    seller_location = current_user.get("location", {})
+
     meal_doc = {
         "seller_id": current_user["_id"],
+        "seller_location": {
+            "latitude": seller_location.get("latitude"),
+            "longitude": seller_location.get("longitude"),
+            "city": seller_location.get("city"),
+            "state": seller_location.get("state"),
+        },
         "title": meal.title,
         "description": meal.description,
         "cuisine_type": meal.cuisine_type,
@@ -277,6 +331,9 @@ async def get_meals(
         None, description="Comma-separated list of ingredients to exclude"
     ),
     min_rating: Optional[float] = None,
+    latitude: Optional[float] = Query(None, description="User's latitude for distance calculation"),
+    longitude: Optional[float] = Query(None, description="User's longitude for distance calculation"),
+    max_distance_miles: Optional[float] = Query(None, description="Maximum distance in miles from user's location"),
     skip: int = 0,
     limit: int = 20,
 ):
@@ -322,7 +379,7 @@ async def get_meals(
             query["$and"] = ingredient_patterns
 
     # Fetch meals
-    meals_cursor = db.meals.find(query).skip(skip).limit(limit).sort("created_at", -1)
+    meals_cursor = db.meals.find(query).skip(skip).limit(limit * 2).sort("created_at", -1)  # Fetch more to account for distance filtering
     meals = await meals_cursor.to_list(length=None)
 
     # Apply dietary restriction filter (post-query filtering for complex logic)
@@ -333,14 +390,30 @@ async def get_meals(
             if check_meal_matches_dietary_restriction(meal, dietary_restriction)
         ]
 
-    # Fetch sellers for each meal
+    # Fetch sellers and calculate distances for each meal
     meal_responses = []
-    for meal in meals[:limit]:  # Re-apply limit after filtering
+    for meal in meals:
         seller = await db.users.find_one({"_id": meal["seller_id"]})
         if seller:
-            meal_responses.append(meal_to_response(meal, seller))
+            meal_response = meal_to_response(meal, seller, latitude, longitude)
+            # Always include the meal - distance filtering temporarily disabled for testing
+            meal_responses.append(meal_response)
 
-    return meal_responses
+            # TEMPORARILY DISABLED: Filter by distance if coordinates are provided
+            # if max_distance_miles is not None and latitude is not None and longitude is not None:
+            #     # Only include meals within the max distance
+            #     if meal_response.distance is not None and meal_response.distance <= max_distance_miles:
+            #         meal_responses.append(meal_response)
+            # else:
+            #     meal_responses.append(meal_response)
+
+    # Sort by distance if user location is provided, otherwise by creation date
+    if latitude is not None and longitude is not None:
+        # Sort by distance (None values go to the end)
+        meal_responses.sort(key=lambda m: (m.distance is None, m.distance if m.distance is not None else float('inf')))
+
+    # Apply final limit
+    return meal_responses[:limit]
 
 
 # Get meal by ID
@@ -393,6 +466,9 @@ async def get_my_meals(current_user: dict = Depends(get_current_user)):
 @router.get("/my/recommendations", response_model=List[MealResponse])
 async def get_recommended_meals(
     current_user: dict = Depends(get_current_user),
+    latitude: Optional[float] = Query(None, description="User's latitude for distance calculation"),
+    longitude: Optional[float] = Query(None, description="User's longitude for distance calculation"),
+    max_distance_miles: Optional[float] = Query(None, description="Maximum distance in miles from user's location"),
     skip: int = 0,
     limit: int = 20,
 ):
@@ -421,8 +497,8 @@ async def get_recommended_meals(
         ]
         query["$and"] = ingredient_patterns
 
-    # Fetch meals
-    meals_cursor = db.meals.find(query).skip(skip).limit(limit).sort("created_at", -1)
+    # Fetch meals (fetch more to account for distance filtering)
+    meals_cursor = db.meals.find(query).skip(skip).limit(limit * 2).sort("created_at", -1)
     meals = await meals_cursor.to_list(length=None)
 
     # Apply dietary restrictions filter
@@ -443,14 +519,30 @@ async def get_recommended_meals(
         other_meals = [m for m in meals if m.get("cuisine_type") not in cuisine_prefs]
         meals = preferred_meals + other_meals
 
-    # Fetch sellers for each meal
+    # Fetch sellers and calculate distances for each meal
     meal_responses = []
-    for meal in meals[:limit]:
+    for meal in meals:
         seller = await db.users.find_one({"_id": meal["seller_id"]})
         if seller:
-            meal_responses.append(meal_to_response(meal, seller))
+            meal_response = meal_to_response(meal, seller, latitude, longitude)
+            # Always include the meal - distance filtering temporarily disabled for testing
+            meal_responses.append(meal_response)
 
-    return meal_responses
+            # TEMPORARILY DISABLED: Filter by distance if coordinates are provided
+            # if max_distance_miles is not None and latitude is not None and longitude is not None:
+            #     # Only include meals within the max distance
+            #     if meal_response.distance is not None and meal_response.distance <= max_distance_miles:
+            #         meal_responses.append(meal_response)
+            # else:
+            #     meal_responses.append(meal_response)
+
+    # Sort by distance if user location is provided
+    if latitude is not None and longitude is not None:
+        # Sort by distance (None values go to the end)
+        meal_responses.sort(key=lambda m: (m.distance is None, m.distance if m.distance is not None else float('inf')))
+
+    # Apply final limit
+    return meal_responses[:limit]
 
 
 # Update a meal

@@ -125,6 +125,25 @@ export default function Dashboard({ onLogout }) {
         };
 
   });
+
+  // Sync user's profile location into preferences when user data loads
+  useEffect(() => {
+    if (user && user.location && user.location.latitude && user.location.longitude) {
+      // Only update if userLocation is not already set
+      if (!preferences.userLocation || !preferences.userLocation.lat) {
+        console.log('Syncing user profile location into preferences:', user.location);
+        setPreferences(prev => ({
+          ...prev,
+          userLocation: {
+            address: user.location.address || '',
+            lat: user.location.latitude,
+            lng: user.location.longitude
+          }
+        }));
+      }
+    }
+  }, [user]);
+
   useEffect(() => {
     localStorage.setItem("preferences", JSON.stringify(preferences));
     console.log('Preferences updated:', preferences);

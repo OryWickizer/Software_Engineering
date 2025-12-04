@@ -314,6 +314,7 @@ class MealResponse(BaseModel):
     views: int = 0
     created_at: datetime
     updated_at: datetime
+    distance: Optional[float] = None  # Distance in miles from user's location
 
 
 # ============================================================

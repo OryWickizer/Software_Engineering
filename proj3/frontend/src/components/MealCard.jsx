@@ -95,7 +95,7 @@ export default function MealCard({
                   </div>
                   <div className="flex items-center space-x-1">
                     <MapPin className="w-3 h-3 shrink-0" />
-                    <span>{meal.distance} mi away</span>
+                    <span>{meal.distance !== null && meal.distance !== undefined ? `${meal.distance} mi away` : 'Distance unknown'}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Package className="w-3 h-3 shrink-0" />
