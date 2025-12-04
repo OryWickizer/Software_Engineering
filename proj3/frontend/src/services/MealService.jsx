@@ -60,7 +60,7 @@ export const getAllMeals = async (filters = {}) => {
   try {
     // Build query string from filters
     const queryParams = new URLSearchParams();
-    
+
     if (filters.cuisine_type) queryParams.append("cuisine_type", filters.cuisine_type);
     if (filters.meal_type) queryParams.append("meal_type", filters.meal_type);
     if (filters.max_price) queryParams.append("max_price", filters.max_price);
@@ -73,8 +73,19 @@ export const getAllMeals = async (filters = {}) => {
     if (filters.skip) queryParams.append("skip", filters.skip);
     if (filters.limit) queryParams.append("limit", filters.limit);
 
+    // Add location parameters for distance calculation
+    if (filters.latitude !== undefined && filters.latitude !== null) {
+      queryParams.append("latitude", filters.latitude);
+    }
+    if (filters.longitude !== undefined && filters.longitude !== null) {
+      queryParams.append("longitude", filters.longitude);
+    }
+    if (filters.max_distance_miles !== undefined && filters.max_distance_miles !== null) {
+      queryParams.append("max_distance_miles", filters.max_distance_miles);
+    }
+
     const url = `${backendURL}/api/meals/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-    
+
     const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" }
@@ -87,6 +98,50 @@ export const getAllMeals = async (filters = {}) => {
     return await response.json();
   } catch (error) {
     console.error("Error fetching meals:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get recommended meals based on user preferences
+ * GET /api/meals/my/recommendations
+ */
+export const getRecommendedMeals = async (filters = {}) => {
+  try {
+    // Build query string from filters
+    const queryParams = new URLSearchParams();
+
+    if (filters.skip) queryParams.append("skip", filters.skip);
+    if (filters.limit) queryParams.append("limit", filters.limit);
+
+    // Add location parameters for distance calculation
+    if (filters.latitude !== undefined && filters.latitude !== null) {
+      queryParams.append("latitude", filters.latitude);
+    }
+    if (filters.longitude !== undefined && filters.longitude !== null) {
+      queryParams.append("longitude", filters.longitude);
+    }
+    if (filters.max_distance_miles !== undefined && filters.max_distance_miles !== null) {
+      queryParams.append("max_distance_miles", filters.max_distance_miles);
+    }
+
+    const url = `${backendURL}/api/meals/my/recommendations${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Not authenticated");
+      }
+      throw new Error("Failed to fetch recommended meals");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching recommended meals:", error);
     throw error;
   }
 };
