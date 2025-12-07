@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import { useEffect, useState } from 'react';
-import { getAllMeals } from '../services/MealService';
+import { getRecommendedMeals, getAllMeals } from '../services/MealService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -19,6 +19,7 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
   const [meals, setMeals] = useState([]);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [filteredMeals, setFilteredMeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [ratingValue, setRatingValue] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -28,14 +29,46 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [sellerDialogOpen, setSellerDialogOpen] = useState(false);
 
-  // fetch meals
+  // fetch meals with location parameters
   useEffect(() => {
     async function fetchMeals() {
-      const data = await getAllMeals();
-      console.log('Fetched meals from DB:', data);
-      setMeals(data);
-    } fetchMeals();
-  }, []);
+      setIsLoading(true);
+      try {
+        const filters = {};
+
+        // Add location parameters if available
+        if (userLocation?.lat !== undefined && userLocation?.lng !== undefined) {
+          filters.latitude = userLocation.lat;
+          filters.longitude = userLocation.lng;
+        }
+
+        // Add max distance if set in preferences
+        if (preferences?.maxDistance !== undefined && preferences?.maxDistance !== null) {
+          filters.max_distance_miles = preferences.maxDistance;
+        }
+
+        let data;
+        try {
+          // Try to get recommended meals (requires auth)
+          data = await getRecommendedMeals(filters);
+          console.log('Fetched recommended meals from DB:', data);
+        } catch (error) {
+          // Fallback to all meals if not authenticated
+          console.log('Failed to fetch recommended meals, falling back to all meals:', error);
+          data = await getAllMeals(filters);
+          console.log('Fetched all meals from DB:', data);
+        }
+
+        setMeals(data);
+      } catch (error) {
+        console.error('Error fetching meals:', error);
+        setMeals([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchMeals();
+  }, [userLocation, preferences]);
 
   // meal price range  
   function mapPriceToLevel(price) {
@@ -61,31 +94,33 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
 }
 
   // filter meals based on preferences & remove user's own meals
+  // Note: Backend already filters by dietary restrictions, allergens, and distance
+  // We only need to filter by cuisine and price on frontend
   useEffect(() => {
-    if (!meals.length || !preferences) return;
-    // get current date
-    //const now = new Date();
+    if (!meals.length) {
+      setFilteredMeals([]);
+      return;
+    }
 
     const filtered = meals.filter((meal) => {
+      // Don't show user their own meals
       if (meal.seller_id === currentUserId) return false;
-      // filter out expired meals, remove these next 2 lines if needed
-      //const expirationDate = new Date(meal.expires_date);
-      //if (expirationDate <= now) return false;
 
+      // Filter by cuisine preference (if any selected)
       const cuisineMatch = !(preferences?.cuisines?.length) || preferences.cuisines.includes(meal.cuisine_type);
-      const allergenMatch = !meal.allergen_info?.contains?.some(a => preferences?.allergens?.includes(a));
-      const dietaryMatch = !meal.dietary_restrictions?.some(d => preferences?.dietary_restrictions?.includes(d));
+
+      // Filter by price range
       const priceLevel = mapPriceToLevel(Number(meal.sale_price));
       const priceMatch = !(preferences?.priceRange?.length) ||
         (priceLevel >= preferences.priceRange[0] && priceLevel <= preferences.priceRange[1]);
-         console.log(meal.name, { cuisineMatch, allergenMatch, priceMatch });
-      return cuisineMatch && allergenMatch && priceMatch;
+
+      return cuisineMatch && priceMatch;
     });
 
     // debug logs
-    console.log('Meals before filtering:', meals);
+    console.log('Meals from backend:', meals.length);
     console.log('Preferences:', preferences);
-    console.log('Filtered meals:', filtered);
+    console.log('Filtered meals:', filtered.length);
 
     setFilteredMeals(filtered);
   }, [meals, preferences, currentUserId]);
@@ -140,6 +175,19 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
     </div>
   );
 
+  // show loading state
+  if (isLoading) {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <div className="flex justify-center items-center space-x-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <h3 className="text-lg">Loading delicious meals...</h3>
+        </div>
+        <p className="text-muted-foreground">Finding the perfect meals for you</p>
+      </div>
+    );
+  }
+
   // if no meals match preferences
   if (!filteredMeals.length) {
     return (
@@ -188,7 +236,7 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
                         </div>
                         <span>{meal.cuisine_type}</span>
                         <div className="flex items-center space-x-1"><span>{renderPriceLevel(meal.sale_price)}</span><span>${meal.sale_price}</span></div>
-                        <div className="flex items-center space-x-1"><MapPin className="w-3 h-3 shrink-0" /><span>{meal.distance} mi away</span></div>
+                        <div className="flex items-center space-x-1"><MapPin className="w-3 h-3 shrink-0" /><span>{meal.distance !== null && meal.distance !== undefined ? `${meal.distance} mi away` : 'Distance unknown'}</span></div>
                         <div className="flex items-center space-x-1"><Package className="w-3 h-3 shrink-0" /><span>{meal.portion_size} servings</span></div>
                       </div>
                       {renderStars(meal.average_rating)}
@@ -328,14 +376,14 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
 
       {/** seller info dialog box */}
       <Dialog open={sellerDialogOpen} onOpenChange={setSellerDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{selectedSeller?.name || "Seller Info"}</DialogTitle>
           <DialogDescription>Learn more about this seller</DialogDescription>
         </DialogHeader>
 
       {selectedSeller ? (
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-y-auto pr-2">
           <p><strong>Seller:</strong> {selectedSeller.full_name || "No name available."}</p>
           <p><strong>Bio:</strong> {selectedSeller.bio || "No bio available."}</p>
           <p><strong>Social Media:</strong> 
@@ -361,7 +409,7 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
         <p>Loading seller info...</p>
       )}
 
-      <div className="flex justify-end mt-4">
+      <div className="flex justify-end mt-4 flex-shrink-0">
         <Button className="cursor-pointer" onClick={() => setSellerDialogOpen(false)}>Close</Button>
       </div>
         </DialogContent>

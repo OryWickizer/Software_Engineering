@@ -44,7 +44,38 @@ export default function CheckoutTab({ cart, onRemoveFromCart, userRatings, onRat
   };
 
   // simulate checkout
-  const handleConfirmCheckout = () => {
+  const handleConfirmCheckout = async () => {
+    // Create transactions for each cart item
+    const userEmail = localStorage.getItem('email');
+    
+    try {
+      for (const item of cart) {
+        const transactionData = {
+          meal_id: item.id,
+          transaction_type: item.selectedSwapMeal ? 'swap' : 'sale',
+          offered_meal_id: item.selectedSwapMeal?.id || null,
+          message: item.selectedSwapMeal 
+            ? `Swapping for ${item.selectedSwapMeal.title}` 
+            : null
+        };
+
+        const response = await fetch('http://localhost:8000/api/transactions/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${userEmail}`
+          },
+          body: JSON.stringify(transactionData)
+        });
+
+        if (!response.ok) {
+          console.error('Failed to create transaction for meal:', item.title);
+        }
+      }
+    } catch (error) {
+      console.error('Error creating transactions:', error);
+    }
+    
     setOrderConfirmed(true);
   };
 
@@ -235,10 +266,19 @@ export default function CheckoutTab({ cart, onRemoveFromCart, userRatings, onRat
               <AlertDialogHeader>
                 <AlertDialogTitle>Order Confirmed 🎉</AlertDialogTitle>
               </AlertDialogHeader>
-              <p className="text-sm mt-2">
-                Your order has been placed successfully. You will receive communication
-                regarding the specific meetup time and place.
-              </p>
+              <div className="space-y-3 mt-2">
+                <p className="text-sm">
+                  Your order has been placed successfully. You will receive communication
+                  regarding the specific meetup time and place.
+                </p>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Need help?</strong> If you don't receive the correct meal or have any issues, 
+                    you can file a dispute from the Disputes tab to request a refund.
+                  </p>
+                </div>
+              </div>
 
               <AlertDialogFooter className="flex justify-end gap-2 mt-4">
                 <AlertDialogAction

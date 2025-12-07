@@ -8,6 +8,8 @@ from app.routes.user_routes import router as user_router
 from app.routes.meal_routes import router as meal_router
 from app.routes.review_routes import router as review_router
 from app.routes.event_routes import router as event_router
+from app.routes.dispute_routes import router as dispute_router
+from app.routes.transaction_routes import router as transaction_router
 from pymongo import ASCENDING
 from fastapi.responses import FileResponse, JSONResponse
 import os
@@ -81,6 +83,18 @@ async def startup_event():
             await db.reviews.create_index([("reviewer_id", ASCENDING)])
             await db.reviews.create_index([("seller_id", ASCENDING)])
 
+            # Dispute indexes
+            await db.disputes.create_index([("transaction_id", ASCENDING)], unique=True)
+            await db.disputes.create_index([("buyer_id", ASCENDING)])
+            await db.disputes.create_index([("seller_id", ASCENDING)])
+            await db.disputes.create_index([("status", ASCENDING)])
+
+            # Transaction indexes
+            await db.transactions.create_index([("buyer_id", ASCENDING)])
+            await db.transactions.create_index([("seller_id", ASCENDING)])
+            await db.transactions.create_index([("meal_id", ASCENDING)])
+            await db.transactions.create_index([("status", ASCENDING)])
+
             print("✅ Database indexes verified/created")
         except Exception as e:
             print(f"⚠️ Index creation note: {e}")
@@ -108,6 +122,8 @@ app.include_router(user_router)
 app.include_router(meal_router)
 app.include_router(review_router)
 app.include_router(event_router)
+app.include_router(dispute_router)
+app.include_router(transaction_router)
 
 
 # @app.get("/")

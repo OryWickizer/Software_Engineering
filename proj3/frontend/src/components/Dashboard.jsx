@@ -13,6 +13,8 @@ import RecommendationsTab from './RecommendationsTab';
 import MyMealsTab from './MyMealsTab';
 import CartTab from './CartTab';
 import EventsTab from './EventsTab';
+import DisputesTab from './DisputesTab';
+import OrderHistoryTab from './OrderHistoryTab';
 import { useNavigate } from 'react-router-dom';
 import Profile from './Profile';
 import { toast } from 'react-toastify';
@@ -23,6 +25,7 @@ export default function Dashboard({ onLogout }) {
   const [loading, setLoading] = useState(true);
   const [myMeals, setMyMeals] = useState([]);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("browse");
   const backendURL = "http://localhost:8000";
   const navigate = useNavigate();
   
@@ -123,6 +126,25 @@ export default function Dashboard({ onLogout }) {
         };
 
   });
+
+  // Sync user's profile location into preferences when user data loads
+  useEffect(() => {
+    if (user && user.location && user.location.latitude && user.location.longitude) {
+      // Only update if userLocation is not already set
+      if (!preferences.userLocation || !preferences.userLocation.lat) {
+        console.log('Syncing user profile location into preferences:', user.location);
+        setPreferences(prev => ({
+          ...prev,
+          userLocation: {
+            address: user.location.address || '',
+            lat: user.location.latitude,
+            lng: user.location.longitude
+          }
+        }));
+      }
+    }
+  }, [user]);
+
   useEffect(() => {
     localStorage.setItem("preferences", JSON.stringify(preferences));
     console.log('Preferences updated:', preferences);
@@ -226,12 +248,18 @@ export default function Dashboard({ onLogout }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
             {/* Logo and title */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <button 
+              onClick={() => {
+                navigate('/dashboard');
+                setActiveTab('browse');
+              }}
+              className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-2xl flex items-center justify-center">
                 <span className="text-primary-foreground text-base sm:text-lg">🍽️</span>
               </div>
               <h1 className="text-lg sm:text-2xl font-serif font-semibold text-primary">Taste Buddiez</h1>
-            </div>
+            </button>
 
             {/* User section */}
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -280,6 +308,8 @@ export default function Dashboard({ onLogout }) {
 
         <Tabs defaultValue="browse" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full max-w-8xl grid-cols-6 h-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full max-w-8xl grid-cols-7 h-auto">
             <TabsTrigger
               value="browse"
               className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
@@ -296,6 +326,33 @@ export default function Dashboard({ onLogout }) {
               <span className="text-base sm:text-lg">📋</span>
               <span className="hidden sm:inline">My Meals</span>
               <span className="sm:hidden">My Meals</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="cart"
+              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
+            >
+              <span className="text-base sm:text-lg">🛒</span>
+              <span className="hidden sm:inline">Meal Cart ({cart.length})</span>
+              <span className="sm:hidden">Cart ({cart.length})</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="orders"
+              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
+            >
+              <span className="text-base sm:text-lg">📦</span>
+              <span className="hidden sm:inline">Orders</span>
+              <span className="sm:hidden">Orders</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="disputes"
+              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
+            >
+              <span className="text-base sm:text-lg">⚖️</span>
+              <span className="hidden sm:inline">Disputes</span>
+              <span className="sm:hidden">Disputes</span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -434,6 +491,13 @@ export default function Dashboard({ onLogout }) {
           </TabsContent>
           <TabsContent value="events">
             <EventsTab currentUser={user} authToken={userEmail} />
+
+          <TabsContent value="orders">
+            <OrderHistoryTab />
+          </TabsContent>
+
+          <TabsContent value="disputes">
+            <DisputesTab />
           </TabsContent>
         </Tabs>
       </main>
