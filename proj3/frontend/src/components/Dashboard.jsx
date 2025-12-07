@@ -306,8 +306,6 @@ export default function Dashboard({ onLogout }) {
           </p>
         </div>
 
-        <Tabs defaultValue="browse" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full max-w-8xl grid-cols-6 h-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full max-w-8xl grid-cols-7 h-auto">
             <TabsTrigger
@@ -491,6 +489,7 @@ export default function Dashboard({ onLogout }) {
           </TabsContent>
           <TabsContent value="events">
             <EventsTab currentUser={user} authToken={userEmail} />
+          </TabsContent>
 
           <TabsContent value="orders">
             <OrderHistoryTab />
