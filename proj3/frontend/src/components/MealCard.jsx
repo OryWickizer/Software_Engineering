@@ -49,6 +49,8 @@ export default function MealCard({
     }
   };
 
+
+
   return (
     <>
     {/** construction of meal card with all specific info */}
@@ -329,6 +331,8 @@ export default function MealCard({
         </div>
       </DialogContent>
       </Dialog>
+
+
 
     </>
   );

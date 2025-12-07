@@ -297,7 +297,7 @@ export default function CheckoutTab({ cart, onRemoveFromCart, userRatings, onRat
         <Dialog open={!!selectedMeal} onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Rate {selectedMeal.name}</DialogTitle>
+              <DialogTitle>Rate {selectedMeal?.title}</DialogTitle>
               <DialogDescription>Provide a rating and review for this meal</DialogDescription>
             </DialogHeader>
 
@@ -325,7 +325,7 @@ export default function CheckoutTab({ cart, onRemoveFromCart, userRatings, onRat
       <AlertDialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Report {reportingMeal?.name}</AlertDialogTitle>
+            <AlertDialogTitle>Report {reportingMeal?.title}</AlertDialogTitle>
             <AlertDialogDescription>Please select a reason and provide any additional details.</AlertDialogDescription>
           </AlertDialogHeader>
 

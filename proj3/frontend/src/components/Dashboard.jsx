@@ -12,6 +12,7 @@ import { PreferencesTab } from './PreferencesTab';
 import RecommendationsTab from './RecommendationsTab';
 import MyMealsTab from './MyMealsTab';
 import CartTab from './CartTab';
+import EventsTab from './EventsTab';
 import DisputesTab from './DisputesTab';
 import OrderHistoryTab from './OrderHistoryTab';
 import { useNavigate } from 'react-router-dom';
@@ -305,6 +306,8 @@ export default function Dashboard({ onLogout }) {
           </p>
         </div>
 
+        <Tabs defaultValue="browse" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full max-w-8xl grid-cols-6 h-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full max-w-8xl grid-cols-7 h-auto">
             <TabsTrigger
@@ -367,6 +370,23 @@ export default function Dashboard({ onLogout }) {
               <span className="text-base sm:text-lg">⚙️</span>
               <span className="hidden lg:inline">Preferences</span>
               <span className="lg:hidden">Settings</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="cart"
+              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
+            >
+              <span className="text-base sm:text-lg">🛒</span>
+              <span className="hidden sm:inline">Meal Cart ({cart.length})</span>
+              <span className="sm:hidden">Cart ({cart.length})</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="events"
+              className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-2 space-y-1 sm:space-y-0 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200"
+            >
+              <span className="text-base sm:text-lg">🎉</span>
+              <span className="hidden sm:inline">Events</span>
+              <span className="sm:hidden">Events</span>
             </TabsTrigger>
           </TabsList>
 
@@ -469,6 +489,8 @@ export default function Dashboard({ onLogout }) {
               clearCart={clearCart}
             />
           </TabsContent>
+          <TabsContent value="events">
+            <EventsTab currentUser={user} authToken={userEmail} />
 
           <TabsContent value="orders">
             <OrderHistoryTab />

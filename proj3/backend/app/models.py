@@ -484,6 +484,47 @@ class UserReviewsSummary(BaseModel):
     rating_distribution: dict  # {"5": 10, "4": 5, "3": 2, "2": 0, "1": 0}
     recent_reviews: List[ReviewResponse]
 
+# ============================================================
+# EVENT MODELS
+# ============================================================
+
+class EventDish(BaseModel):
+    """A dish that a participant will bring to an event"""
+    id: Optional[str] = None
+    title: str
+    description: Optional[str] = None
+    seller_id: Optional[str] = None
+
+
+class NeighborhoodEventCreate(BaseModel):
+    """Model for creating a neighborhood/seasonal food event"""
+
+    title: str = Field(..., min_length=3, max_length=150)
+    description: Optional[str] = Field(None, max_length=1000)
+    neighborhood: Optional[str] = None
+    date: datetime
+    location: Optional[Location] = None
+    capacity: Optional[int] = None
+
+
+class NeighborhoodEventResponse(BaseModel):
+    id: str
+    title: str
+    description: Optional[str]
+    neighborhood: Optional[str]
+    date: datetime
+    location: Optional[Location]
+    organizer_id: str
+    organizer_name: Optional[str]
+    capacity: Optional[int]
+    class EventAttendee(BaseModel):
+        id: str
+        name: Optional[str]
+
+    attendees: List[EventAttendee] = []
+    dishes: List[EventDish] = []
+    created_at: datetime
+    updated_at: Optional[datetime]
 
 # ============================================================
 # DISPUTE/REFUND MODELS
