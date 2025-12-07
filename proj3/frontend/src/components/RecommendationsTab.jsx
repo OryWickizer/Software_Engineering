@@ -110,7 +110,7 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
       alert('Please select a reason for reporting');
       return;
     }
-    alert(`Report submitted for "${reportingMeal?.name}". We'll review this within 24 hours.`);
+    alert(`Report submitted for "${reportingMeal?.title || reportingMeal?.name || 'meal'}". We'll review this within 24 hours.`);
     setReportDialogOpen(false);
     setReportReason('');
     setReportDetails('');
@@ -293,7 +293,7 @@ export default function RecommendationsTab({ preferences, userRatings, onRateRes
       <AlertDialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Report {reportingMeal?.name}</AlertDialogTitle>
+            <AlertDialogTitle>Report {reportingMeal?.title || reportingMeal?.name}</AlertDialogTitle>
             <AlertDialogDescription>Please select a reason and provide any additional details.</AlertDialogDescription>
           </AlertDialogHeader>
 

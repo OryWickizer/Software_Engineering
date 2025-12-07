@@ -7,6 +7,7 @@ from app.routes.auth_routes import router as auth_router
 from app.routes.user_routes import router as user_router
 from app.routes.meal_routes import router as meal_router
 from app.routes.review_routes import router as review_router
+from app.routes.event_routes import router as event_router
 from pymongo import ASCENDING
 from fastapi.responses import FileResponse, JSONResponse
 import os
@@ -106,6 +107,7 @@ app.include_router(auth_router, tags=["Authentication"])
 app.include_router(user_router)
 app.include_router(meal_router)
 app.include_router(review_router)
+app.include_router(event_router)
 
 
 # @app.get("/")

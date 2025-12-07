@@ -14,7 +14,8 @@ import sys
 
 
 # Test MongoDB configuration
-TEST_MONGO_URL = os.environ.get("TEST_MONGO_URL", "mongodb://localhost:27018")
+# Use the production MongoDB Atlas URL with a separate test database
+TEST_MONGO_URL = os.environ.get("TEST_MONGO_URL", "mongodb+srv://yashbmv_db_user:Ecobites1234@cluster0.x6pmmrs.mongodb.net/?appName=Cluster0")
 TEST_DB_NAME = os.environ.get("TEST_DB_NAME", "test_meal_db")
 
 
