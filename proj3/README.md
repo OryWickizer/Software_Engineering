@@ -8,7 +8,7 @@
 
 [![DOI](https://zenodo.org/badge/1044463210.svg)](https://doi.org/10.5281/zenodo.17546496)
 
-# TASTE BUDDIEZ (Group 26)
+# TASTE BUDDIEZ (New Group: 22) (Old Group: 26)
 
 ## Our Story
 
