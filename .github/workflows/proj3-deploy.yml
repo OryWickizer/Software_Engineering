@@ -1,0 +1,54 @@
+name: Proj3 Deploy (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment name"
+        default: "production"
+        required: true
+
+jobs:
+  build-and-push-backend:
+    name: Proj3 • Build & Push Backend Image (GHCR)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & Push
+        uses: docker/build-push-action@v6
+        with:
+          context: proj3/backend
+          push: true
+          tags: ghcr.io/${{ github.repository }}-proj3-backend:latest,ghcr.io/${{ github.repository }}-proj3-backend:${{ github.sha }}
+
+  build-and-push-frontend:
+    name: Proj3 • Build & Push Frontend Image (GHCR)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & Push
+        uses: docker/build-push-action@v6
+        with:
+          context: proj3/frontend
+          push: true
+          tags: ghcr.io/${{ github.repository }}-proj3-frontend:latest,ghcr.io/${{ github.repository }}-proj3-frontend:${{ github.sha }}
