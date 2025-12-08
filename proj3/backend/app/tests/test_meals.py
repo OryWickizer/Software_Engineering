@@ -30,9 +30,11 @@ async def test_user(mongo_client):
         "phone": "1234567890",
         "location": {
             "address": "123 Test St",
-            "city": "Test City",
-            "state": "TS",
-            "zip_code": "12345",
+            "city": "Raleigh",
+            "state": "NC",
+            "zip_code": "27601",
+            "latitude": 35.7796,  # Raleigh, NC
+            "longitude": -78.6382,
         },
         "bio": "Test bio",
         "profile_picture": None,
@@ -78,9 +80,11 @@ async def second_user(mongo_client):
         "phone": "0987654321",
         "location": {
             "address": "456 Test Ave",
-            "city": "Test City",
-            "state": "TS",
-            "zip_code": "12346",
+            "city": "Durham",
+            "state": "NC",
+            "zip_code": "27701",
+            "latitude": 35.9940,  # Durham, NC
+            "longitude": -78.8986,
         },
         "bio": "Second user bio",
         "profile_picture": None,
@@ -113,6 +117,38 @@ async def second_user(mongo_client):
 
     # Cleanup
     await db.users.delete_one({"_id": result.inserted_id})
+
+
+@pytest_asyncio.fixture
+async def user_far_away(mongo_client):
+    """Create a user far away from the others"""
+    db = mongo_client[TEST_DB_NAME]
+
+    user_doc = {
+        "email": "far@example.com",
+        "full_name": "Far User",
+        "phone": "5555555555",
+        "location": {
+            "address": "789 Far St",
+            "city": "Los Angeles",
+            "state": "CA",
+            "zip_code": "90001",
+            "latitude": 34.0522,  # Los Angeles, CA
+            "longitude": -118.2437,
+        },
+        "bio": "A user from another coast.",
+        "role": "user",
+        "status": "active",
+        "stats": {"average_rating": 4.0, "total_reviews": 1},
+        "created_at": datetime.utcnow(),
+        "verified": True,
+        "password_hash": "hashed_password",
+    }
+    result = await db.users.insert_one(user_doc)
+    user_doc["_id"] = result.inserted_id
+    yield user_doc
+    await db.users.delete_one({"_id": result.inserted_id})
+
 
 
 @pytest_asyncio.fixture
@@ -209,8 +245,10 @@ async def multiple_meals(mongo_client, test_user, second_user):
     ]
 
     for config in meal_configs:
+        user = test_user if config["seller_id"] == test_user["_id"] else second_user
         meal_doc = {
             **config,
+            "seller_location": user["location"],
             "description": f"Delicious {config['title']}",
             "photos": [],
             "allergen_info": {"contains": [], "may_contain": []},
@@ -458,6 +496,139 @@ async def test_get_meals_pagination(mongo_client, multiple_meals):
 
 
 @pytest.mark.asyncio
+async def test_get_meals_with_distance_filter(
+    meal_async_client, mongo_client, multiple_meals, user_far_away
+):
+    """Test filtering meals by max_distance_miles."""
+    # User is in Raleigh (35.7796, -78.6382)
+    # Second user is in Durham (~24 miles away)
+    # Far user is in LA (~2200 miles away)
+
+    # Add a meal from the far away user
+    db = mongo_client[TEST_DB_NAME]
+    meal_doc = {
+        "seller_id": user_far_away["_id"],
+        "title": "LA Meal",
+        "cuisine_type": "American",
+        "meal_type": "dinner",
+        "sale_price": 30.00,
+        "status": "available",
+        "available_for_sale": True,
+        "description": "A meal from LA",
+        "allergen_info": {"contains": [], "may_contain": []},
+        "portion_size": "1",
+        "preparation_date": datetime.utcnow(),
+        "expires_date": datetime.utcnow() + timedelta(days=2),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "seller_location": user_far_away["location"],
+    }
+    result = await db.meals.insert_one(meal_doc)
+
+    # Search from Raleigh with a 30-mile radius should only include NC meals
+    response = await meal_async_client.get(
+        "/api/meals/?latitude=35.7796&longitude=-78.6382&max_distance_miles=30"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    # 5 meals are from the `multiple_meals` fixture, all from users in NC
+    assert len(data) == 5
+    assert all(m["title"] != "LA Meal" for m in data)
+
+    # Search with a 3000-mile radius should include the LA meal
+    response = await meal_async_client.get(
+        "/api/meals/?user_lat=35.7796&user_lon=-78.6382&max_distance_miles=3000"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 6
+    assert any(m["title"] == "LA Meal" for m in data)
+
+    await db.meals.delete_one({"_id": result.inserted_id})
+
+
+@pytest.mark.asyncio
+async def test_get_meals_sorted_by_distance(meal_async_client, multiple_meals):
+    """Test that meals are sorted by distance when location is provided."""
+    # User is in Raleigh (35.7796, -78.6382)
+    # The `multiple_meals` fixture creates meals for test_user (Raleigh) and
+    # second_user (Durham). We expect meals from test_user to appear first.
+    response = await meal_async_client.get(
+        "/api/meals/?latitude=35.7796&longitude=-78.6382"
+    )
+    assert response.status_code == 200
+    data = response.json()
+
+    distances = [m["distance"] for m in data]
+    
+    # Check that non-None distances are sorted
+    non_none_distances = [d for d in distances if d is not None]
+    assert non_none_distances == sorted(non_none_distances)
+
+    # Meals from test_user (Raleigh) should have a distance of 0
+    # Meals from second_user (Durham) should have a distance > 0
+    raleigh_user_id = str(multiple_meals[0]["seller_id"])
+    durham_user_id = str(multiple_meals[2]["seller_id"])
+
+    for meal in data:
+        if meal["distance"] is not None:
+            if meal["seller_id"] == raleigh_user_id:
+                assert meal["distance"] == 0
+            elif meal["seller_id"] == durham_user_id:
+                assert meal["distance"] > 20  # Approx 24 miles
+
+
+@pytest.mark.asyncio
+async def test_get_recommendations_with_distance_filter(
+    authenticated_meal_client, mongo_client, multiple_meals, user_far_away
+):
+    """Test filtering recommendations by max_distance_miles."""
+    # The authenticated user is test_user, located in Raleigh.
+    db = mongo_client[TEST_DB_NAME]
+    # Add a meal from a far away user
+    meal_doc = {
+        "seller_id": user_far_away["_id"],
+        "title": "LA Recommendation",
+        "cuisine_type": "American",
+        "meal_type": "dinner",
+        "sale_price": 30.00,
+        "status": "available",
+        "available_for_sale": True,
+        "description": "A meal from LA",
+        "allergen_info": {"contains": [], "may_contain": []},
+        "portion_size": "1",
+        "preparation_date": datetime.utcnow(),
+        "expires_date": datetime.utcnow() + timedelta(days=2),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "seller_location": user_far_away["location"],
+    }
+    result = await db.meals.insert_one(meal_doc)
+
+    # Recommendations with 30-mile radius should NOT include LA meal
+    # The other user's meals are in Durham (~24 miles) and should be included.
+    response = await authenticated_meal_client.get(
+        "/api/meals/my/recommendations?latitude=35.7796&longitude=-78.6382&max_distance_miles=30"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) > 0
+    assert all(m["title"] != "LA Recommendation" for m in data)
+
+    # Recommendations with 3000-mile radius SHOULD include LA meal
+    response = await authenticated_meal_client.get(
+        "/api/meals/my/recommendations?latitude=35.7796&longitude=-78.6382&max_distance_miles=3000"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert any(m["title"] == "LA Recommendation" for m in data)
+
+    await db.meals.delete_one({"_id": result.inserted_id})
+
+
+
+
+@pytest.mark.asyncio
 async def test_get_meals_empty_result(mongo_client):
     """Test getting meals when no meals match criteria"""
     db = mongo_client[TEST_DB_NAME]
@@ -699,6 +870,10 @@ async def sample_meal_data():
         "expires_date": (datetime.utcnow() + timedelta(days=2)).isoformat(),
         "pickup_instructions": "Ring doorbell",
     }
+
+
+
+
 
 
 # ============================================================
