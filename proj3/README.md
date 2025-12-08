@@ -32,21 +32,30 @@ At Taste Buddiez, we believe food is more than just fuel — it’s a connection
 * Frontend: React (Port 5173)
 * Containerization: Docker & Docker Compose
 
-## Quick Start Guide: SEE [INSTALL.MD](https://github.com/madisonbook/CSC510/blob/main/proj2/documentation/INSTALL.md)
+## Quick Start Guide
 
 Clone the Repository
 
 cd to proj3/backend
+
 //create new virtual environment with the name .venv
+
 //activate the virtual environment
+
 //install dependencies from requirement.txt file
+
 pip install -r requirements.txt
+
 //run backend
+
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 //For frontend
+
 cd to frontend
+
 npm install
+
 npm run dev
 
 create .env in backend folder and replace with below:
