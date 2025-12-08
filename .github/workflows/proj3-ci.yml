@@ -1,0 +1,66 @@
+name: Proj3 CI
+
+on:
+  push:
+    branches: [ main, Yash ]
+    paths:
+      - 'proj3/**'
+  pull_request:
+    branches: [ main, Yash ]
+    paths:
+      - 'proj3/**'
+
+concurrency:
+  group: proj3-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  proj3-backend-tests:
+    name: Proj3 • Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proj3/backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest
+
+  proj3-frontend-checks:
+    name: Proj3 • Frontend Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proj3/frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: proj3/frontend/package.json
+
+      - name: Install deps
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm i; fi
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Build
+        run: npm run build
