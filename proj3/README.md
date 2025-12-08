@@ -36,23 +36,23 @@ At Taste Buddiez, we believe food is more than just fuel — it’s a connection
 
 #### Clone the Repository
 
-####Make Virtual Environment
+#### Make Virtual Environment
 cd to proj3/backend
 
 //create new virtual environment with the name .venv
 
 //activate the virtual environment
 
-####Install Dependencies
+#### Install Dependencies
 //install dependencies from requirement.txt file
 
 pip install -r requirements.txt
 
-####run backend
+#### run backend
 
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-####For frontend
+#### For frontend
 
 cd to frontend
 
@@ -65,8 +65,7 @@ create .env in backend folder and replace with below:
 MONGODB_URL="mongodb+srv://yashbmv_db_user:Ecobites1234@cluster0.x6pmmrs.mongodb.net/?appName=Cluster0"
 DATABASE_NAME=tastebuddies
 
-#JWT Configuration
-
+#JWT Configuration  
 SECRET_KEY=your-secret-key-here-change-in-production
 
 ALGORITHM=HS256
