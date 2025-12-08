@@ -34,23 +34,25 @@ At Taste Buddiez, we believe food is more than just fuel — it’s a connection
 
 ## Quick Start Guide
 
-Clone the Repository
+####Clone the Repository
 
+####Make Virtual Environment
 cd to proj3/backend
 
 //create new virtual environment with the name .venv
 
 //activate the virtual environment
 
+####Install Dependencies
 //install dependencies from requirement.txt file
 
 pip install -r requirements.txt
 
-//run backend
+####run backend
 
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-//For frontend
+####For frontend
 
 cd to frontend
 
@@ -64,8 +66,11 @@ MONGODB_URL="mongodb+srv://yashbmv_db_user:Ecobites1234@cluster0.x6pmmrs.mongodb
 DATABASE_NAME=tastebuddies
 
 #JWT Configuration
+
 SECRET_KEY=your-secret-key-here-change-in-production
+
 ALGORITHM=HS256
+
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 
