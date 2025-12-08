@@ -143,7 +143,7 @@ export default function Dashboard({ onLogout }) {
         }));
       }
     }
-  }, [user]);
+  }, [user, preferences.userLocation]);
 
   useEffect(() => {
     localStorage.setItem("preferences", JSON.stringify(preferences));

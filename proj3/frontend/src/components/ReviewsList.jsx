@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import StarRating from './StarRating';
 
 const ReviewsList = ({ userId }) => {
@@ -6,11 +6,7 @@ const ReviewsList = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchReviews();
-  }, [userId]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:8000/reviews/user/${userId}`);
       if (!response.ok) {
@@ -23,7 +19,11 @@ const ReviewsList = ({ userId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
 
   if (loading) {
     return (

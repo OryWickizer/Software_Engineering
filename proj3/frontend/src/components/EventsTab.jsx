@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { listEvents, listMyEvents, createEvent, joinEvent, addDish } from '../services/EventService';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
@@ -16,7 +16,7 @@ export default function EventsTab({ currentUser, authToken }) {
   const [dishTitle, setDishTitle] = useState('');
   const [dishDescription, setDishDescription] = useState('');
 
-  const load = async (mine = false) => {
+  const load = useCallback(async (mine = false) => {
     try {
       let data;
       if (mine) {
@@ -34,9 +34,9 @@ export default function EventsTab({ currentUser, authToken }) {
       console.error('Failed to load events', err);
       toast.error('Failed to load events');
     }
-  };
+  }, [authToken]);
 
-  useEffect(() => { load(showMine); }, [showMine]);
+  useEffect(() => { load(showMine); }, [showMine, load]);
 
   const handleCreate = async () => {
     if (!form.title || !form.date) {

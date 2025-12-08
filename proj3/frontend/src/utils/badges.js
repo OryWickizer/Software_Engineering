@@ -218,14 +218,16 @@ export const getBadgeProgress = (badgeId, userStats, userMeals = []) => {
       return { current: totalReviews, required: 10, extraInfo: `${avgRating.toFixed(1)} rating` };
     case 'community_favorite':
       return { current: totalReviews, required: 100 };
-    case 'diverse_cook':
+    case 'diverse_cook': {
       const uniqueCuisines = new Set(userMeals.map(m => m.cuisine_type).filter(Boolean));
       return { current: uniqueCuisines.size, required: 5 };
-    case 'generous_sharer':
+    }
+    case 'generous_sharer': {
       const freeOrSwapMeals = userMeals.filter(m => 
         (m.sale_price === 0 || !m.available_for_sale) && m.available_for_swap
       );
       return { current: freeOrSwapMeals.length, required: 10 };
+    }
     default:
       return null;
   }

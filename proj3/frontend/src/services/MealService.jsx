@@ -33,7 +33,7 @@ export const createMeal = async (mealData) => {
       let errorBody;
       try {
         errorBody = await response.json();
-      } catch (e) {
+      } catch {
         throw new Error("Failed to create meal");
       }
 

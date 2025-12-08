@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"; // adjust your import

@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from 'react';
 import { getRecommendedMeals, getAllMeals } from '../services/MealService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
