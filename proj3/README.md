@@ -34,20 +34,29 @@ At Taste Buddiez, we believe food is more than just fuel — it’s a connection
 
 ## Quick Start Guide: SEE [INSTALL.MD](https://github.com/madisonbook/CSC510/blob/main/proj2/documentation/INSTALL.md)
 
-### 1. Clone the Repository
-1. navigate to the directory where you want to store the software
-2. terminal: 'git clone https://github.com/madisonbook/CSC510.git'
-3. terminal: 'cd CSC510'
+Clone the Repository
 
-### 2. Build and Run the Application
-1. terminal: 'cd proj2'
-2. terminal: 'pip install -e .'
-3. terminal: 'tastebuddiez setup'
-4. terminal: 'tastebuddiez start'
-5. navigate to [http://localhost:5173/](http://localhost:5173/) in your browser
+cd to proj3/backend
+//create new virtual environment with the name .venv
+//activate the virtual environment
+//install dependencies from requirement.txt file
+pip install -r requirements.txt
+//run backend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-### 3. Stopping the Application
-1. terminal: 'Ctrl+C'
+//For frontend
+cd to frontend
+npm install
+npm run dev
 
-### 4. Build and Run Backend Tests
-1. terminal: 'tastebuddiez test all'
+create .env in backend folder and replace with below:
+
+MONGODB_URL="mongodb+srv://yashbmv_db_user:Ecobites1234@cluster0.x6pmmrs.mongodb.net/?appName=Cluster0"
+DATABASE_NAME=tastebuddies
+
+#JWT Configuration
+SECRET_KEY=your-secret-key-here-change-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+
