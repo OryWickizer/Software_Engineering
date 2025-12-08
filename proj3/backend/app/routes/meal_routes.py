@@ -396,16 +396,14 @@ async def get_meals(
         seller = await db.users.find_one({"_id": meal["seller_id"]})
         if seller:
             meal_response = meal_to_response(meal, seller, latitude, longitude)
-            # Always include the meal - distance filtering temporarily disabled for testing
-            meal_responses.append(meal_response)
 
-            # TEMPORARILY DISABLED: Filter by distance if coordinates are provided
-            # if max_distance_miles is not None and latitude is not None and longitude is not None:
-            #     # Only include meals within the max distance
-            #     if meal_response.distance is not None and meal_response.distance <= max_distance_miles:
-            #         meal_responses.append(meal_response)
-            # else:
-            #     meal_responses.append(meal_response)
+            # Filter by distance if coordinates are provided
+            if max_distance_miles is not None and latitude is not None and longitude is not None:
+                # Only include meals within the max distance
+                if meal_response.distance is not None and meal_response.distance <= max_distance_miles:
+                    meal_responses.append(meal_response)
+            else:
+                meal_responses.append(meal_response)
 
     # Sort by distance if user location is provided, otherwise by creation date
     if latitude is not None and longitude is not None:
@@ -525,16 +523,14 @@ async def get_recommended_meals(
         seller = await db.users.find_one({"_id": meal["seller_id"]})
         if seller:
             meal_response = meal_to_response(meal, seller, latitude, longitude)
-            # Always include the meal - distance filtering temporarily disabled for testing
-            meal_responses.append(meal_response)
 
-            # TEMPORARILY DISABLED: Filter by distance if coordinates are provided
-            # if max_distance_miles is not None and latitude is not None and longitude is not None:
-            #     # Only include meals within the max distance
-            #     if meal_response.distance is not None and meal_response.distance <= max_distance_miles:
-            #         meal_responses.append(meal_response)
-            # else:
-            #     meal_responses.append(meal_response)
+            # Filter by distance if coordinates are provided
+            if max_distance_miles is not None and latitude is not None and longitude is not None:
+                # Only include meals within the max distance
+                if meal_response.distance is not None and meal_response.distance <= max_distance_miles:
+                    meal_responses.append(meal_response)
+            else:
+                meal_responses.append(meal_response)
 
     # Sort by distance if user location is provided
     if latitude is not None and longitude is not None:
