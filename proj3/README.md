@@ -34,7 +34,7 @@ At Taste Buddiez, we believe food is more than just fuel — it’s a connection
 
 ## Quick Start Guide
 
-####Clone the Repository
+#### Clone the Repository
 
 ####Make Virtual Environment
 cd to proj3/backend
