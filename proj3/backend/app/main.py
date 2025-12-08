@@ -29,6 +29,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# This is a test comment to trigger the workflow
 frontend_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 )
