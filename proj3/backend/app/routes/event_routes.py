@@ -166,6 +166,28 @@ async def join_event(event_id: str, current_user: dict = Depends(get_current_use
     return {"message": "Joined"}
 
 
+@router.post("/{event_id}/unjoin")
+async def unjoin_event(event_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_database()
+    if not ObjectId.is_valid(event_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid event ID")
+    event = await db.events.find_one({"_id": ObjectId(event_id)})
+    if not event:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    
+    # Prevent organizer from unjoining their own event
+    if event.get("organizer_id") == current_user["_id"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organizer cannot leave their own event")
+    
+    attendees = event.get("attendees", [])
+    if current_user["_id"] not in attendees:
+        return {"message": "Not joined"}
+    
+    attendees.remove(current_user["_id"])
+    await db.events.update_one({"_id": ObjectId(event_id)}, {"$set": {"attendees": attendees, "updated_at": datetime.utcnow()}})
+    return {"message": "Unjoined"}
+
+
 @router.post("/{event_id}/dishes")
 async def add_dish(event_id: str, dish: EventDish, current_user: dict = Depends(get_current_user)):
     db = get_database()

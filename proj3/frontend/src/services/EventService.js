@@ -46,6 +46,17 @@ export async function joinEvent(eventId, token) {
   return res.json();
 }
 
+export async function unjoinEvent(eventId, token) {
+  const res = await fetch(`${API_BASE}/${eventId}/unjoin`, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!res.ok) throw new Error("Failed to unjoin event");
+  return res.json();
+}
+
 export async function addDish(eventId, dish, token) {
   const res = await fetch(`${API_BASE}/${eventId}/dishes`, {
     method: "POST",

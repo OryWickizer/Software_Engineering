@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listEvents, listMyEvents, createEvent, joinEvent, addDish } from '../services/EventService';
+import { listEvents, listMyEvents, createEvent, joinEvent, unjoinEvent, addDish } from '../services/EventService';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
@@ -60,11 +60,22 @@ export default function EventsTab({ currentUser, authToken }) {
   const handleJoin = async (eventId) => {
     try {
       await joinEvent(eventId, authToken);
-      await load();
+      await load(showMine);
       toast.success('Joined event');
     } catch (err) {
       console.error(err);
       toast.error('Failed to join');
+    }
+  };
+
+  const handleUnjoin = async (eventId) => {
+    try {
+      await unjoinEvent(eventId, authToken);
+      await load(showMine);
+      toast.success('Left event');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to leave event');
     }
   };
 
@@ -111,12 +122,19 @@ export default function EventsTab({ currentUser, authToken }) {
               <div className="mt-3 flex gap-2">
                 <Button onClick={() => setSelectedEvent(ev)}>View</Button>
                 {(() => {
-                  const joined = (ev.attendees || []).some(a => (a.id || a) === (currentUser?.id || currentUser?._id));
-                  return joined ? (
-                    <Button disabled>Joined</Button>
-                  ) : (
-                    <Button onClick={() => handleJoin(ev.id)}>Join</Button>
-                  );
+                  const userId = currentUser?.id || (currentUser?._id ? String(currentUser._id) : null);
+                  const joined = (ev.attendees || []).some(a => (a.id || a) === userId);
+                  const isOrganizer = (ev.organizer_id === userId);
+                  
+                  if (joined) {
+                    return isOrganizer ? (
+                      <Button disabled variant="outline">Organizer</Button>
+                    ) : (
+                      <Button onClick={() => handleUnjoin(ev.id)} variant="outline">Unjoin</Button>
+                    );
+                  } else {
+                    return <Button onClick={() => handleJoin(ev.id)}>Join</Button>;
+                  }
                 })()}
               </div>
             </CardContent>
