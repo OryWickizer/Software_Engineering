@@ -14,7 +14,7 @@ This document summarizes the major updates and features developed across the fin
 - Added **Reporting System** for incorrect or missing meals.
 - Integrated **Review and Rating System** tied to user profiles.
 - Added **Cuisine Preferences, Allergens, and Dietary Filters** that tailor meal recommendations.
-- Implemented **24-Hour Meal Expiration** for all listings.
+
 
 ### 🛠 Improvements
 - Enhanced account creation with optional **phone number** and **bio** fields.
